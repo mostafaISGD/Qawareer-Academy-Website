@@ -1,0 +1,1623 @@
+/* ==========================================================================
+   Qawareer Academy — Admin Panel
+   يتعامل مع content.js، ويكتبه من جديد، وينشره على GitHub.
+
+   Data flow:
+     1. load content.js  (or the browser's saved copy, if newer)
+     2. you edit forms  ->  window.CONTENT is mutated live
+     3. save            ->  written back to content.js (blob) + GitHub
+     4. render          ->  the marked regions of each page are rebuilt
+                           using RENDER.* so the HTML that Google reads
+                           always matches what you see.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  /* ---------- tiny helpers ---------- */
+  var $  = function (s, c) { return (c || document).querySelector(s); };
+  var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
+  var C  = window.CONTENT;
+
+  var LS_CONTENT = 'qwr-content';
+  var LS_DRAFT   = 'qwr-draft';
+  var LS_GH      = 'qwr-github';
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function toast(msg, kind) {
+    var t = $('#admToast');
+    t.textContent = msg;
+    t.className = 'adm-toast is-on' + (kind ? ' is-' + kind : '');
+    setTimeout(function () { t.className = 'adm-toast'; }, 3400);
+  }
+  function setStatus(text, cls) {
+    $('#admStatus').textContent = text;
+    $('#admDot').className = 'adm-dot' + (cls ? ' is-' + cls : '');
+  }
+  function uid(prefix) {
+    return prefix + Math.random().toString(36).slice(2, 7);
+  }
+
+  /* ================================================================
+     1. DRAFT STATE
+     ================================================================ */
+  function loadDraft() {
+    var raw = null;
+    try { raw = localStorage.getItem(LS_DRAFT); } catch (e) {}
+    if (!raw) return;
+    try {
+      var saved = JSON.parse(raw);
+      if (!saved || !saved.programs) return;   // not a draft we wrote
+
+      // The shipped content.js has no updatedAt, so there is nothing to
+      // compare against: any readable draft is newer by definition (it can
+      // only exist because this browser saved it in a previous session).
+      var draftAt = saved.updatedAt ? new Date(saved.updatedAt).getTime() : 0;
+      var liveAt  = C && C.updatedAt ? new Date(C.updatedAt).getTime() : 0;
+
+      if (draftAt >= liveAt) {
+        C = saved;
+        window.CONTENT = C;
+        setStatus('عندك مسودة محفوظة من قبل', 'dirty');
+        $('#btnPublish').disabled = false;
+        $('#admSaveTxt').textContent =
+          'عندك مسودة محفوظة — اضغطي «حفظ ونشر» لتثبيتها أو امسحيها من المتصفح.';
+      }
+    } catch (e) {}
+  }
+
+  function dropDraft() {
+    try { localStorage.removeItem(LS_DRAFT); } catch (e) {}
+  }
+
+  function markDirty() {
+    C.updatedAt = new Date().toISOString();
+    try { localStorage.setItem(LS_DRAFT, JSON.stringify(C)); } catch (e) {}
+    setStatus('فيه تغييرات مش محفوظة', 'dirty');
+    $('#btnPublish').disabled = false;
+    $('#admSaveTxt').textContent = 'فيه تغييرات — اضغطي «حفظ ونشر» لتثبيتها على الموقع';
+  }
+
+  function markClean() {
+    try { localStorage.setItem(LS_CONTENT, JSON.stringify(C)); } catch (e) {}
+    dropDraft();
+    setStatus('كل حاجة محفوظة', 'saved');
+    $('#btnPublish').disabled = true;
+    $('#admSaveTxt').textContent = 'مفيش تغييرات لسه';
+  }
+
+  /* ================================================================
+     2. FORM BUILDERS
+     ================================================================ */
+  /* ---------- helpers ---------- */
+  /* Every control needs a programmatic label, otherwise it is unreachable by
+     screen readers and Lighthouse flags the whole panel. Field labels are
+     rendered as siblings, so we pair them with a generated id. */
+  var uid = 0;
+  function nextId(prefix) {
+    uid += 1;
+    return 'adm-' + prefix + '-' + uid;
+  }
+  function labelFor(labelEl, control, prefix) {
+    var id = control.id || (control.id = nextId(prefix));
+    labelEl.htmlFor = id;
+    return id;
+  }
+
+  function field(label, hint, value, onInput, multiline, tall) {
+    var tag = multiline ? 'textarea' : 'input';
+    var cls = multiline ? 'adm-ta' + (tall ? ' adm-ta--tall' : '') : 'adm-in';
+    var el = document.createElement(tag);
+    el.className = cls;
+    el.value = value == null ? '' : value;
+    if (!multiline) el.type = 'text';
+    el.addEventListener('input', function () { onInput(el.value); markDirty(); });
+
+    var wrap = document.createElement('div');
+    wrap.className = 'adm-field';
+    var lab = document.createElement('label');
+    lab.className = 'adm-label';
+    lab.innerHTML = esc(label) +
+      (hint ? ' <span class="adm-hint">' + esc(hint) + '</span>' : '');
+    labelFor(lab, el, 'f');
+    wrap.appendChild(lab);
+    wrap.appendChild(el);
+    return wrap;
+  }
+
+  /* `options` may be an array of strings, or a {value: label} map. The map
+     form is what lets a select use stable keys ('shot') instead of Arabic
+     text, so the onChange callback never has to match on copy. */
+  function select(label, options, value, onChange) {
+    var el = document.createElement('select');
+    el.className = 'adm-sel';
+
+    var pairs;
+    if (Array.isArray(options)) {
+      pairs = options.map(function (o) { return { value: o, label: o }; });
+    } else {
+      pairs = Object.keys(options).map(function (k) {
+        return { value: k, label: options[k] };
+      });
+    }
+
+    pairs.forEach(function (p) {
+      var op = document.createElement('option');
+      op.value = p.value;
+      op.textContent = p.label;
+      if (p.value === value) op.selected = true;
+      el.appendChild(op);
+    });
+    el.addEventListener('change', function () { onChange(el.value); markDirty(); });
+
+    var wrap = document.createElement('div');
+    wrap.className = 'adm-field';
+    var lab = document.createElement('label');
+    lab.className = 'adm-label';
+    lab.textContent = label;
+    labelFor(lab, el, 's');
+    wrap.appendChild(lab);
+    wrap.appendChild(el);
+    return wrap;
+  }
+
+  function toggle(label, checked, onChange) {
+    var wrap = document.createElement('label');
+    wrap.className = 'adm-toggle';
+    wrap.innerHTML =
+      '<input type="checkbox"' + (checked ? ' checked' : '') + '>' +
+      '<span class="adm-toggle__ui"></span>' +
+      '<span class="adm-label" style="margin:0">' + esc(label) + '</span>';
+    $('input', wrap).addEventListener('change', function (e) {
+      onChange(e.target.checked); markDirty();
+    });
+    return wrap;
+  }
+
+  /* --- image field -------------------------------------------------------
+     Used for testimonial photos AND chat screenshots. Two ways to fill it:
+       1. pick a file  -> we shrink it in the browser and store it inline
+          as a data URL, so the site stays a single folder with no extra
+          files to publish and the image never 404s.
+       2. type a path or a full URL (e.g. assets/img/shot-1.jpg) if you
+          would rather host the image yourself.
+
+     `opts.maxEdge` / `opts.placeholder` let the avatar and the screenshot
+     use the same control with different limits: an avatar renders at 52px,
+     a chat screenshot is opened full-screen and needs to stay readable.  */
+  var MAX_DATA_KB = 90;    // warn above this so content.js stays lean
+
+  function imgField(label, hint, value, onInput, opts) {
+    opts = opts || {};
+    var maxEdge = opts.maxEdge || 220;
+    var ph = opts.placeholder || 'اختاري صورة أو اكتبي رابطها';
+
+    var wrap = document.createElement('div');
+    wrap.className = 'adm-field adm-field--img' + (opts.wide ? ' is-wide' : '');
+
+    var lab = document.createElement('label');
+    lab.className = 'adm-label';
+    lab.textContent = label;
+    wrap.appendChild(lab);
+
+    var row = document.createElement('div');
+    row.className = 'adm-imgrow';
+
+    var prev = document.createElement('span');
+    prev.className = 'adm-imgprev';
+    row.appendChild(prev);
+
+    var col = document.createElement('div');
+    col.className = 'adm-imgcol';
+
+    var inp = document.createElement('input');
+    inp.className = 'adm-in adm-in--ltr';
+    inp.type = 'text';
+    inp.value = value || '';
+    inp.placeholder = ph;
+    labelFor(lab, inp, 'img');
+    inp.addEventListener('input', function () {
+      onInput(inp.value.trim());
+      paint();
+      markDirty();
+    });
+    col.appendChild(inp);
+
+    var note = document.createElement('div');
+    note.className = 'adm-hint';
+    col.appendChild(note);
+
+    var btns = document.createElement('div');
+    btns.className = 'adm-imgbtns';
+
+    var file = document.createElement('input');
+    file.type = 'file';
+    file.accept = 'image/*';
+    file.className = 'adm-hidden-file';
+    file.setAttribute('aria-label', 'اختيار ملف صورة من الجهاز');
+    file.addEventListener('change', function () {
+      if (!file.files || !file.files[0]) return;
+      shrinkImage(file.files[0], function (dataUrl, w, h) {
+        inp.value = dataUrl;
+        onInput(dataUrl);
+        paint();
+        markDirty();
+      }, maxEdge, opts.crop !== false);
+    });
+
+    var pick = document.createElement('button');
+    pick.type = 'button';
+    pick.className = 'btn btn--outline btn--sm';
+    pick.textContent = opts.pickLabel || '📷 اختيار صورة';
+    pick.addEventListener('click', function () { file.click(); });
+
+    var clear = document.createElement('button');
+    clear.type = 'button';
+    clear.className = 'btn btn--outline btn--sm';
+    clear.textContent = opts.clearLabel || '✕ بدون صورة';
+    clear.addEventListener('click', function () {
+      inp.value = '';
+      onInput('');
+      paint();
+      markDirty();
+    });
+
+    btns.appendChild(pick);
+    btns.appendChild(clear);
+    btns.appendChild(file);
+    col.appendChild(btns);
+    row.appendChild(col);
+    wrap.appendChild(row);
+
+    if (hint) {
+      var h = document.createElement('div');
+      h.className = 'adm-hint';
+      h.textContent = hint;
+      wrap.appendChild(h);
+    }
+
+    function paint() {
+      var v = inp.value.trim();
+      if (!v) {
+        prev.innerHTML = '<span class="adm-imgprev__none">' +
+          esc(opts.emptyText || 'لا صورة') + '</span>';
+        note.textContent = opts.emptyHint || 'بدون صورة يظهر الحرف الأول من الاسم.';
+        note.className = 'adm-hint';
+        return;
+      }
+      var kb = Math.round(v.length * 0.75 / 1024);
+      prev.innerHTML = '';
+      var im = document.createElement('img');
+      im.src = v;
+      im.alt = '';
+      prev.appendChild(im);
+      if (/^data:/.test(v)) {
+        note.textContent = 'مخزّنة داخل الملف (' + kb + ' كيلوبايت)';
+        note.className = 'adm-hint' + (kb > MAX_DATA_KB ? ' adm-hint--warn' : '');
+      } else {
+        note.textContent = 'رابط أو مسار صورة: ' + v;
+        note.className = 'adm-hint';
+      }
+    }
+    paint();
+    return wrap;
+  }
+
+  /* Resample a picked image in the browser and return it as a data URL.
+
+     A phone photo is several MB, which would bloat content.js, so the image
+     is scaled down here. Two shapes:
+       square (crop: true)  -> the round avatar
+       fitted  (crop: false) -> a chat screenshot, which must keep its whole
+                               shape because the words are the point         */
+  function shrinkImage(file, done, maxEdge, crop) {
+    var LIMIT = maxEdge || 220;
+    var fr = new FileReader();
+    fr.onerror = function () { alert('تعذّرت قراءة الصورة.'); };
+    fr.onload = function () {
+      var im = new Image();
+      im.onerror = function () { alert('هذا الملف ليس صورة صالحة.'); };
+      im.onload = function () {
+        var w, h, sx = 0, sy = 0, sw = im.width, sh = im.height;
+
+        if (crop) {
+          var s = Math.min(im.width, im.height);
+          sx = (im.width - s) / 2;
+          sy = (im.height - s) / 2;
+          sw = sh = s;
+          w = h = Math.min(LIMIT, s);
+        } else {
+          // never grow a small image; only shrink what is too big
+          var k = Math.min(1, LIMIT / Math.max(im.width, im.height));
+          w = Math.round(im.width * k);
+          h = Math.round(im.height * k);
+        }
+
+        var c = document.createElement('canvas');
+        c.width = w;
+        c.height = h;
+        var g = c.getContext('2d');
+        // chat screenshots have small text: keep the pixels crisp
+        g.imageSmoothingQuality = 'high';
+        g.drawImage(im, sx, sy, sw, sh, 0, 0, w, h);
+
+        var url;
+        try {
+          url = c.toDataURL('image/webp', crop ? 0.82 : 0.9);
+          // some browsers silently fall back to PNG; detect by header
+          if (url.slice(0, 15) !== 'data:image/webp') {
+            url = c.toDataURL('image/jpeg', crop ? 0.85 : 0.92);
+          }
+        } catch (e) {
+          url = c.toDataURL('image/jpeg', crop ? 0.85 : 0.92);
+        }
+        done(url, w, h);
+      };
+      im.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  }
+
+  /* --- repeatable list editor (who / how / out / plans / topics) --- */
+  function listEditor(arr, onChange, placeholder, withTitle) {
+    var box = document.createElement('div');
+    box.className = 'adm-list';
+
+    /* items are either plain strings or objects; withTitle means the row is
+       edited as "title — text" inside a single textarea */
+    function display(item) {
+      if (withTitle === 'plan') {
+        if (item && typeof item === 'object') {
+          return (item.sessions || '') + ' — ' + (item.price || '');
+        }
+        return String(item == null ? '' : item);
+      }
+      if (withTitle) {
+        if (item && typeof item === 'object') {
+          return (item.title || '') + ' — ' + (item.text || '');
+        }
+        return String(item == null ? '' : item);
+      }
+      if (item && typeof item === 'object') return String(item.text || '');
+      return String(item == null ? '' : item);
+    }
+
+    function parse(value, template) {
+      if (withTitle === 'plan') {
+        var m = String(value).split(/\s+[—–-]\s+/);
+        return {
+          sessions: (m[0] || '').trim(),
+          price: (m.length > 1 ? m.slice(1).join(' — ') : '').trim()
+        };
+      }
+      if (withTitle) {
+        var p = String(value).split(/\s+[—–-]\s+/);
+        var o2 = (template && typeof template === 'object') ? template : {};
+        o2.title = (p[0] || '').trim();
+        o2.text = p.length > 1 ? p.slice(1).join(' — ').trim() : '';
+        return o2;
+      }
+      return value;
+    }
+
+    function render() {
+      box.innerHTML = '';
+      arr.forEach(function (item, i) {
+        var row = document.createElement('div');
+        row.className = 'adm-li';
+
+        var grip = document.createElement('span');
+        grip.className = 'adm-li__grip';
+        grip.textContent = '⠿';
+        grip.setAttribute('aria-hidden', 'true');
+
+        var ta = document.createElement('textarea');
+        ta.rows = 1;
+        ta.value = display(item);
+        ta.placeholder = placeholder || '';
+        ta.setAttribute('aria-label',
+          (placeholder || 'بند') + ' ' + (i + 1));
+        ta.addEventListener('input', function () {
+          arr[i] = parse(ta.value, item);
+          ta.style.height = 'auto';
+          ta.style.height = ta.scrollHeight + 'px';
+          onChange();
+          markDirty();
+        });
+
+        var x = document.createElement('button');
+        x.className = 'adm-li__x';
+        x.type = 'button';
+        x.setAttribute('aria-label', 'احذفي');
+        x.innerHTML = '&times;';
+        x.addEventListener('click', function () {
+          arr.splice(i, 1);
+          render();
+          onChange();
+          markDirty();
+        });
+
+        row.appendChild(grip);
+        row.appendChild(ta);
+        row.appendChild(x);
+        box.appendChild(row);
+      });
+      requestAnimationFrame(function () {
+        $$('textarea', box).forEach(function (t) {
+          t.style.height = 'auto';
+          t.style.height = t.scrollHeight + 'px';
+        });
+      });
+    }
+
+    box.__arr = arr;
+    box.__render = render;
+    box.__display = display;
+    render();
+    return box;
+  }
+
+  function addRow(listEl, value, title) {
+    var arr = listEl.__arr;
+    var item = (title !== undefined)
+      ? { title: title, text: value }
+      : (value === undefined ? '' : value);
+    arr.push(item);
+    listEl.__render();
+    listEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function addPlanRow(listEl) {
+    listEl.__arr.push({ sessions: 'حصة جديدة', price: '0' });
+    listEl.__render();
+    listEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  /* --- generic card shell with order / visibility / delete --- */
+  function cardShell(item, titleText, num, opts) {
+    opts = opts || {};
+    var card = document.createElement('div');
+    card.className = 'adm-card';
+    if (item.visible === false) card.style.opacity = '.55';
+
+    var head = document.createElement('div');
+    head.className = 'adm-card__head';
+    head.innerHTML =
+      '<div class="adm-card__num">' + esc(num) + '</div>' +
+      '<div class="adm-card__title">' + esc(titleText || '') + '</div>';
+
+    var tools = document.createElement('div');
+    tools.className = 'adm-card__tools';
+
+    if (opts.orderable !== false) {
+      var up = document.createElement('button');
+      up.className = 'adm-mini'; up.type = 'button'; up.title = 'لأعلى'; up.textContent = '↑';
+      up.addEventListener('click', function () {
+        var i = C[opts.list].indexOf(item);
+        if (i > 0) {
+          C[opts.list].splice(i, 1);
+          C[opts.list].splice(i - 1, 0, item);
+          markDirty(); renderTab();
+        }
+      });
+      var dn = document.createElement('button');
+      dn.className = 'adm-mini'; dn.type = 'button'; dn.title = 'لأسفل'; dn.textContent = '↓';
+      dn.addEventListener('click', function () {
+        var i = C[opts.list].indexOf(item);
+        if (i < C[opts.list].length - 1) {
+          C[opts.list].splice(i, 1);
+          C[opts.list].splice(i + 1, 0, item);
+          markDirty(); renderTab();
+        }
+      });
+      tools.appendChild(up);
+      tools.appendChild(dn);
+    }
+
+    var vis = document.createElement('label');
+    vis.className = 'adm-toggle';
+    vis.title = 'إظهار / إخفاء';
+    vis.innerHTML = '<input type="checkbox"' + (item.visible !== false ? ' checked' : '') + '>' +
+                    '<span class="adm-toggle__ui"></span>';
+    $('input', vis).addEventListener('change', function (e) {
+      item.visible = e.target.checked;
+      card.style.opacity = item.visible === false ? '.55' : '1';
+      markDirty();
+    });
+    tools.appendChild(vis);
+
+    var del = document.createElement('button');
+    del.className = 'adm-mini is-del'; del.type = 'button'; del.title = 'احذفي'; del.textContent = '🗑';
+    del.addEventListener('click', function () {
+      if (!confirm('احذفي «' + (titleText || '') + '» نهائياً؟')) return;
+      var i = C[opts.list].indexOf(item);
+      if (i > -1) C[opts.list].splice(i, 1);
+      markDirty(); renderTab();
+    });
+    tools.appendChild(del);
+
+    head.appendChild(tools);
+    card.appendChild(head);
+    card.__item = item;
+    return card;
+  }
+
+  /* ================================================================
+     3. TAB BUILDERS
+     ================================================================ */
+  /* `add` is optional: tabs without it (الصفحات / الرئيسية) are singletons.
+     When present it appends a fresh item to the list and re-renders, so the
+     new card appears at the bottom ready to fill in. */
+  var TABS = [
+    { id: 'sections', label: 'الأقسام', icon: '👁', build: buildSections },
+    { id: 'programs', label: 'البرامج', icon: '📚', build: buildPrograms,
+      addLabel: '+ أضيفي برنامجاً', add: addProgram },
+    { id: 'packages', label: 'الباقات', icon: '💳', build: buildPackages,
+      addLabel: '+ أضيفي نظاماً', add: addPackage },
+    { id: 'reviews', label: 'الآراء', icon: '⭐', build: buildReviews,
+      addLabel: '+ أضيفي رأياً جديداً', add: addReview },
+    { id: 'articles', label: 'المقالات', icon: '📰', build: buildArticles,
+      addLabel: '+ أضيفي مقالاً', add: addArticle },
+    { id: 'faq', label: 'الأسئلة', icon: '❓', build: buildFaq,
+      addLabel: '+ أضيفي سؤالاً جديداً', add: addFaq },
+    { id: 'pages', label: 'الصفحات', icon: '📄', build: buildPages },
+    { id: 'home', label: 'الرئيسية', icon: '🏠', build: buildHome }
+  ];
+
+  /* ---------- factory helpers ----------
+     nextOrder keeps the existing 1,2,3… numbering intact so the sort in
+     render.js stays stable and no two items share a position. */
+  function nextOrder(list) {
+    var max = 0;
+    (list || []).forEach(function (x) { max = Math.max(max, x.order || 0); });
+    return max + 1;
+  }
+
+  function addProgram() {
+    C.programs.push({
+      id: 'p' + Date.now().toString(36).slice(-5),
+      order: nextOrder(C.programs),
+      visible: true,
+      title: 'برنامج جديد',
+      short: 'وصف مختصر يظهر في كارت البرنامج.',
+      audience: 'الجميع',
+      duration: '٨ أسابيع',
+      idea: 'اشرحي فكرة البرنامج في سطرين.',
+      why: 'اكتبي هنا ليه البرنامج مهم.',
+      who: ['الفئة المستهدفة'],
+      how: ['خطوة أولى'],
+      out: ['ما الذي تخرج به الطالبة']
+    });
+    markDirty();
+    var at = C.programs.length - 1;   // programs render first, in order
+    renderTab();
+    focusCard(at);
+  }
+
+  function addPackage() {
+    C.packages.push({
+      id: 'k' + Date.now().toString(36).slice(-5),
+      order: nextOrder(C.packages),
+      visible: true,
+      featured: false,
+      name: 'نظام جديد',
+      subtitle: 'وصف قصير للنظام.',
+      cta: 'اختاري باقتكِ',
+      plans: [
+        { sessions: '٤ حصص', price: '0' },
+        { sessions: '٨ حصص', price: '0' }
+      ]
+    });
+    markDirty();
+    // the packages tab renders one card per package, then the notes card,
+    // so the new package sits at its own index
+    var at = C.packages.length - 1;
+    renderTab();
+    focusCard(at);
+  }
+
+  function addReview() {
+    C.testimonials.push({
+      id: 'r' + Date.now().toString(36).slice(-5),
+      order: nextOrder(C.testimonials),
+      visible: true,
+      rating: 5,
+      name: 'اسم الطالبة',
+      initial: '',
+      program: '',
+      text: 'اكتبي هنا رأي الطالبة أو وليّ الأمر.'
+    });
+    markDirty();
+    var at = C.testimonials.length - 1;
+    renderTab();
+    focusCard(at);
+  }
+
+  function addFaq() {
+    C.faq.push({
+      id: 'q' + Date.now().toString(36).slice(-5),
+      order: nextOrder(C.faq),
+      visible: true,
+      q: 'السؤال الجديد؟',
+      a: 'اكتبي الإجابة هنا.'
+    });
+    markDirty();
+    var at = C.faq.length - 1;
+    renderTab();
+    focusCard(at);
+  }
+
+  /* Scroll to the card that was just created and put the caret in its first
+     box, so the owner can start typing straight away.
+
+     The index matters: the_packages tab ends with a "price notes" card that
+     is NOT part of the packages array, so "last card" would be the wrong
+     target there. Each adder therefore reports where it landed. */
+  function focusCard(index) {
+    // The panel is rebuilt synchronously by renderTab(), so the card already
+    // exists here — no requestAnimationFrame needed. Using rAF would also mean
+    // the focus silently never happens when the browser throttles animations
+    // (background tab, reduced-motion, some mobile browsers).
+    var card = $$('.adm-card')[index];
+    if (!card) return;
+
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // brief highlight so the eye finds it in a long list
+    card.classList.add('is-fresh');
+    setTimeout(function () { card.classList.remove('is-fresh'); }, 1800);
+
+    /* Focus the first box meant for TYPING, not the show/hide checkbox in
+       the card header — that checkbox is the first <input> in the card, so a
+       naive "first input" would land there and typing would toggle
+       visibility instead of writing text. */
+    var TEXTY = { text: 1, search: 1, email: 1, url: 1, tel: 1, password: 1 };
+    var target = $$('input, textarea, select', card).filter(function (el) {
+      if (el.disabled || el.readOnly) return false;
+      if (el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') return true;
+      return TEXTY[el.type] === 1;
+    })[0];
+
+    if (target) {
+      target.focus();
+      if (target.select) target.select();
+    }
+  }
+
+  function panel(id) {
+    var p = document.createElement('div');
+    p.id = 'panel-' + id;
+    p.className = 'adm-panel';
+    return p;
+  }
+
+  /* ---------- SECTIONS: إظهار / إخفاء للزائرة ---------- */
+/* Turning a section off does not delete anything. The content stays in
+   content.js, the visitor gets a "قريباً" panel instead, and switching it
+   back on brings every card straight back. The renderers return an empty
+   string while a section is off, so the hidden content is not in the HTML
+   either — which means it is not indexed before you are ready for it. */
+
+var SEC_META = [
+  { key: 'articles',  title: 'المقالات والشروحات',
+    where: 'صفحة المقالات + قسم في الصفحة الرئيسية' },
+  { key: 'reviews',   title: 'آراء الطالبات',
+    where: 'الصفحة الرئيسية + صفحة آراء الطالبات' },
+  { key: 'faq',       title: 'الأسئلة الشائعة',
+    where: 'الرئيسية + صفحة الأسئلة + صفحة تواصل معنا' },
+  { key: 'materials', title: 'المواد المقروءة',
+    where: 'صفحة المواد المقروءة' }
+];
+
+function secState(key) {
+  if (!C.sections) C.sections = {};
+  if (!C.sections[key]) C.sections[key] = { visible: true };
+  return C.sections[key];
+}
+
+function buildSections(host) {
+  var note = document.createElement('div');
+  note.className = 'adm-note';
+  note.innerHTML =
+    'المفتاح ده بيحكم في <strong>اللي بيشوفه الزائرة بس</strong>، ' +
+    'وأنتِ بتقدري تكتبي وتعدّلي عادي. ' +
+    'لما تقفلي أي قسم، الزائرة بتشوف لوحة «قريباً» بدل المحتوى، ' +
+    'والمحتوى بيتشال من صفحة الموقع كلها — فمحدش بيشوفه ولا جوجل ' +
+    'لما يكون مقفول. مش محتاجة تحذفي حاجة؛ ارجعي المفتاح تاني في أي وقت.';
+  host.appendChild(note);
+
+  SEC_META.forEach(function (m) {
+    var s = secState(m.key);
+    var on = s.visible !== false;
+
+    var card = document.createElement('div');
+    card.className = 'adm-card';
+
+    var head = document.createElement('div');
+    head.className = 'adm-card__head';
+    head.innerHTML =
+      '<div><div class="adm-card__title">' + esc(m.title) + '</div>' +
+      '<div class="adm-hint">' + esc(m.where) + '</div></div>';
+
+    var tools = document.createElement('div');
+    tools.className = 'adm-card__tools';
+
+    var sw = document.createElement('label');
+    sw.className = 'adm-toggle';
+    sw.title = on ? 'ظاهر للزائرة' : 'مخفي — الزائرة تشوف «قريباً»';
+    sw.innerHTML = '<input type="checkbox"' + (on ? ' checked' : '') + '>' +
+                   '<span class="adm-toggle__ui"></span>';
+    $('input', sw).addEventListener('change', function (e) {
+      s.visible = e.target.checked;
+      sw.title = s.visible ? 'ظاهر للزائرة' : 'مخفي — الزائرة تشوف «قريباً»';
+      var vis = s.visible !== false;
+      state.textContent = stateText(vis);
+      state.classList.toggle('adm-hint--warn', !vis);
+      renderTabs();          // refresh the count in the tab label
+      markDirty();
+    });
+    tools.appendChild(sw);
+    head.appendChild(tools);
+    card.appendChild(head);
+
+    function stateText(vis) {
+      return vis
+        ? 'ظاهر للزائرة على كل الصفحات.'
+        : 'مخفي الآن. الزائرة تشوف «قريباً بإذن الله» مكان القسم.';
+    }
+
+    var state = document.createElement('p');
+    state.className = 'adm-hint mt-2';
+    state.textContent = stateText(on);
+    if (!on) state.classList.add('adm-hint--warn');
+    card.appendChild(state);
+
+    host.appendChild(card);
+  });
+}
+
+/* ---------- PROGRAMS ---------- */
+  function buildPrograms(host) {
+    C.programs.forEach(function (p) {
+      var card = cardShell(p, p.title, p.order, { list: 'programs' });
+
+      var grid = document.createElement('div');
+      grid.className = 'adm-row';
+      grid.appendChild(field('اسم البرنامج', '', p.title, function (v) { p.title = v; }));
+      grid.appendChild(field('الفئة المستهدفة', 'تظهر كشارة', p.audience, function (v) { p.audience = v; }));
+      card.appendChild(grid);
+
+      grid = document.createElement('div');
+      grid.className = 'adm-row';
+      grid.appendChild(field('المدة', 'مثال: 8 – 12 أسبوع', p.duration, function (v) { p.duration = v; }));
+      grid.appendChild(field('الوصف القصير', 'يظهر في كارت البرنامج', p.short, function (v) { p.short = v; }, true));
+      card.appendChild(grid);
+
+      card.appendChild(field('الفكرة', 'الفقرة الأولى في التفاصيل', p.idea, function (v) { p.idea = v; }, true));
+      card.appendChild(field('لماذا مهم؟', '', p.why, function (v) { p.why = v; }, true));
+
+      [['who', 'الفئة المستهدفة (كل سطر بند)'],
+       ['how', 'طريقة التنفيذ (كل سطر بند)'],
+       ['out', 'المخرج النهائي (كل سطر بند)']].forEach(function (pair) {
+        var f = document.createElement('div');
+        f.className = 'adm-field';
+        // a group of textareas, not a single control: use a span, not a <label>
+        f.innerHTML = '<span class="adm-label">' + esc(pair[1]) + '</span>';
+        var le = listEditor(p[pair[0]], function () {}, 'اكتبي بنداً');
+        f.appendChild(le);
+        var add = document.createElement('button');
+        add.className = 'adm-mini'; add.type = 'button'; add.textContent = '+ أضيفي بند';
+        add.style.marginTop = '8px';
+        add.addEventListener('click', function () {
+          addRow(le, 'بند جديد'); markDirty();
+        });
+        f.appendChild(add);
+        card.appendChild(f);
+      });
+
+      card.appendChild(field('الميزة التنافسية', 'يظهر في مربع مميز', p.edge, function (v) { p.edge = v; }, true));
+
+      host.appendChild(card);
+    });
+  }
+
+  /* ---------- PACKAGES ---------- */
+  function buildPackages(host) {
+    C.packages.forEach(function (pk) {
+      var card = cardShell(pk, pk.name, pk.order, { list: 'packages' });
+
+      var grid = document.createElement('div');
+      grid.className = 'adm-row';
+      grid.appendChild(field('اسم الباقة', '', pk.name, function (v) { pk.name = v; }));
+      grid.appendChild(field('وصف قصير', '', pk.subtitle, function (v) { pk.subtitle = v; }));
+      card.appendChild(grid);
+
+      var feat = document.createElement('div');
+      feat.className = 'adm-field';
+      feat.appendChild(toggle('تمييز هذه الباقة (إطار ذهبي)', pk.featured === true, function (v) { pk.featured = v; }));
+      card.appendChild(feat);
+
+      // plans
+      var f = document.createElement('div');
+      f.className = 'adm-field';
+      f.innerHTML = '<span class="adm-label">الأسعار ' +
+        '<span class="adm-hint">اكتبي: عدد الحصص — السعر</span></span>';
+      var le = listEditor(pk.plans, function () {}, '4 حصص — 200', 'plan');
+      f.appendChild(le);
+      var add = document.createElement('button');
+      add.className = 'adm-mini'; add.type = 'button'; add.textContent = '+ أضيفي باقة سعر';
+      add.style.marginTop = '8px';
+      add.addEventListener('click', function () {
+        addPlanRow(le); markDirty();
+      });
+      f.appendChild(add);
+      card.appendChild(f);
+
+      card.appendChild(field('نص الزرار', '', pk.cta, function (v) { pk.cta = v; }));
+      host.appendChild(card);
+    });
+
+    // price notes
+    var n = C.priceNotes;
+    if (n) {
+      var nCard = document.createElement('div');
+      nCard.className = 'adm-card';
+      nCard.innerHTML = '<div class="adm-card__head"><div class="adm-card__num">' +
+        esc(n.order) + '</div><div class="adm-card__title">' + esc(n.title) + '</div></div>';
+      nCard.appendChild(field('عنوان القسم', '', n.title, function (v) { n.title = v; }));
+
+      n.items.forEach(function (it, i) {
+        var g = document.createElement('div');
+        g.className = 'adm-row';
+        g.appendChild(field('أيقونة ' + (i + 1), '', it.icon, function (v) { it.icon = v; }));
+        g.appendChild(field('عنوان ' + (i + 1), '', it.title, function (v) { it.title = v; }));
+        nCard.appendChild(g);
+        nCard.appendChild(field('وصف ' + (i + 1), '', it.text, function (v) { it.text = v; }, true));
+      });
+
+      nCard.appendChild(field('ملاحظة في الأسفل', '', n.quote, function (v) { n.quote = v; }, true));
+      host.appendChild(nCard);
+    }
+  }
+
+  /* ---------- REVIEWS ---------- */
+  var APPS = ['واتساب', 'تيليجرام', 'ماسنجر', 'أخرى'];
+
+  /* the three shapes a testimonial can take; the values are what render.js
+     decides on, so the panel and the site can never disagree */
+  var REVIEW_KINDS = {
+    text: 'نص',
+    shot: 'سكرين شوت محادثة',
+    both: 'نص + سكرين شوت'
+  };
+
+  function buildReviews(host) {
+    C.testimonials.forEach(function (r) {
+      var card = cardShell(r, r.name, r.order, { list: 'testimonials' });
+
+      var grid = document.createElement('div');
+      grid.className = 'adm-row--3 adm-row';
+      grid.appendChild(field('الاسم', '', r.name, function (v) { r.name = v; }));
+      grid.appendChild(field('الحرف في الأفاتار', 'يظهر لو لم تختاري صورة', r.initial, function (v) { r.initial = v; }));
+      grid.appendChild(field('البرنامج', '', r.program, function (v) { r.program = v; }));
+      card.appendChild(grid);
+
+      /* ---- how this review is presented ----
+         A review may be text, a chat screenshot, or both. The selector at
+         the top switches between them so the card is never cluttered with
+         fields the owner does not need.
+
+         The mode is stored implicitly: `shot` being present at all means the
+         screenshot field exists, which is exactly what render.js checks. So
+         choosing "screenshot" creates an empty slot for the owner to fill
+         rather than adding a second, redundant flag. */
+      var hasShot = ('shot' in r);
+      var mode = hasShot ? (r.text ? 'both' : 'shot') : 'text';
+
+      var modeSel = document.createElement('div');
+      modeSel.className = 'adm-field';
+      modeSel.appendChild(select('نوع الرأي', REVIEW_KINDS, mode,
+        function (v) {
+          if (v === 'text') {
+            delete r.shot;
+          } else {
+            if (!('shot' in r)) r.shot = '';          // open an empty slot
+            if (v === 'shot') {
+              delete r.text;
+            } else if (!r.text) {
+              // 'both' needs words as well; seed them so the field exists
+              r.text = 'اكتبي هنا رأي الطالبة أو وليّ الأمر.';
+            }
+          }
+          if (!r.name) r.name = 'اسم الطالبة';
+          if (!r.program) r.program = 'اسم البرنامج';
+          if (!r.initial) r.initial = (r.name || '؟').charAt(0);
+          markDirty();
+          renderTab();
+        }));
+      card.appendChild(modeSel);
+
+      if (mode !== 'shot') {
+        card.appendChild(field('نص الرأي', '', r.text, function (v) {
+          r.text = v;
+        }, true, true));
+      }
+
+      if (mode !== 'text') {
+        // a screenshot is kept whole (not cropped) and bigger, because the
+        // words inside it are the whole point
+        card.appendChild(imgField('سكرين شوت المحادثة',
+          'صوّر المحادثة من واتساب أو تيليجرام أو ماسنجر، أو اكتبي رابطها. ' +
+          'بتظهر بحجم كبير، والزائرة تقدر تكبّرها بالضغط عليها.',
+          r.shot, function (v) {
+            if (v) r.shot = v; else delete r.shot;
+          }, {
+            wide: true,
+            maxEdge: 900,              // readable when opened full-screen
+            crop: false,               // keep the chat's real shape
+            placeholder: 'اختاري سكرين شوت أو اكتبي رابطها',
+            pickLabel: '📎 اختيار سكرين شوت',
+            clearLabel: '✕ بدون سكرين شوت',
+            emptyText: 'لا سكرين',
+            emptyHint: 'بدون سكرين شوت يظهر نص الرأي فقط.'
+          }));
+
+        var appRow = document.createElement('div');
+        appRow.className = 'adm-row';
+        appRow.appendChild(select('التطبيق', APPS, r.app || 'واتساب',
+          function (v) { r.app = v; }));
+        appRow.appendChild(field('عدد الرسائل', 'اختياري — مثال: من ١٢ رسالة', r.count,
+          function (v) {
+            if (v) r.count = v; else delete r.count;
+          }));
+        card.appendChild(appRow);
+      }
+
+      /* ---- avatar: only worth showing next to words ---- */
+      if (mode === 'text') {
+        card.appendChild(imgField('صورة الطالبة',
+          'اختياري: صورة دائرية صغيرة. النص يظل ظاهرًا دائمًا.',
+          r.img, function (v) {
+            if (v) r.img = v; else delete r.img;
+          }));
+      } else if (r.img) {
+        card.appendChild(imgField('صورة الطالبة', '', r.img, function (v) {
+          if (v) r.img = v; else delete r.img;
+        }));
+      }
+
+      var rate = document.createElement('div');
+      rate.className = 'adm-field';
+      rate.appendChild(select('التقييم', ['5', '4', '3', '2', '1'], String(r.rating || 5),
+        function (v) { r.rating = parseInt(v, 10); }));
+      card.appendChild(rate);
+
+      host.appendChild(card);
+    });
+  }
+
+  /* ---------- ARTICLES ---------- */
+  /* The body is edited as one paragraph per line. render.js splits it back
+     into <p> elements, which keeps the panel simple and means a stray blank
+     line never produces an empty paragraph on the page. */
+  function paragraphsToText(list) {
+    return (list || []).join('\n');
+  }
+
+  function textToParagraphs(text) {
+    return String(text || '')
+      .split('\n')
+      .map(function (s) { return s.trim(); })
+      .filter(Boolean);
+  }
+
+  function addArticle() {
+    var today = new Date().toISOString().slice(0, 10);
+    C.articles.push({
+      id: 'a' + Date.now().toString(36).slice(-5),
+      order: nextOrder(C.articles),
+      visible: true,
+      featured: false,
+      title: 'عنوان المقال',
+      category: 'الحفظ',
+      date: today,
+      excerpt: 'فقرة تشويقية قصيرة بتظهر في الكارت قبل ما تفتحي المقال.',
+      body: ['اكتبي فقرة أولى هنا.', 'اكتبي فقرة ثانية، وكل فقرة في سطر.'],
+      tags: []
+    });
+    markDirty();
+    var at = C.articles.length - 1;
+    renderTab();
+    focusCard(at);
+  }
+
+  function buildArticles(host) {
+    (C.articles || []).forEach(function (a) {
+      var card = cardShell(a, a.title, a.order, { list: 'articles' });
+
+      var grid = document.createElement('div');
+      grid.className = 'adm-row';
+      grid.appendChild(field('عنوان المقال', '', a.title, function (v) { a.title = v; }));
+      grid.appendChild(field('التصنيف', 'يظهر كشارة وفلتر أعلى الصفحة', a.category,
+        function (v) { a.category = v.trim(); }));
+      card.appendChild(grid);
+
+      var grid2 = document.createElement('div');
+      grid2.className = 'adm-row';
+
+      var dateWrap = document.createElement('div');
+      dateWrap.className = 'adm-field';
+      var dLab = document.createElement('label');
+      dLab.className = 'adm-label';
+      dLab.textContent = 'تاريخ النشر';
+      var dIn = document.createElement('input');
+      dIn.type = 'date';
+      dIn.className = 'adm-in';
+      dIn.value = a.date || '';
+      labelFor(dLab, dIn, 'adate');
+      dIn.addEventListener('input', function () { a.date = dIn.value; markDirty(); });
+      dateWrap.appendChild(dLab);
+      dateWrap.appendChild(dIn);
+      grid2.appendChild(dateWrap);
+
+      var featWrap = document.createElement('div');
+      featWrap.className = 'adm-field';
+      featWrap.appendChild(toggle('مقال مميّز (يظهر أولاً)', a.featured === true,
+        function (v) { a.featured = v; }));
+      card.appendChild(grid2);
+      card.appendChild(featWrap);
+
+      card.appendChild(field('فقرة تشويقية', 'سطر أو سطران يظهران قبل فتح المقال',
+        a.excerpt, function (v) { a.excerpt = v; }, true));
+
+      /* the body: one paragraph per line */
+      var bodyField = field('متن المقال',
+        'كل فقرة في سطر — اضغطي Enter بين كل فقرة والتالية',
+        paragraphsToText(a.body),
+        function (v) { a.body = textToParagraphs(v); },
+        true, true);
+      bodyField.classList.add('adm-field--body');
+      card.appendChild(bodyField);
+
+      var pf = document.createElement('div');
+      pf.className = 'adm-field';
+      pf.innerHTML = '<span class="adm-label">الوسوم' +
+        ' <span class="adm-hint">افصلي بينها بفاصلة</span></span>';
+      var tagsIn = document.createElement('input');
+      tagsIn.type = 'text';
+      tagsIn.className = 'adm-in';
+      tagsIn.value = (a.tags || []).join('، ');
+      labelFor({ htmlFor: '' }, tagsIn, 'atags');
+      tagsIn.addEventListener('input', function () {
+        a.tags = tagsIn.value.split(/[،,]/).map(function (s) { return s.trim(); })
+          .filter(Boolean);
+        markDirty();
+      });
+      /* the tags input sits under a <span>, so give it its own label element
+         for screen readers instead of relying on htmlFor */
+      var tagsLab = document.createElement('label');
+      tagsLab.className = 'adm-hint';
+      tagsLab.htmlFor = tagsIn.id;
+      tagsLab.textContent = 'مثال: خطة حفظ، تنظيم الوقت';
+      pf.appendChild(tagsLab);
+      pf.appendChild(tagsIn);
+      card.appendChild(pf);
+
+      host.appendChild(card);
+    });
+  }
+
+  /* ---------- FAQ ---------- */
+  function buildFaq(host) {
+    C.faq.forEach(function (f) {
+      var card = cardShell(f, f.q, f.order, { list: 'faq' });
+      card.appendChild(field('السؤال', '', f.q, function (v) { f.q = v; }));
+      card.appendChild(field('الإجابة', '', f.a, function (v) { f.a = v; }, true));
+      host.appendChild(card);
+    });
+  }
+
+  /* ---------- PAGES ---------- */
+  function buildPages(host) {
+    ['about', 'materials'].forEach(function (key) {
+      var pg = C.pages[key];
+      if (!pg) return;
+      var names = { about: 'صفحة "عن الأكاديمية"', materials: 'صفحة "المواد المقروءة"' };
+      var card = document.createElement('div');
+      card.className = 'adm-card';
+      card.innerHTML = '<div class="adm-card__head"><div class="adm-card__num">' +
+        (key === 'about' ? 'ع' : 'م') + '</div><div class="adm-card__title">' +
+        esc(names[key]) + '</div></div>';
+
+      card.appendChild(field('عنوان الصفحة', '', pg.title, function (v) { pg.title = v; }));
+      card.appendChild(field('العنوان الفرعي', 'يظهر تحت العنوان', pg.subtitle, function (v) { pg.subtitle = v; }, true));
+
+      if (key === 'about') {
+        card.appendChild(field('النص الأساسي', '', pg.lead, function (v) { pg.lead = v; }, true, true));
+        card.appendChild(field('النص الثانوي', '', pg.lead2, function (v) { pg.lead2 = v; }, true, true));
+        card.appendChild(field('الفلسفة', 'يظهر داخل مربع مميز', pg.philosophy, function (v) { pg.philosophy = v; }, true));
+      } else {
+        card.appendChild(field('المقدمة', '', pg.intro, function (v) { pg.intro = v; }, true));
+        card.appendChild(field('عنوان الاقتراح', '', pg.suggestionTitle, function (v) { pg.suggestionTitle = v; }));
+        card.appendChild(field('نص الاقتراح', '', pg.suggestionText, function (v) { pg.suggestionText = v; }, true));
+
+        var f = document.createElement('div');
+        f.className = 'adm-field';
+        f.innerHTML = '<span class="adm-label">المواضيع القادمة ' +
+          '<span class="adm-hint">كل سطر: العنوان — الوصف</span></span>';
+        var le = listEditor(pg.topics, function () {}, 'عنوان — وصف', true);
+        f.appendChild(le);
+        var add = document.createElement('button');
+        add.className = 'adm-mini'; add.type = 'button'; add.textContent = '+ أضيفي موضوع';
+        add.style.marginTop = '8px';
+        add.addEventListener('click', function () {
+          pg.topics.push({ icon: '📖', title: 'موضوع جديد', text: 'وصف مختصر' });
+          markDirty(); renderTab();
+        });
+        f.appendChild(add);
+        card.appendChild(f);
+      }
+
+      host.appendChild(card);
+    });
+  }
+
+  /* ---------- HOME ---------- */
+  function buildHome(host) {
+    var h = C.home;
+
+    // hero
+    var card = document.createElement('div');
+    card.className = 'adm-card';
+    card.innerHTML = '<div class="adm-card__head"><div class="adm-card__num">H</div>' +
+      '<div class="adm-card__title">قسم الهيرو (أول الصفحة)</div></div>';
+    card.appendChild(field('اسم الأكاديمية', '', h.hero.title, function (v) { h.hero.title = v; }));
+    card.appendChild(field('السلوجان', '', h.hero.slogan, function (v) { h.hero.slogan = v; }));
+
+    var g = document.createElement('div');
+    g.className = 'adm-row';
+    g.appendChild(field('الوصف', '', h.hero.desc, function (v) { h.hero.desc = v; }, true));
+    g.appendChild(field('نص الزرار الأساسي', '', h.hero.ctaPrimary, function (v) { h.hero.ctaPrimary = v; }));
+    card.appendChild(g);
+
+    card.appendChild(field('نص الزرار الثانوي', '', h.hero.ctaSecondary, function (v) { h.hero.ctaSecondary = v; }));
+    card.appendChild(field('الوسوم (كل سطر واحد)', '', h.hero.tags.join('\n'), function (v) {
+      h.hero.tags = v.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+    }, true));
+    host.appendChild(card);
+
+    // stats
+    var sc = document.createElement('div');
+    sc.className = 'adm-card';
+    sc.innerHTML = '<div class="adm-card__head"><div class="adm-card__num">S</div>' +
+      '<div class="adm-card__title">شريط الأرقام</div></div>';
+    h.stats.forEach(function (st, i) {
+      var row = document.createElement('div');
+      row.className = 'adm-row--3 adm-row';
+      row.appendChild(field('الرقم ' + (i + 1), '', st.value, function (v) { st.value = parseInt(v, 10) || 0; }));
+      row.appendChild(field('اللاحقة ' + (i + 1), '+ أو % أو /7', st.suffix, function (v) { st.suffix = v; }));
+      row.appendChild(field('الوصف ' + (i + 1), '', st.label, function (v) { st.label = v; }));
+      sc.appendChild(row);
+    });
+    host.appendChild(sc);
+
+    // cta
+    var cc = document.createElement('div');
+    cc.className = 'adm-card';
+    cc.innerHTML = '<div class="adm-card__head"><div class="adm-card__num">C</div>' +
+      '<div class="adm-card__title">شريط الدعوة للتسجيل</div></div>';
+    cc.appendChild(field('الشارة', '', h.cta.offer, function (v) { h.cta.offer = v; }));
+    cc.appendChild(field('العنوان', '', h.cta.title, function (v) { h.cta.title = v; }));
+    cc.appendChild(field('النص', '', h.cta.text, function (v) { h.cta.text = v; }, true));
+    cc.appendChild(field('نص الزرار', '', h.cta.button, function (v) { h.cta.button = v; }));
+    host.appendChild(cc);
+  }
+
+  /* ================================================================
+     4. TABS UI
+     ================================================================ */
+  var currentTab = TABS[0].id;
+
+  function countFor(id) {
+    switch (id) {
+      case 'sections': return SEC_META.filter(function (m) {
+        return secState(m.key).visible !== false;
+      }).length;
+      case 'programs': return C.programs.length;
+      case 'packages': return C.packages.length;
+      case 'reviews':  return C.testimonials.length;
+      case 'articles': return (C.articles || []).length;
+      case 'faq':      return C.faq.length;
+      case 'pages':    return Object.keys(C.pages || {}).length;
+      case 'home':     return 1;
+      default: return 0;
+    }
+  }
+
+  function renderTabs() {
+    var box = $('#admTabs');
+    box.innerHTML = '';
+    TABS.forEach(function (t) {
+      var b = document.createElement('button');
+      b.className = 'adm-tab' + (t.id === currentTab ? ' is-on' : '');
+      b.type = 'button';
+      b.innerHTML = t.icon + ' ' + esc(t.label) +
+        ' <span class="adm-tab__n">' + countFor(t.id) + '</span>';
+      b.addEventListener('click', function () { currentTab = t.id; renderTab(); });
+      box.appendChild(b);
+    });
+  }
+
+  function renderTab() {
+    renderTabs();
+    var host = $('#admPanels');
+    host.innerHTML = '';
+    var def = TABS.filter(function (t) { return t.id === currentTab; })[0];
+    if (!def) return;
+
+    var p = panel(currentTab);
+    p.style.display = 'block';
+    host.appendChild(p);
+    try {
+      def.build(p);
+
+      // The add button sits BELOW the list on purpose: you read what is
+      // already there first, then append.
+      if (def.add) {
+        var addBar = document.createElement('div');
+        addBar.className = 'adm-addbar';
+        var btn = document.createElement('button');
+        btn.className = 'btn btn--green btn--sm';
+        btn.type = 'button';
+        btn.textContent = def.addLabel;
+        btn.addEventListener('click', def.add);
+        addBar.appendChild(btn);
+
+        var hint = document.createElement('span');
+        hint.className = 'adm-hint';
+        hint.textContent = 'العنصر الجديد بيظهر في الآخر — عدّليه ثم احفظي.';
+        addBar.appendChild(hint);
+
+        p.appendChild(addBar);
+      }
+    } catch (e) {
+      p.innerHTML = '<div class="adm-note">حصل خطأ في العرض: ' + esc(e.message) + '</div>';
+      if (window.console) console.error(e);
+    }
+  }
+
+  /* ================================================================
+     5. REGENERATE THE STATIC HTML
+     Marks regions in each page and replaces them with freshly rendered
+     HTML, so what Google reads always equals what you see.
+     ================================================================ */
+  var PAGE_MAP = [
+    { file: 'index.html', regions: {
+        'programs-cards': 'programCards',
+        'stats':          'stats',
+        'pricing-cards':  'priceCards',
+        'reviews':        'reviewSlider',
+        'articles-teaser': 'articleTeaser',
+        'faq':            'faq',
+        'soon:articles':  'soon:articles',
+        'soon:reviews':   'soon:reviews',
+        'soon:faq':       'soon:faq'
+      } },
+    { file: 'programs.html', regions: {
+        'programs-cards':  'programCardsLocal',
+        'program-details': 'programDetails'
+      } },
+    { file: 'pricing.html', regions: {
+        'pricing-cards': 'priceCards',
+        'price-table':  'priceTable',
+        'price-notes':  'priceNotes'
+      } },
+    { file: 'testimonials.html', regions: {
+        'reviews': 'reviewsAll',
+        'soon:reviews': 'soon:reviews'
+      } },
+    { file: 'materials.html', regions: {
+        'topics':            'topics',
+        'materials-hero':    'pageHeroText:materials',
+        'materials-intro':   'materialsIntro',
+        'materials-suggest': 'materialsSuggest',
+        'soon:materials':    'soon:materials'
+      } },
+    { file: 'faq.html', regions: {
+        'faq': 'faq',
+        'soon:faq': 'soon:faq'
+      } },
+    { file: 'articles.html', regions: {
+        'articles': 'articleCards',
+        'soon:articles': 'soon:articles'
+      } },
+    { file: 'contact.html', regions: {
+        'soon:faq': 'soon:faq'
+      } },
+    { file: 'about.html', regions: {
+        'about-hero': 'pageHeroText:about',
+        'about':      'aboutBody'
+      } },
+  ];
+
+  function rebuildPages() {
+    var out = {};
+
+    PAGE_MAP.forEach(function (p) {
+      var res = fetch(p.file, { cache: 'no-store' });
+      out[p.file] = res.then(function (r) {
+        if (!r.ok) throw new Error(p.file + ' → HTTP ' + r.status);
+        return r.text();
+      }).then(function (html) {
+        Object.keys(p.regions).forEach(function (label) {
+          var spec = p.regions[label];
+          var fresh;
+
+          if (spec === 'reviewsAll') {
+            fresh = window.RENDER.reviews();
+          } else if (spec === 'articlesTeaser') {
+            // homepage shows only the three newest
+            fresh = window.RENDER.articleTeaser(3);
+          } else if (spec === 'reviews') {
+            // no argument = every review (the testimonials page)
+            fresh = window.RENDER.reviews();
+          } else if (spec.indexOf('reviews:') === 0) {
+            fresh = window.RENDER.reviews(parseInt(spec.split(':')[1], 10));
+          } else if (spec === 'programCardsLocal') {
+            // inside programs.html a same-page anchor is correct
+            fresh = window.RENDER.programCards('');
+          } else if (spec.indexOf('pageHeroText:') === 0) {
+            // the <h1> + subtitle pair inside .page-hero
+            fresh = window.RENDER.pageHeroText(spec.split(':')[1]);
+          } else if (spec.indexOf('soon:') === 0) {
+            // the "قريباً" panel. Always written; CSS shows it only when the
+            // section is switched off.
+            fresh = window.RENDER.secSoon(spec.slice(5));
+          } else {
+            var fn = window.RENDER[spec];
+            if (typeof fn !== 'function') {
+              throw new Error('renderer missing: ' + spec);
+            }
+            fresh = fn();
+          }
+
+          var s = '<!--qwr:' + label + ':start-->';
+          var e = '<!--qwr:' + label + ':end-->';
+          var si = html.indexOf(s);
+          var ei = html.indexOf(e);
+          if (si === -1 || ei === -1) return;   // marker not present -> skip
+          if (ei < si) return;
+          html = html.slice(0, si + s.length) + '\n' + fresh + '\n' +
+                 html.slice(ei);
+        });
+        /* section on/off: add or remove `is-off` on every <section data-sec>.
+           Same function the build tools use, so the published HTML and the
+           committed HTML cannot drift apart. */
+        return window.RENDER.applySections(html);
+      });
+    });
+
+    return Promise.all(Object.keys(out).map(function (f) {
+      return out[f].then(function (html) { return { file: f, html: html }; });
+    }));
+  }
+
+  /* ================================================================
+     6. OUTPUT
+     ================================================================ */
+  function contentJsText() {
+    var body = JSON.stringify(C, null, 2)
+      // JSON is valid JS — just re-wrap it with the friendly header
+      .replace(/^/gm, '');
+    var header =
+      '/* ==========================================================================\n' +
+      '   أكاديمية قوارير — المحتوى المركزي\n' +
+      '   Single source of truth for all editable content\n' +
+      '\n' +
+      '   Generated by admin.html — edit through the panel, not by hand.\n' +
+      '   ========================================================================== */\n\n';
+    return header + 'window.CONTENT = ' + body + ';\n';
+  }
+
+  function download(name, text, mime) {
+    var blob = new Blob([text], { type: mime || 'text/plain;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+
+  /* ---------- GitHub ---------- */
+  function ghCreds() {
+    try { return JSON.parse(localStorage.getItem(LS_GH) || 'null'); } catch (e) { return null; }
+  }
+  function ghHeaders(token) {
+    return {
+      'Accept': 'application/vnd.github+json',
+      'Authorization': 'Bearer ' + token,
+      'X-GitHub-Api-Version': '2022-11-28'
+    };
+  }
+
+  function gitUrl(owner, repo, branch, path) {
+    return 'https://api.github.com/repos/' + owner + '/' + repo +
+           '/contents/' + path + '?ref=' + encodeURIComponent(branch);
+  }
+
+  function putFile(owner, repo, branch, path, text, token, sha, message) {
+    return fetch(gitUrl(owner, repo, branch, path), {
+      method: 'PUT',
+      headers: Object.assign({ 'Content-Type': 'application/json; charset=utf-8' }, ghHeaders(token)),
+      body: JSON.stringify({
+        message: message,
+        content: btoa(unescape(encodeURIComponent(text))),
+        branch: branch,
+        sha: sha
+      })
+    }).then(function (r) {
+      if (!r.ok) {
+        return r.json().then(function (j) {
+          throw new Error('GitHub ' + r.status + ': ' + (j.message || 'error'));
+        });
+      }
+      return r.json();
+    });
+  }
+
+  function getFile(owner, repo, branch, path, token) {
+    return fetch(gitUrl(owner, repo, branch, path), { headers: ghHeaders(token) })
+      .then(function (r) {
+        if (r.status === 404) return null;
+        if (!r.ok) throw new Error('GitHub ' + r.status);
+        return r.json();
+      });
+  }
+
+  function connectGh() {
+    var owner = $('#ghOwner').value.trim();
+    var repo  = $('#ghRepo').value.trim();
+    var branch = $('#ghBranch').value.trim() || 'main';
+    var token = $('#ghToken').value.trim();
+
+    if (!owner || !repo || !token) { toast('اكملي كل الحقول الأول', 'err'); return; }
+
+    setStatus('جاري الاتصال...');
+    fetch('https://api.github.com/repos/' + owner + '/' + repo, { headers: ghHeaders(token) })
+      .then(function (r) {
+        if (!r.ok) throw new Error('المستودع غير موجود أو الـ Token غير صحيح');
+        return r.json();
+      })
+      .then(function () {
+        localStorage.setItem(LS_GH, JSON.stringify({ owner: owner, repo: repo, branch: branch, token: token }));
+        $('#ghSetup').open = false;
+        $('#btnPublish').disabled = false;
+        setStatus('متصل بـ GitHub', 'saved');
+        toast('تم الاتصال بـ ' + owner + '/' + repo, 'ok');
+      })
+      .catch(function (e) { setStatus('فشل الاتصال', 'error'); toast(e.message, 'err'); });
+  }
+
+  function forgetGh() {
+    localStorage.removeItem(LS_GH);
+    $('#ghToken').value = '';
+    setStatus('غير متصل');
+    toast('تم نسيان بيانات GitHub');
+  }
+
+  function publish() {
+    var g = ghCreds();
+    if (!g) { toast('اتصلي بـ GitHub الأول', 'err'); $('#ghSetup').open = true; return; }
+
+    var btn = $('#btnPublish');
+    btn.disabled = true;
+    setStatus('جاري النشر...');
+    toast('جاري تجهيز الصفحات...');
+
+    rebuildPages()
+      .then(function (files) {
+        toast('جاري الرفع إلى GitHub...');
+        var msg = 'تحديث المحتوى من لوحة التحكم';
+
+        // content.js first
+        return getFile(g.owner, g.repo, g.branch, 'content.js', g.token)
+          .then(function (existing) {
+            return putFile(g.owner, g.repo, g.branch, 'content.js',
+              contentJsText(), g.token, existing ? existing.sha : null, msg);
+          })
+          .then(function () {
+            // then every touched page, one after another (rate limits)
+            return files.reduce(function (chain, f) {
+              return chain.then(function () {
+                return getFile(g.owner, g.repo, g.branch, f.file, g.token)
+                  .then(function (existing) {
+                    if (!existing) return null;   // page not in repo -> skip
+                    return putFile(g.owner, g.repo, g.branch, f.file,
+                      f.html, g.token, existing.sha, msg);
+                  });
+              });
+            }, Promise.resolve());
+          })
+          .then(function () { return files.length; });
+      })
+      .then(function (count) {
+        markClean();
+        setStatus('تم النشر بنجاح', 'saved');
+        toast('تم النشر! الموقع هيتحدّث خلال دقيقة', 'ok');
+        $('#admSaveTxt').textContent = 'تم النشر على GitHub — الموقع بيتحدّث الآن';
+      })
+      .catch(function (e) {
+        btn.disabled = false;
+        setStatus('فشل النشر', 'error');
+        toast(e.message, 'err');
+        if (window.console) console.error(e);
+      });
+  }
+
+  function exportFiles() {
+    rebuildPages()
+      .then(function (files) {
+        download('content.js', contentJsText(), 'text/javascript;charset=utf-8');
+        setTimeout(function () {
+          files.forEach(function (f, i) {
+            setTimeout(function () {
+              download(f.file, f.html, 'text/html;charset=utf-8');
+            }, 420 * (i + 1));
+          });
+        }, 500);
+        markClean();
+        toast('تم تحميل الملفات — ارفعيها على السيرفر', 'ok');
+      })
+      .catch(function (e) { toast(e.message, 'err'); });
+  }
+
+  /* ================================================================
+     7. BOOT
+     ================================================================ */
+  function boot() {
+    loadDraft();
+
+    renderTab();
+
+    $('#btnPublish').addEventListener('click', publish);
+    $('#btnExport').addEventListener('click', exportFiles);
+    $('#ghConnect').addEventListener('click', connectGh);
+    $('#ghForget').addEventListener('click', forgetGh);
+
+    // restore github form values
+    var g = ghCreds();
+    if (g) {
+      $('#ghOwner').value = g.owner;
+      $('#ghRepo').value = g.repo;
+      $('#ghBranch').value = g.branch;
+      $('#ghToken').value = g.token;
+      $('#btnPublish').disabled = false;
+      setStatus('متصل بـ GitHub', 'saved');
+    }
+
+    // keyboard: Ctrl/Cmd + S saves
+    document.addEventListener('keydown', function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        if ($('#btnPublish').disabled) exportFiles(); else publish();
+      }
+    });
+
+    if (window.console) {
+      console.info('%c لوحة تحكم قوارير ', 'background:#06683f;color:#caa959;padding:4px 10px;border-radius:4px;font-weight:700');
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+
+})();

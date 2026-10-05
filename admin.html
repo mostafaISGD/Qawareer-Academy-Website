@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة التحكم | أكاديمية قوارير</title>
+<meta name="description" content="لوحة تحكم موقع أكاديمية قوارير — لتعديل المحتوى فقط.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+/* ===================================================================
+   ADMIN PANEL — styles specific to /admin.html
+   =================================================================== */
+body { background: var(--cream); }
+
+.adm-bar {
+  position: sticky; top: 0; z-index: 300;
+  background: var(--green-dd); color: #fff;
+  border-bottom: 3px solid var(--gold);
+}
+.adm-bar__in {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  min-height: 68px;
+}
+.adm-bar__title {
+  font-family: var(--font-head); font-weight: 800; font-size: 1.08rem;
+  display: flex; align-items: center; gap: 10px;
+}
+.adm-bar__title span { font-size: 1.5rem; }
+.adm-bar__sp { flex: 1; }
+.adm-bar__status {
+  font-size: .84rem; padding: 6px 14px; border-radius: 99px;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22);
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.adm-dot { width: 9px; height: 9px; border-radius: 50%; background: #94a3b8; }
+.adm-dot.is-dirty { background: #fbbf24; }
+.adm-dot.is-saved { background: #4ade80; }
+.adm-dot.is-error { background: #f87171; }
+
+.adm-wrap { padding-block: 26px 70px; }
+
+/* tabs */
+.adm-tabs {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 14px; padding: 7px; margin-bottom: 24px;
+}
+.adm-tab {
+  padding: 11px 20px; border-radius: 10px;
+  font-family: var(--font-head); font-weight: 600; font-size: .96rem;
+  color: var(--text-soft); transition: all .2s;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.adm-tab:hover { background: var(--green-soft); color: var(--green); }
+.adm-tab.is-on { background: var(--green); color: #fff; }
+.adm-tab__n {
+  min-width: 22px; height: 22px; padding-inline: 6px; border-radius: 99px;
+  background: rgba(0,0,0,.1); font-size: .76rem; font-weight: 700;
+  display: inline-grid; place-items: center;
+}
+.adm-tab.is-on .adm-tab__n { background: rgba(255,255,255,.24); }
+
+/* cards */
+.adm-card {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 16px; padding: 22px; margin-bottom: 18px;
+  box-shadow: var(--sh-xs);
+}
+.adm-card__head {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding-bottom: 14px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.adm-card__num {
+  width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--gold-l), var(--gold));
+  color: #3b2c07; display: grid; place-items: center;
+  font-family: var(--font-head); font-weight: 800;
+}
+.adm-card__title {
+  font-family: var(--font-head); font-weight: 700; font-size: 1.06rem;
+  flex: 1; min-width: 140px;
+}
+.adm-card__tools { display: flex; gap: 7px; flex-wrap: wrap; }
+
+.adm-mini {
+  width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center;
+  border: 1px solid var(--line-2); background: var(--paper); color: var(--text-soft);
+  font-size: .95rem; transition: all .18s;
+}
+.adm-mini:hover { background: var(--green-soft); color: var(--green); border-color: var(--green); }
+.adm-mini.is-del:hover { background: #fee2e2; color: #b91c1c; border-color: #ef4444; }
+.adm-mini svg { width: 16px; height: 16px; }
+
+.adm-field { margin-bottom: 15px; }
+.adm-field:last-child { margin-bottom: 0; }
+.adm-label {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font-family: var(--font-head); font-weight: 600; font-size: .9rem;
+  margin-bottom: 6px; color: var(--text);
+}
+.adm-hint { font-size: .78rem; color: var(--muted); font-weight: 400; }
+
+/* "add new item" bar under each list */
+.adm-addbar {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  margin-top: 22px; padding: 16px 18px;
+  border: 2px dashed var(--line-2); border-radius: 14px;
+  background: var(--cream);
+}
+.adm-addbar .adm-hint { flex: 1; min-width: 180px; }
+
+/* the card you just created, highlighted for a moment so the eye finds it */
+.adm-card.is-fresh {
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px var(--green-soft);
+}
+
+.adm-in, .adm-ta, .adm-sel {
+  width: 100%; padding: 12px 14px; border-radius: 10px;
+  border: 1.5px solid var(--line-2); background: var(--bg); color: var(--text);
+  font-size: .97rem; line-height: 1.7; transition: border-color .2s, box-shadow .2s;
+}
+.adm-in:focus, .adm-ta:focus, .adm-sel:focus {
+  outline: none; border-color: var(--green); box-shadow: 0 0 0 4px var(--green-soft);
+}
+.adm-ta { resize: vertical; min-height: 96px; }
+.adm-ta--tall { min-height: 150px; }
+.adm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.adm-row--3 { grid-template-columns: repeat(3, 1fr); }
+
+/* image field (testimonial photo) */
+.adm-imgrow { display: flex; gap: 14px; align-items: flex-start; }
+.adm-imgprev {
+  width: 62px; height: 62px; flex-shrink: 0; border-radius: 50%;
+  overflow: hidden; background: var(--cream);
+  border: 2px solid var(--line-2);
+  display: grid; place-items: center;
+}
+.adm-imgprev img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.adm-imgprev__none { font-size: .62rem; color: var(--muted); text-align: center; line-height: 1.25; }
+.adm-imgcol { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.adm-in--ltr { direction: ltr; text-align: left; }
+.adm-imgbtns { display: flex; gap: 8px; flex-wrap: wrap; }
+.adm-hidden-file { display: none; }
+.adm-hint--warn { color: #b45309; font-weight: 600; }
+
+/* article body: one paragraph per line, so give it real estate */
+.adm-field--body textarea {
+  font-family: var(--font-head);
+  font-size: 1rem;
+  line-height: 2.1;
+  min-height: 240px;
+}
+
+/* list editor (arrays) */
+.adm-list { display: flex; flex-direction: column; gap: 9px; }
+.adm-li {
+  display: flex; align-items: flex-start; gap: 9px;
+  background: var(--cream); border: 1px solid var(--line);
+  border-radius: 10px; padding: 9px 11px;
+}
+.adm-li__grip { color: var(--muted); cursor: grab; padding-top: 9px; flex-shrink: 0; }
+.adm-li__x {
+  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+  display: grid; place-items: center; color: var(--muted);
+  border: 1px solid transparent;
+}
+.adm-li__x:hover { background: #fee2e2; color: #b91c1c; }
+.adm-li textarea {
+  flex: 1; border: none; background: transparent; resize: vertical;
+  min-height: 34px; font-size: .95rem; line-height: 1.7; color: var(--text);
+  padding: 6px 2px;
+}
+.adm-li textarea:focus { outline: none; }
+
+/* toggle */
+.adm-toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.adm-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.adm-toggle__ui {
+  width: 44px; height: 25px; border-radius: 99px; background: var(--line-2);
+  position: relative; transition: background .2s; flex-shrink: 0;
+}
+.adm-toggle__ui::after {
+  content: ''; position: absolute; inset-block-start: 3px; inset-inline-start: 3px;
+  width: 19px; height: 19px; border-radius: 50%; background: #fff;
+  transition: transform .2s;
+}
+.adm-toggle input:checked + .adm-toggle__ui { background: var(--green); }
+.adm-toggle input:checked + .adm-toggle__ui::after { transform: translateX(-19px); }
+.adm-toggle input:focus-visible + .adm-toggle__ui { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* save bar */
+.adm-save {
+  position: fixed; inset-block-end: 0; inset-inline: 0; z-index: 250;
+  background: color-mix(in srgb, var(--bg) 96%, transparent);
+  backdrop-filter: blur(14px); border-top: 1px solid var(--line);
+  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
+}
+.adm-save__in {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  justify-content: center;
+}
+.adm-save__txt { font-size: .88rem; color: var(--muted); text-align: center; width: 100%; }
+
+/* toast */
+.adm-toast {
+  position: fixed; inset-block-end: 92px; inset-inline-start: 50%;
+  transform: translateX(50%) translateY(20px);
+  background: var(--green-dd); color: #fff;
+  padding: 14px 24px; border-radius: 12px; font-weight: 600;
+  box-shadow: var(--sh-lg); opacity: 0; pointer-events: none;
+  transition: all .3s var(--ease); z-index: 400; max-width: 90vw; text-align: center;
+}
+.adm-toast.is-on { opacity: 1; transform: translateX(50%) translateY(0); }
+.adm-toast.is-err { background: #b91c1c; }
+.adm-toast.is-ok { background: var(--green); }
+
+/* setup box */
+.adm-setup {
+  background: var(--gold-soft); border: 1.5px solid var(--gold);
+  border-radius: 16px; padding: 22px; margin-bottom: 22px;
+}
+.adm-setup h3 { color: var(--gold-d); margin-bottom: 10px; font-size: 1.06rem; }
+.adm-setup ol { margin-inline-start: 20px; list-style: decimal; }
+.adm-setup li { margin-bottom: 8px; font-size: .94rem; color: var(--text-soft); }
+.adm-setup code {
+  background: rgba(0,0,0,.07); padding: 2px 7px; border-radius: 5px;
+  font-family: monospace; font-size: .88em; direction: ltr; display: inline-block;
+}
+
+.adm-note {
+  background: var(--green-soft); border: 1px solid rgba(6,104,63,.2);
+  border-radius: 12px; padding: 15px 18px; font-size: .92rem;
+  color: var(--text-soft); margin-bottom: 20px;
+}
+.adm-note strong { color: var(--green); }
+
+/* --------------------------------------------------------------------------
+   LOCK SCREEN — see assets/js/admin-gate.js
+
+   While it is up the editor behind it is not merely covered: admin.js has not
+   been requested yet. `is-locked` also stops the page scrolling, so the panel
+   cannot be dragged out from under the overlay.
+   -------------------------------------------------------------------------- */
+body.is-locked { overflow: hidden; }
+
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background:
+    radial-gradient(1100px 520px at 50% -10%, rgba(202, 169, 89, .22), transparent 62%),
+    linear-gradient(160deg, var(--green-dd), #06251a 70%);
+  overflow: auto;
+}
+.gate__card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 34px 28px 28px;
+  text-align: center;
+  box-shadow: var(--sh-lg);
+  animation: gateIn .32s var(--ease) both;
+}
+@keyframes gateIn {
+  from { opacity: 0; transform: translateY(14px) scale(.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+.gate__ico {
+  font-size: 2.3rem;
+  line-height: 1;
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--green-soft);
+  border: 1px solid rgba(6, 104, 63, .18);
+}
+.gate__title {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--green);
+  margin: 0 0 6px;
+}
+.gate__sub {
+  font-size: .9rem;
+  color: var(--muted);
+  margin: 0 0 22px;
+}
+
+.gate__label {
+  display: block;
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: .86rem;
+  color: var(--text-soft);
+  margin-bottom: 7px;
+}
+.gate__in {
+  width: 100%;
+  padding: 13px 15px;
+  border-radius: 11px;
+  border: 1.5px solid var(--line-2);
+  background: var(--bg);
+  color: var(--text);
+  font-family: monospace;
+  font-size: 1.02rem;
+  letter-spacing: .08em;
+  text-align: center;
+  transition: border-color .2s, box-shadow .2s;
+}
+.gate__in:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px var(--green-soft);
+}
+
+/* a wrong guess shakes the card. It is the only thing that moves, and it is
+   switched off entirely for visitors who prefer reduced motion. */
+.gate__card.is-wrong { animation: gateShake .38s ease; border-color: #dc2626; }
+@keyframes gateShake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-9px); }
+  45%      { transform: translateX(8px); }
+  70%      { transform: translateX(-5px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gate__card, .gate__card.is-wrong { animation: none; }
+}
+
+.gate__msg {
+  color: #b91c1c;
+  font-size: .86rem;
+  font-weight: 600;
+  margin: 10px 0 0;
+}
+.gate__go { width: 100%; margin-top: 16px; }
+
+.gate__keep {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: .84rem;
+  color: var(--text-soft);
+  cursor: pointer;
+}
+.gate__keep input { width: 17px; height: 17px; accent-color: var(--green); }
+
+.gate__hint {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+  font-size: .78rem;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.gate__hint code {
+  background: var(--cream);
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-family: monospace;
+  font-size: .92em;
+  direction: ltr;
+  display: inline-block;
+}
+
+@media (max-width: 700px) {
+  .adm-row, .adm-row--3 { grid-template-columns: 1fr; }
+  .adm-tabs { gap: 4px; }
+  .adm-tab { padding: 9px 13px; font-size: .88rem; }
+  .adm-save__in .btn { flex: 1; }
+  .gate__card { padding: 28px 20px 22px; }
+}
+</style>
+</head>
+
+<body>
+<a class="skip-link" href="#adm-main">تخطّي إلى المحتوى</a>
+
+<!-- ================= TOP BAR ================= -->
+<header class="adm-bar">
+  <div class="container adm-bar__in">
+    <div class="adm-bar__title">
+      <span>⚙️</span> لوحة تحكم أكاديمية قوارير
+    </div>
+    <div class="adm-bar__sp"></div>
+    <div class="adm-bar__status">
+      <span class="adm-dot" id="admDot"></span>
+      <span id="admStatus">جاهز</span>
+    </div>
+    <a class="btn btn--ghost-light btn--sm" href="index.html" target="_blank" rel="noopener">
+      عرض الموقع ↗
+    </a>
+  </div>
+</header>
+
+<main class="adm-wrap" id="adm-main">
+  <div class="container">
+
+    <!-- ===== intro / setup ===== -->
+    <div class="adm-note">
+      <strong>إزاي بتشتغل اللوحة:</strong>
+      عدّلي المحتوى في أي تبويب ← اضغطي «حفظ التغييرات» ← هيتحفظ عندك في المتصفح.
+      بعدين اختاري طريقة النشر: <strong>نشر على GitHub</strong> (الموقع يتحدّث لوحده)
+      أو <strong>تحميل ملف</strong> (ترفعيه بنفسك).
+    </div>
+
+    <!-- GitHub setup (collapsible) -->
+    <details class="adm-setup" id="ghSetup">
+      <summary style="cursor:pointer;font-weight:700">
+        ⚙️ إعداد النشر على GitHub (مرة واحدة فقط)
+      </summary>
+      <div style="margin-top:16px">
+        <h3>خطوات إعداد النشر التلقائي</h3>
+        <ol>
+          <li>روح <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">إعدادات GitHub Tokens</a> واعملي Token جديد.</li>
+          <li>اختاري <code>Fine-grained token</code> ثم <strong>repo access</strong> اختاري مستودع الموقع بتاعكِ.</li>
+          <li>الصلاحيات: فعّلي <code>Contents: Read and write</code> فقط.</li>
+          <li>حددي تاريخ انتهاء (مثلاً 90 يوم) وحدّثيه كل فترة.</li>
+          <li>الصقي الـ Token هنا واسم المستودع واسم الفرع، واضغطي «اتصل».</li>
+        </ol>
+        <div class="adm-row mt-2">
+          <div class="adm-field">
+            <label class="adm-label" for="ghOwner">اسم الحساب (owner)</label>
+            <input class="adm-in" id="ghOwner" placeholder="mostafa" dir="ltr" style="text-align:left">
+          </div>
+          <div class="adm-field">
+            <label class="adm-label" for="ghRepo">اسم المستودع (repo)</label>
+            <input class="adm-in" id="ghRepo" placeholder="qawareer" dir="ltr" style="text-align:left">
+          </div>
+        </div>
+        <div class="adm-row">
+          <div class="adm-field">
+            <label class="adm-label" for="ghBranch">الفرع (branch)</label>
+            <input class="adm-in" id="ghBranch" value="main" dir="ltr" style="text-align:left">
+          </div>
+          <div class="adm-field">
+            <label class="adm-label" for="ghToken">Personal Access Token</label>
+            <input class="adm-in" id="ghToken" type="password" placeholder="ghp_xxxxxxxxxxxx" dir="ltr" style="text-align:left">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn--green btn--sm" id="ghConnect">اتصل بـ GitHub</button>
+          <button class="btn btn--outline btn--sm" id="ghForget">نسيت الاتصال</button>
+        </div>
+        <p class="adm-hint mt-2">
+          🔒 الـ Token بيتحفظ في متصفحكِ أنتِ بس، ومبيتبعتش لحد.
+          إذا استضافة الموقع عامة، يفضل متأكد إن المستودع عام ومحدشش بيستخدم متصفحكِ.
+        </p>
+      </div>
+    </details>
+
+    <!-- ===== tabs ===== -->
+    <nav class="adm-tabs" id="admTabs" aria-label="أقسام المحتوى"></nav>
+
+    <!-- ===== panels ===== -->
+    <div id="admPanels"></div>
+
+  </div>
+</main>
+
+<!-- ================= SAVE BAR ================= -->
+<div class="adm-save">
+  <div class="container adm-save__in">
+    <p class="adm-save__txt" id="admSaveTxt">مفيش تغييرات لسه</p>
+    <button class="btn btn--outline btn--sm" id="btnExport">⬇️ تحميل ملف</button>
+    <button class="btn btn--green btn--sm" id="btnPublish" disabled>
+      ⬆️ حفظ ونشر على GitHub
+    </button>
+  </div>
+</div>
+
+<div class="adm-toast" id="admToast"></div>
+
+<script src="content.js"></script>
+<script src="assets/js/render.js"></script>
+<!-- admin.js is NOT loaded here. assets/js/admin-gate.js draws the lock screen
+     and only pulls the editor in once the passphrase is accepted, so someone who
+     guesses this URL finds a password field instead of the editor. -->
+<script src="assets/js/sha256.js"></script>
+<script src="assets/js/admin-gate.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Qawareer Academy">
+  <circle cx="32" cy="32" r="31" fill="#06683f"/>
+  <circle cx="32" cy="32" r="26" fill="none" stroke="#caa959" stroke-width="2.5"/>
+  <circle cx="32" cy="32" r="21" fill="none" stroke="#caa959" stroke-width="1" opacity=".55"/>
+  <!-- open book -->
+  <path d="M20 22h9c2 0 3 1 3 3v18c0-2-1-3-3-3h-9a2 2 0 0 1-2-2V24a2 2 0 0 1 2-2z"
+        fill="#caa959"/>
+  <path d="M44 22h-9c-2 0-3 1-3 3v18c0-2 1-3 3-3h9a2 2 0 0 0 2-2V24a2 2 0 0 0-2-2z"
+        fill="#caa959" opacity=".82"/>
+  <!-- spine -->
+  <path d="M32 25v18" stroke="#06683f" stroke-width="1.6" stroke-linecap="round"/>
+</svg>

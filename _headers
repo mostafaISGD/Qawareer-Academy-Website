@@ -1,0 +1,87 @@
+# =============================================================================
+#  Cloudflare Pages — custom response headers
+#  https://developers.cloudflare.com/pages/configuration/headers/
+#
+#  Read by Cloudflare Pages and applied to static-asset responses. The file is
+#  never served itself.
+#
+#  Format:  a URL pattern on its own line, then indented "Name: value" lines.
+#  `#` starts a comment. Comments are kept OUTSIDE the blocks on purpose: the
+#  documented examples only show them above a block, so a comment sitting
+#  between two headers is not something to bet a live site on.
+#
+#  WHAT THESE HEADERS DO *NOT* DO
+#  They cannot block anyone. `_headers` sets metadata only -- a request for
+#  /admin.html still returns the file. The only thing that actually refuses to
+#  serve it is Cloudflare Access, a separate setting on your account.
+#  See ADMIN.md -> "حماية لوحة التحكم".
+#
+#  This file lives in the project root so a root-folder deploy gets it too, and
+#  _tools/deploy.py copies it into _dist/ so there is only ever one copy.
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# The admin panel: keep it out of search results and out of every cache.
+# The page already carries <meta name="robots" content="noindex, nofollow">;
+# this is the server-side half of the same promise.
+# -----------------------------------------------------------------------------
+/admin.html
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
+
+# -----------------------------------------------------------------------------
+# Everything else. Header by header:
+#
+#   X-Frame-Options / frame-ancestors
+#       Deny being framed, so nobody can load your site inside theirs and turn a
+#       click on the admin panel into something you did not intend.
+#   X-Content-Type-Options
+#       Stops a browser guessing that a .txt or .md is something else and
+#       running it.
+#   Referrer-Policy
+#       Sends only the origin, never the page path, so a visitor arriving from
+#       the admin panel cannot leak your private URL structure.
+#   Strict-Transport-Security
+#       HTTPS only for the next year. Deliberately WITHOUT includeSubDomains:
+#       if you ever attach another subdomain that is not HTTPS-only it would
+#       break for anyone who has seen this site before. Add it once every
+#       subdomain is covered.
+#   Permissions-Policy
+#       The site uses none of these features.
+#   Content-Security-Policy
+#       'unsafe-inline' is needed for script-src and style-src because every
+#       page carries a small inline <script> (the WhatsApp/Telegram link
+#       filler) and admin.html carries an inline <style> block. Even so it is
+#       worth having: it blocks any external script or frame being injected,
+#       and pins every third party that is actually allowed.
+#
+#       The third parties, and why each one is listed:
+#         fonts.googleapis.com / fonts.gstatic.com
+#             the Cairo + Tajawal fonts
+#         www.youtube-nocookie.com
+#             the intro video is an iframe on the homepage. Without frame-src
+#             it renders as a blank box -- caught in a real browser, not
+#             assumed.
+#         www.googletagmanager.com + google-analytics.com
+#             Google Analytics. It is switched OFF until SITE.gaId is filled
+#             in config.js, and is allowed here anyway so that turning it on
+#             later needs no edit to this file and breaks nothing.
+#
+#       data: in img-src is required -- testimonial photos and chat
+#       screenshots are stored inline as data URLs inside content.js so they
+#       can never 404.
+#
+#       Adding another embed, font provider or analytics service? Add it here
+#       too or it will be blocked. To check, run:
+#           python _tools/serve.py --dist --headers
+#       then open the page and read the browser console.
+# -----------------------------------------------------------------------------
+/*
+  X-Frame-Options: DENY
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com; frame-src 'self' https://www.youtube-nocookie.com; form-action 'self'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()

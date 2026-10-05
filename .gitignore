@@ -1,0 +1,24 @@
+# The upload folder. Regenerate any time with:
+#     python _tools/deploy.py
+_dist/
+_dist.zip
+
+# Any archive of this folder. "Qawareer Academy Website.zip" was sitting in the
+# project root and contained ADMIN.md, README.md and _tools/ -- committing it
+# would have published every private file on the internet, because Cloudflare
+# serves the repository root when there is no build step.
+*.zip
+
+# Build tools. Never needed on the live site, and never committed.
+_tools/
+
+# The owner's own notes. Not pages for visitors.
+ADMIN.md
+README.md
+
+*.bak
+*.log
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
