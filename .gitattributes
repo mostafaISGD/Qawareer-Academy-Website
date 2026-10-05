@@ -1,0 +1,38 @@
+# Keep line endings as LF in the repository.
+#
+# Without this, git on Windows rewrites every file to CRLF the next time it
+# touches it, which makes every diff noisy and -- worse -- means the HTML that
+# Cloudflare serves can differ from the HTML that was tested, by nothing more
+# than invisible carriage returns.
+#
+#   * text=auto      let git detect, but normalise to LF in the repo
+#   *.html  text     the pages
+#   *.js    text     the scripts
+#   *.css   text     the styles
+#   *.json  text     content.js and site.webmanifest
+#   *.txt   text     robots.txt
+#   *.xml   text     sitemap.xml
+#   *.md    text     the docs
+#   *.png *.webp *.svg binary   images must never be touched
+#   *.zip  binary
+
+* text=auto
+
+*.html  text diff=html
+*.js    text diff=js
+*.css   text diff=css
+*.json  text
+*.txt   text
+*.xml   text
+*.webmanifest text
+*.md    text
+
+*.png   binary
+*.webp  binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.svg   text
+*.ico   binary
+*.zip   binary
+*.pdf   binary

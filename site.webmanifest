@@ -1,0 +1,17 @@
+{
+  "name": "أكاديمية قوارير",
+  "short_name": "قوارير",
+  "description": "برامج قرآنية وتربوية رحيمة للنساء والأطفال",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#faf7f0",
+  "theme_color": "#06683f",
+  "icons": [
+    { "src": "assets/img/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "assets/img/logo-sm.png", "sizes": "96x96", "type": "image/png" },
+    { "src": "assets/img/logo.png",  "sizes": "320x320", "type": "image/png" }
+  ]
+}

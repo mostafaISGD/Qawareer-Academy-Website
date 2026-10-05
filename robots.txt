@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /_tools/
+
+# Add your domain in _tools/seo.py (SITE_BASE) to publish
+# an absolute sitemap for Google.
