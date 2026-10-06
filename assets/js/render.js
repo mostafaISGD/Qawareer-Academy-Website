@@ -158,7 +158,84 @@
      ================================================================== */
 
   function pr() {
-    return data().pricing || {};
+    var d = data();
+    if (d.pricing) return d.pricing;
+
+    /* ---- compatibility with the pre-tiers shape ----------------------
+       The panel publishes content.js through JSON.stringify, so a tab left
+       open across a model change still holds the OLD object in memory. If it
+       is used to publish, the new `pricing` block is replaced by `packages`
+       -- and since the panel publishes straight to GitHub, nothing local runs
+       to catch it. renderers would then read an empty model and the pricing
+       section would silently vanish from the live site.
+
+       So: derive a model from `packages` so the section keeps rendering, and
+       shout in the console about what actually happened. One tier holding
+       every system is the closest honest approximation of the old layout. */
+    if (d.packages && d.packages.length) {
+      if (!pr._warned) {
+        pr._warned = true;
+        console.warn('[render] content.js has the old "packages" shape and no '
+          + '"pricing" block. The panel published from a tab that was loaded '
+          + 'before the tiers existed, which overwrote the pricing model. '
+          + 'Reload admin.html (Ctrl+F5) and re-enter the tiers. Showing a '
+          + 'derived fallback until then.');
+      }
+
+      var plans = [];
+      d.packages.forEach(function (pk) {
+        (pk.plans || []).forEach(function (pl) {
+          if (plans.indexOf(pl.sessions) === -1) plans.push(pl.sessions);
+        });
+      });
+
+      var systems = d.packages.map(function (pk, i) {
+        var mins = /(\d+)/.exec(pk.name || '');
+        return {
+          id: 'legacy' + i,
+          minutes: mins ? parseInt(mins[1], 10) : 0,
+          name: pk.name || ('system ' + (i + 1)),
+          subtitle: pk.subtitle || ''
+        };
+      });
+
+      return {
+        currency: 'جنيه',
+        plans: plans.map(function (label, i) {
+          return { id: 'lp' + i, sessions: i + 1, label: label };
+        }),
+        systems: systems,
+        tiers: [{
+          id: 'legacy',
+          order: 1,
+          visible: true,
+          featured: false,
+          theme: 'classic',
+          badge: '',
+          name: 'الباقات',
+          tagline: '',
+          description: '',
+          features: [],
+          cta: (d.packages[0] && d.packages[0].cta) || 'اختاري باقتكِ',
+          rows: systems.map(function (s) {
+            var pk = d.packages.filter(function (x, i) {
+              return 'legacy' + i === s.id;
+            })[0] || {};
+            return {
+              system: s.id,
+              prices: plans.map(function (label) {
+                var hit = (pk.plans || []).filter(function (pl) {
+                  return pl.sessions === label;
+                })[0];
+                return hit ? hit.price : '';
+              })
+            };
+          })
+        }]
+      };
+    }
+
+    return {};
   }
 
   function prSystems() {
