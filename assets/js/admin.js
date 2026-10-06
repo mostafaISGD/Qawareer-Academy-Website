@@ -555,8 +555,8 @@
     { id: 'sections', label: 'الأقسام', icon: '👁', build: buildSections },
     { id: 'programs', label: 'البرامج', icon: '📚', build: buildPrograms,
       addLabel: '+ أضيفي برنامجاً', add: addProgram },
-    { id: 'packages', label: 'الباقات', icon: '💳', build: buildPackages,
-      addLabel: '+ أضيفي نظاماً', add: addPackage },
+    { id: 'packages', label: 'الفئات', icon: '💳', build: buildPackages,
+      addLabel: '+ أضيفي فئة أسعار', add: addPackage },
     { id: 'reviews', label: 'الآراء', icon: '⭐', build: buildReviews,
       addLabel: '+ أضيفي رأياً جديداً', add: addReview },
     { id: 'articles', label: 'المقالات', icon: '📰', build: buildArticles,
@@ -598,23 +598,38 @@
   }
 
   function addPackage() {
-    C.packages.push({
-      id: 'k' + Date.now().toString(36).slice(-5),
-      order: nextOrder(C.packages),
+    var P = priceModel();
+    var plans = P.plans;
+
+    P.tiers.push({
+      id: 't' + Date.now().toString(36).slice(-5),
+      order: nextOrder(P.tiers),
       visible: true,
       featured: false,
-      name: 'نظام جديد',
-      subtitle: 'وصف قصير للنظام.',
+      theme: 'classic',
+      badge: '',
+      name: 'فئة جديدة',
+      tagline: 'عنوان فرعي قصير',
+      description: 'اكتبي هنا وصف الفئة، وليه الزائرة تختارها.',
+            features: [
+        'ميزة أولى بتظهر بعلامة صح',
+        'ميزة ثانية'
+      ],
       cta: 'اختاري باقتكِ',
-      plans: [
-        { sessions: '٤ حصص', price: '0' },
-        { sessions: '٨ حصص', price: '0' }
-      ]
+      // start with every system the site knows about, so the new tier is
+      // complete on the page rather than half-filled and easy to forget
+      rows: P.systems.map(function (s) {
+        return {
+          system: s.id,
+          prices: plans.map(function () { return ''; })
+        };
+      })
     });
+
     markDirty();
-    // the packages tab renders one card per package, then the notes card,
-    // so the new package sits at its own index
-    var at = C.packages.length - 1;
+    // the pricing tab renders the currency/plans card first, then one card
+    // per tier, so the new tier's index is offset by 1
+    var at = P.tiers.length;
     renderTab();
     focusCard(at);
   }
@@ -825,42 +840,249 @@ function buildSections(host) {
   }
 
   /* ---------- PACKAGES ---------- */
+    /* ---------- PRICING TIERS ----------
+     The model is pricing.systems (session lengths) + pricing.plans (bundles)
+   + pricing.tiers (each pointing at systems by id with its own prices array).
+
+     The editor follows that shape: one card per tier, and inside it one row
+     per system with four price boxes aligned to the plan names printed once at
+     the top. Aligning them by eye across free-text fields is exactly the kind
+     of thing that goes wrong quietly, so the plan labels come from
+     pricing.plans and the boxes are numbered the same way. */
+  var TIER_THEMES = {
+    classic: 'أخضر — الباقة الأساسية',
+    golden: 'ذهبي — الباقة المميزة',
+    groups: 'فيروزي — المجموعات'
+  };
+
+  function priceModel() {
+    if (!C.pricing) {
+      C.pricing = { currency: 'جنيه', systems: [], plans: [], tiers: [] };
+    }
+    if (!C.pricing.systems) C.pricing.systems = [];
+    if (!C.pricing.plans) C.pricing.plans = [];
+    if (!C.pricing.tiers) C.pricing.tiers = [];
+    return C.pricing;
+  }
+
+  function sysById(id) {
+    var all = priceModel().systems;
+    for (var i = 0; i < all.length; i++) if (all[i].id === id) return all[i];
+    return null;
+  }
+
+  /* one row: the system name on the left, then a price box per plan */
+  function priceRow(tier, row, plans) {
+    var sys = sysById(row.system);
+    var wrap = document.createElement('div');
+    wrap.className = 'adm-pricerow';
+
+    var head = document.createElement('div');
+    head.className = 'adm-pricerow__head';
+
+    var nameSel = document.createElement('select');
+    nameSel.className = 'adm-sel';
+    priceModel().systems.forEach(function (s) {
+      var o = document.createElement('option');
+      o.value = s.id;
+      o.textContent = s.name;
+      if (s.id === row.system) o.selected = true;
+      nameSel.appendChild(o);
+    });
+    nameSel.addEventListener('change', function () {
+      row.system = nameSel.value;
+      markDirty();
+    });
+    head.appendChild(nameSel);
+
+    var del = document.createElement('button');
+    del.className = 'adm-mini is-del';
+    del.type = 'button';
+    del.title = 'احذفي هذا النظام من الفئة';
+    del.textContent = '🗑';
+    del.addEventListener('click', function () {
+      if (!confirm('احذفي النظام ده من الفئة؟')) return;
+      var i = tier.rows.indexOf(row);
+      if (i > -1) tier.rows.splice(i, 1);
+      markDirty();
+      renderTab();
+    });
+    head.appendChild(del);
+
+    wrap.appendChild(head);
+
+    var cells = document.createElement('div');
+    cells.className = 'adm-pricerow__cells';
+    plans.forEach(function (pl, pi) {
+      var cell = document.createElement('div');
+      cell.className = 'adm-pricecell';
+
+      var lab = document.createElement('span');
+      lab.className = 'adm-label';
+      lab.textContent = pl.label;
+      cell.appendChild(lab);
+
+      var wrapI = document.createElement('div');
+      wrapI.className = 'adm-field';
+      var input = document.createElement('input');
+      input.className = 'adm-in adm-in--ltr';
+      input.type = 'text';
+      input.dir = 'ltr';
+      input.value = (row.prices || [])[pi] || '';
+      input.placeholder = '0';
+      input.addEventListener('input', function () {
+        if (!row.prices) row.prices = [];
+        row.prices[pi] = input.value;
+        markDirty();
+      });
+      wrapI.appendChild(input);
+      cell.appendChild(wrapI);
+
+      cells.appendChild(cell);
+    });
+    wrap.appendChild(cells);
+    return wrap;
+  }
+
   function buildPackages(host) {
-    C.packages.forEach(function (pk) {
-      var card = cardShell(pk, pk.name, pk.order, { list: 'packages' });
+    var P = priceModel();
+    var plans = P.plans;
 
-      var grid = document.createElement('div');
-      grid.className = 'adm-row';
-      grid.appendChild(field('اسم الباقة', '', pk.name, function (v) { pk.name = v; }));
-      grid.appendChild(field('وصف قصير', '', pk.subtitle, function (v) { pk.subtitle = v; }));
-      card.appendChild(grid);
+    /* --- currency + the two shared lists --- */
+    var top = document.createElement('div');
+    top.className = 'adm-card';
+    top.innerHTML = '<div class="adm-card__head"><div class="adm-card__num">' +
+      esc('₪') + '</div><div class="adm-card__title">العملة والباقات</div></div>';
+    top.appendChild(field('اسم العملة (يظهر بعد السعر)', 'مثال: جنيه أو ج.م',
+      P.currency, function (v) { P.currency = v; }));
 
-      var feat = document.createElement('div');
-      feat.className = 'adm-field';
-      feat.appendChild(toggle('تمييز هذه الباقة (إطار ذهبي)', pk.featured === true, function (v) { pk.featured = v; }));
-      card.appendChild(feat);
+    var sysWrap = document.createElement('div');
+    sysWrap.className = 'adm-field';
+    sysWrap.innerHTML = '<span class="adm-label">أنظمة الحصة' +
+      '<span class="adm-hint">الاسم والدقيقة — بتتكرر في كل الفئات</span></span>';
+    P.systems.forEach(function (s) {
+      var g = document.createElement('div');
+      g.className = 'adm-row';
+      g.appendChild(field('اسم النظام', '', s.name, function (v) { s.name = v; }));
+      var m = document.createElement('div');
+      m.className = 'adm-field';
+      var ml = document.createElement('label');
+      ml.className = 'adm-label';
+      ml.textContent = 'عدد الدقائق';
+      var mi = document.createElement('input');
+      mi.type = 'number';
+      mi.className = 'adm-in';
+      mi.dir = 'ltr';
+      mi.value = s.minutes;
+      mi.addEventListener('input', function () { s.minutes = parseInt(mi.value, 10) || 0; markDirty(); });
+      m.appendChild(ml);
+      m.appendChild(mi);
+      g.appendChild(m);
+      sysWrap.appendChild(g);
+    });
+    top.appendChild(sysWrap);
 
-      // plans
+    var planWrap = document.createElement('div');
+    planWrap.className = 'adm-field';
+    planWrap.innerHTML = '<span class="adm-label">عدد الحصص في كل باقة' +
+      '<span class="adm-hint">أعمدة الأسعار بتترتيب دي بالظبط</span></span>';
+    var prow = document.createElement('div');
+    prow.className = 'adm-row adm-row--3';
+    plans.forEach(function (pl) {
+      prow.appendChild(field('الباقة', 'مثال: 4 حصص', pl.label,
+        function (v) { pl.label = v; }));
+    });
+    planWrap.appendChild(prow);
+    top.appendChild(planWrap);
+
+    host.appendChild(top);
+
+    /* --- one card per tier --- */
+    P.tiers.forEach(function (tier) {
+      var card = cardShell(tier, tier.name, tier.order, { list: 'pricing' });
+
+      var g = document.createElement('div');
+      g.className = 'adm-row';
+      g.appendChild(field('اسم الفئة', 'يظهر في اللون المميز', tier.name,
+        function (v) { tier.name = v; }));
+      g.appendChild(field('العنوان الفرعي', 'جملة قصيرة تحت الاسم', tier.tagline,
+        function (v) { tier.tagline = v; }, true));
+      card.appendChild(g);
+
+      card.appendChild(field('الوصف', 'اشرحِي للمعاها إيه الفئة دي وليه تختارها',
+        tier.description, function (v) { tier.description = v; }, true, true));
+
+      /* theme + badge + featured, side by side */
+      var meta = document.createElement('div');
+      meta.className = 'adm-row';
+
+      var thWrap = document.createElement('div');
+      thWrap.className = 'adm-field';
+      thWrap.appendChild(select('لون الفئة', TIER_THEMES, tier.theme || 'classic',
+        function (v) { tier.theme = v; }));
+      meta.appendChild(thWrap);
+      meta.appendChild(field('شريط صغير', 'مثال: الأكثر طلباً — اتركيه فاضي لل invisible',
+        tier.badge, function (v) { tier.badge = v; }));
+
+      var featWrap = document.createElement('div');
+      featWrap.className = 'adm-field';
+      featWrap.appendChild(toggle('الفئة المميزة (ظهور أكبر وظل ذهبي)',
+        tier.featured === true, function (v) { tier.featured = v; }));
+      meta.appendChild(featWrap);
+      card.appendChild(meta);
+
+      /* features, one per line */
       var f = document.createElement('div');
       f.className = 'adm-field';
-      f.innerHTML = '<span class="adm-label">الأسعار ' +
-        '<span class="adm-hint">اكتبي: عدد الحصص — السعر</span></span>';
-      var le = listEditor(pk.plans, function () {}, '4 حصص — 200', 'plan');
-      f.appendChild(le);
-      var add = document.createElement('button');
-      add.className = 'adm-mini'; add.type = 'button'; add.textContent = '+ أضيفي باقة سعر';
-      add.style.marginTop = '8px';
-      add.addEventListener('click', function () {
-        addPlanRow(le); markDirty();
+      f.innerHTML = '<span class="adm-label">مميزات الفئة' +
+        '<span class="adm-hint">كل سطر ميزة، بتظهر بعلامة صح في اللون</span></span>';
+      var fTa = document.createElement('textarea');
+      fTa.className = 'adm-ta adm-ta--tall';
+      fTa.dir = 'auto';
+      fTa.value = (tier.features || []).join('\n');
+      fTa.addEventListener('input', function () {
+        tier.features = fTa.value.split('\n')
+          .map(function (s) { return s.trim(); })
+          .filter(Boolean);
+        markDirty();
       });
-      f.appendChild(add);
+      f.appendChild(fTa);
       card.appendChild(f);
 
-      card.appendChild(field('نص الزرار', '', pk.cta, function (v) { pk.cta = v; }));
+      /* prices, one row per system */
+      var pr = document.createElement('div');
+      pr.className = 'adm-field';
+      pr.innerHTML = '<span class="adm-label">الأسعار' +
+        '<span class="adm-hint">صف لكل نظام، والأعمدة بترتيب الباقات اللي فوق</span></span>';
+      (tier.rows || []).forEach(function (row) {
+        pr.appendChild(priceRow(tier, row, plans));
+      });
+
+      var addSys = document.createElement('button');
+      addSys.className = 'adm-mini';
+      addSys.type = 'button';
+      addSys.textContent = '+ أضيفي نظام لهذه الفئة';
+      addSys.style.marginTop = '8px';
+      addSys.addEventListener('click', function () {
+        var first = priceModel().systems[0];
+        if (!first) { toast('لا توجد أنظمة — أضيفي نظاماً أولاً'); return; }
+        tier.rows.push({
+          system: first.id,
+          prices: plans.map(function () { return ''; })
+        });
+        markDirty();
+        renderTab();
+      });
+      pr.appendChild(addSys);
+      card.appendChild(pr);
+
+      card.appendChild(field('نص زرار الحجز', '', tier.cta,
+        function (v) { tier.cta = v; }));
+
       host.appendChild(card);
     });
 
-    // price notes
+    /* --- price notes: unchanged, still here --- */
     var n = C.priceNotes;
     if (n) {
       var nCard = document.createElement('div');
@@ -870,11 +1092,11 @@ function buildSections(host) {
       nCard.appendChild(field('عنوان القسم', '', n.title, function (v) { n.title = v; }));
 
       n.items.forEach(function (it, i) {
-        var g = document.createElement('div');
-        g.className = 'adm-row';
-        g.appendChild(field('أيقونة ' + (i + 1), '', it.icon, function (v) { it.icon = v; }));
-        g.appendChild(field('عنوان ' + (i + 1), '', it.title, function (v) { it.title = v; }));
-        nCard.appendChild(g);
+        var g2 = document.createElement('div');
+        g2.className = 'adm-row';
+        g2.appendChild(field('أيقونة ' + (i + 1), '', it.icon, function (v) { it.icon = v; }));
+        g2.appendChild(field('عنوان ' + (i + 1), '', it.title, function (v) { it.title = v; }));
+        nCard.appendChild(g2);
         nCard.appendChild(field('وصف ' + (i + 1), '', it.text, function (v) { it.text = v; }, true));
       });
 
@@ -1227,7 +1449,7 @@ function buildSections(host) {
         return secState(m.key).visible !== false;
       }).length;
       case 'programs': return C.programs.length;
-      case 'packages': return C.packages.length;
+      case 'packages': return (C.pricing && C.pricing.tiers || []).length;
       case 'reviews':  return C.testimonials.length;
       case 'articles': return (C.articles || []).length;
       case 'faq':      return C.faq.length;
@@ -1311,7 +1533,7 @@ function buildSections(host) {
         'program-details': 'programDetails'
       } },
     { file: 'pricing.html', regions: {
-        'pricing-cards': 'priceCards',
+        'pricing-cards': 'priceTiers',
         'price-table':  'priceTable',
         'price-notes':  'priceNotes'
       } },

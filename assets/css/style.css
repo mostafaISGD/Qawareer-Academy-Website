@@ -2299,3 +2299,273 @@ a.contact-card__val:hover { color: var(--gold-d); }
 [data-sec].is-off > .container { display: none; }
 [data-sec].is-off > .sec-soon { display: block; }
 
+
+/* --------------------------------------------------------------------------
+   19. PRICING TIERS
+
+   Three families so the eye can tell them apart before reading a number:
+
+     classic  deep brand green   the default, calm
+     golden   gold               the premium one, with a dark-on-gold banner
+     groups   petrol             a sibling of the green, so it reads as part
+                                 of the same family and not a third brand
+
+   Every tier sets the same set of custom properties and nothing below reads
+   anything else, so re-theming means editing three blocks.
+
+   --tier-on* exist because white text on gold does not pass contrast: the
+   golden banner carries dark brown ink instead. A second variable set keeps
+   that from leaking into the other two.
+   -------------------------------------------------------------------------- */
+.tier {
+  --tier:          var(--green);
+  --tier-deep:     #04351f;
+  --tier-soft:     var(--green-soft);
+  --tier-ink:      var(--green);
+  --tier-border:   var(--line);
+
+  --tier-on:       #ffffff;
+  --tier-on-90:    rgba(255, 255, 255, .90);
+  --tier-on-88:    rgba(255, 255, 255, .88);
+  --tier-on-75:    rgba(255, 255, 255, .75);
+  --tier-on-18:    rgba(255, 255, 255, .18);
+  --tier-on-30:    rgba(255, 255, 255, .30);
+  --tier-chip-ink: #ffffff;
+
+  margin-bottom: 34px;
+}
+.tier--golden {
+  /* both stops stay light: the ink on this banner is dark brown, so a
+     light->dark gradient would drop it to 2.5:1 at the dark end */
+  --tier:          #d9ad47;
+  --tier-deep:     #b8912f;
+  --tier-soft:     var(--gold-soft);
+  --tier-ink:      var(--gold-d);
+  --tier-border:   var(--gold);
+
+  --tier-on:       #33260a;
+  --tier-on-90:    rgba(51, 38, 10, .92);
+  --tier-on-88:    rgba(51, 38, 10, .88);
+  --tier-on-75:    rgba(51, 38, 10, .78);
+  --tier-on-18:    rgba(255, 255, 255, .42);
+  --tier-on-30:    rgba(255, 255, 255, .70);
+  --tier-chip-ink: #33260a;
+}
+.tier--groups {
+  --tier:          #0d5a60;
+  --tier-deep:     #06383c;
+  --tier-soft:     #e4f1f1;
+  --tier-ink:      #0d5a60;
+  --tier-border:   #bcd8d9;
+}
+[data-theme='dark'] .tier--groups {
+  --tier:        #17707a;
+  --tier-deep:   #0a4f56;
+  --tier-soft:   rgba(23, 112, 122, .22);
+  --tier-ink:    #5fc4ca;
+  --tier-border: rgba(23, 112, 122, .5);
+}
+
+/* --- the banner ------------------------------------------------------- */
+.tier__banner {
+  position: relative;
+  border-radius: var(--r);
+  padding: 30px 30px 28px;
+  margin-bottom: 20px;
+  color: var(--tier-on);
+  background: linear-gradient(135deg, var(--tier) 0%, var(--tier-deep) 100%);
+  overflow: hidden;
+}
+/* a soft highlight so a flat colour is not lifeless */
+.tier__banner::after {
+  content: '';
+  position: absolute;
+  inset-block-start: -60%;
+  inset-inline-end: -10%;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .07);
+  pointer-events: none;
+}
+.tier__banner > * { position: relative; z-index: 1; }
+
+.tier__badge {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 99px;
+  background: var(--tier-on-18);
+  border: 1px solid var(--tier-on-30);
+  color: var(--tier-on);
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: .8rem;
+  margin-bottom: 12px;
+}
+.tier__name {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 1.7rem;
+  line-height: 1.4;
+  margin: 0 0 4px;
+  /* the global h3 rule paints headings green; inside a coloured banner that
+     has to be overridden explicitly or the title comes out unreadable */
+  color: var(--tier-on);
+}
+.tier__tagline {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--tier-on-90);
+  margin: 0 0 12px;
+}
+.tier__desc {
+  max-width: 62ch;
+  line-height: 1.95;
+  color: var(--tier-on-88);
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* the feature checklist */
+.tier__feats {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: grid;
+  /* two columns, not four: at four the columns get narrow enough that the
+     longer features wrap mid-phrase */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 26px;
+  max-width: 68ch;
+}
+.tier__feats li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: .93rem;
+  line-height: 1.7;
+  color: var(--tier-on-90);
+}
+.tier__feats svg {
+  flex-shrink: 0;
+  margin-top: 4px;
+  color: var(--tier-on-75);
+}
+
+/* --- the system cards ------------------------------------------------- */
+.tier__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+/* a tier with one system gets one centred card, sized like a normal column so
+   the stacked plan rows keep the same label-to-price spacing as the other two
+   tiers instead of stretching across an empty band */
+.tier__grid--single {
+  grid-template-columns: minmax(0, 400px);
+  justify-content: center;
+}
+
+.tier__sys {
+  background: var(--paper);
+  border: 1px solid var(--tier-border);
+  border-radius: var(--r);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--t), box-shadow var(--t);
+}
+.tier__sys:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--sh);
+}
+
+.tier__syshead {
+  padding: 20px 22px 18px;
+  background: var(--tier-soft);
+  border-bottom: 1px solid var(--tier-border);
+}
+.tier__mins {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 99px;
+  background: var(--tier);
+  color: var(--tier-chip-ink);
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: .78rem;
+  margin-bottom: 10px;
+}
+.tier__syshead h4 {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 1.08rem;
+  margin: 0 0 6px;
+  color: var(--tier-ink);
+}
+[data-theme='dark'] .tier__syshead h4 { color: var(--tier-ink); }
+.tier__syshead p {
+  margin: 0;
+  font-size: .88rem;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.tier__plans { padding: 8px 14px 6px; flex: 1; }
+
+/* --- the premium lift ------------------------------------------------- */
+.tier.is-featured .tier__sys { box-shadow: var(--sh-gold); }
+.tier.is-featured .tier__banner { box-shadow: var(--sh-gold); }
+
+/* --- the per-tier call to action -------------------------------------- */
+.tier__cta { margin-top: 18px; display: flex; justify-content: center; }
+.tier__btn {
+  width: 100%;
+  max-width: 560px;
+  background: var(--tier);
+  color: var(--tier-chip-ink);
+  border: 2px solid var(--tier);
+}
+.tier__btn:hover {
+  background: var(--tier-deep);
+  border-color: var(--tier-deep);
+  color: var(--tier-chip-ink);
+}
+
+/* --- the single-system line under the comparison table ---------------- */
+.tier-ones {
+  margin-top: 20px;
+  padding: 18px 20px;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r);
+  background: var(--cream);
+}
+.tier-one {
+  margin: 0;
+  font-size: .96rem;
+  line-height: 1.9;
+  color: var(--text-soft);
+}
+.tier-one + .tier-one { margin-top: 8px; }
+.tier-one strong { color: var(--green); }
+.tier-one b { color: var(--text); }
+
+/* the tier name row in the comparison table */
+.table__tier {
+  font-family: var(--font-head);
+  font-weight: 800;
+  color: #fff !important;
+  background: var(--green);
+  border-inline-end-color: rgba(255, 255, 255, .25) !important;
+}
+.table__tier + .table__tier { background: #d9ad47; color: #33260a !important; }
+
+@media (max-width: 980px) {
+  .tier__feats { grid-template-columns: 1fr; }
+  .tier__grid { grid-template-columns: 1fr; }
+  .tier__grid--single { grid-template-columns: 1fr; }
+  .tier__name { font-size: 1.45rem; }
+  .tier__banner { padding: 24px 22px 22px; }
+}
