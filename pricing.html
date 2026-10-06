@@ -139,54 +139,334 @@
     <div class="container">
       <div class="sec-head sec-head--center">
         <span class="kicker">نظرة عامة</span>
-        <h2>ثلاثة أنظمة، وأربعة باقات لكل نظام</h2>
-        <p>اختاري مدة الحصة وعدد الحصص الذي يناسبكِ. كل الأسعار بالجنيه المصري.</p>
+        <h2>اختاري الفئة التي تناسبكِ</h2>
+        <p>
+          ثلاث فئات، وكل فئة فيها أنظمة الحصة الثلاث (30 و 45 و 60 دقيقة)
+          بأربع باقات (4 و 8 و 12 و 16 حصة). كل الأسعار بالجنيه المصري.
+        </p>
         <div class="rule"></div>
       </div>
 
-      <div class="grid g-3 g-pricing">
 <!--qwr:pricing-cards:start-->
-        <div class="price-card" data-reveal>
-          <div class="price-card__head">
-            <h3>نظام الـ 30 دقيقة</h3>
-            <p>مثالي للحفظ اليومي السريع</p>
+        <section class="tier tier--classic" data-tier="classic">
+          <div class="tier__banner" data-reveal>
+            <h3 class="tier__name">الباقات التقليدية</h3>
+            <p class="tier__tagline">البداية المتينة</p>
+            <p class="tier__desc">الاختيار الأمتن لو بتبدئي من الصفر أو عايزةِ خطة واضحة من غير تعقيد. نفس الالتزام والمتابعة، بإيقاع مريح يناسب جدولكِ.</p>
+            <ul class="tier__feats">
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                   stroke-linejoin="round" aria-hidden="true">
+                <path d="m4 12.5 5 5L20 6.5"/>
+              </svg>
+              <span>خطة حفظ متدرجة لكل طالبة على حدة</span>
+            </li>
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                   stroke-linejoin="round" aria-hidden="true">
+                <path d="m4 12.5 5 5L20 6.5"/>
+              </svg>
+              <span>متابعة أسبوعية عبر الواتساب</span>
+            </li>
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                   stroke-linejoin="round" aria-hidden="true">
+                <path d="m4 12.5 5 5L20 6.5"/>
+              </svg>
+              <span>مراجعة وتصحيح بعد كل حصة</span>
+            </li>
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                   stroke-linejoin="round" aria-hidden="true">
+                <path d="m4 12.5 5 5L20 6.5"/>
+              </svg>
+              <span>تسجيل الحصة متاح عند الحاجة</span>
+            </li>
+            </ul>
           </div>
-          <div class="price-card__body">
-            <div class="plan"><span class="plan__label">4 حصص</span><span class="plan__price">200 <small>جنيه</small></span></div>
-            <div class="plan"><span class="plan__label">8 حصص</span><span class="plan__price">350 <small>جنيه</small></span></div>
-            <div class="plan"><span class="plan__label">12 حصة</span><span class="plan__price">500 <small>جنيه</small></span></div>
-            <div class="plan"><span class="plan__label">16 حصة</span><span class="plan__price">650 <small>جنيه</small></span></div>
-            <a class="btn btn--gold btn--green btn--block mt-4" href="pricing.html" data-wa>اختاري باقتكِ</a>
+          <div class="tier__grid" data-reveal>
+          <div class="tier__sys">
+            <div class="tier__syshead">
+              <span class="tier__mins">30 دقيقة</span>
+              <h4>نظام الـ 30 دقيقة</h4>
+              <p>للحفظ اليومي السريع والمراجعة المركّزة</p>
+            </div>
+            <div class="tier__plans">
+            <div class="plan">
+              <span class="plan__label">4 حصص</span>
+              <span class="plan__price">200 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">8 حصص</span>
+              <span class="plan__price">350 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">12 حصة</span>
+              <span class="plan__price">500 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">16 حصة</span>
+              <span class="plan__price">650 <small>جنيه</small></span>
+            </div>
+            </div>
           </div>
-        </div>
-        <div class="price-card price-card--featured" data-reveal data-delay="1">
-          <div class="price-card__head">
-            <h3>نظام الـ 45 دقيقة</h3>
-            <p>مثالي للتجويد والتلاوة المتقنة</p>
+          <div class="tier__sys">
+            <div class="tier__syshead">
+              <span class="tier__mins">45 دقيقة</span>
+              <h4>نظام الـ 45 دقيقة</h4>
+              <p>توازن بين الحفظ والتلاوة والتسميع</p>
+            </div>
+            <div class="tier__plans">
+            <div class="plan">
+              <span class="plan__label">4 حصص</span>
+              <span class="plan__price">280 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">8 حصص</span>
+              <span class="plan__price">500 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">12 حصة</span>
+              <span class="plan__price">700 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">16 حصة</span>
+              <span class="plan__price">900 <small>جنيه</small></span>
+            </div>
+            </div>
           </div>
-          <div class="price-card__body">
-            <div class="plan"><span class="plan__label">4 حصص</span><span class="plan__price">280 <small>جنيه</small></span></div>
-            <div class="plan"><span class="plan__label">8 حصص</span><span class="plan__price">500 <small>جنيه</small></span></div>
-            <div class="plan"><span class="plan__label">12 حصة</span><span class="plan__price">700 <small>جنيه</small></span></div>
-            <div class="plan"><span class="plan__label">16 حصة</span><span class="plan__price">900 <small>جنيه</small></span></div>
-            <a class="btn btn--gold btn--block mt-4" href="pricing.html" data-wa>اختاري باقتكِ</a>
+          <div class="tier__sys">
+            <div class="tier__syshead">
+              <span class="tier__mins">60 دقيقة</span>
+              <h4>نظام الـ 60 دقيقة</h4>
+              <p>حصة شاملة — تجويد وتلاوة وتسميع</p>
+            </div>
+            <div class="tier__plans">
+            <div class="plan">
+              <span class="plan__label">4 حصص</span>
+              <span class="plan__price">350 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">8 حصص</span>
+              <span class="plan__price">620 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">12 حصة</span>
+              <span class="plan__price">880 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">16 حصة</span>
+              <span class="plan__price">1,100 <small>جنيه</small></span>
+            </div>
+            </div>
           </div>
-        </div>
-        <div class="price-card" data-reveal data-delay="2">
-          <div class="price-card__head">
-            <h3>نظام الـ 60 دقيقة</h3>
-            <p>حصة شاملة — تجويد + تلاوة + تسميع</p>
           </div>
-          <div class="price-card__body">
-            <div class="plan"><span class="plan__label">4 حصص</span><span class="plan__price">350 <small>جنيه</small></span></div>
-            <div class="plan"><span class="plan__label">8 حصص</span><span class="plan__price">620 <small>جنيه</small></span></div>
-            <div class="plan"><span class="plan__label">12 حصة</span><span class="plan__price">880 <small>جنيه</small></span></div>
-            <div class="plan"><span class="plan__label">16 حصة</span><span class="plan__price">1,100 <small>جنيه</small></span></div>
-            <a class="btn btn--gold btn--green btn--block mt-4" href="pricing.html" data-wa>اختاري باقتكِ</a>
+          <div class="tier__cta" data-reveal>
+            <a class="btn btn--block tier__btn" href="pricing.html"
+               data-wa data-msg="السلام عليكم، حابّة أعرف تفاصيل أكثر عن الباقات التقليدية">اختاري باقتكِ</a>
           </div>
-        </div>
+        </section>
+        <section class="tier tier--golden is-featured" data-tier="golden">
+          <div class="tier__banner" data-reveal data-delay="1">
+            <span class="tier__badge">الأكثر طلباً</span>
+            <h3 class="tier__name">الباقات الذهبية</h3>
+            <p class="tier__tagline">عناية أقرب ووقت أطول</p>
+            <p class="tier__desc">لما تحبي تكوني حاضرة بجدية أو عايزة تخرجي أسرع. وقت أطول، متابعة أكثف، وأولوية في اختيار المواعيد.</p>
+            <ul class="tier__feats">
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                   stroke-linejoin="round" aria-hidden="true">
+                <path d="m4 12.5 5 5L20 6.5"/>
+              </svg>
+              <span>حصة أطول مع تسميع وتسريع للحفظ</span>
+            </li>
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                   stroke-linejoin="round" aria-hidden="true">
+                <path d="m4 12.5 5 5L20 6.5"/>
+              </svg>
+              <span>تقرير تقدّم مكتوب كل أسبوعين</span>
+            </li>
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                   stroke-linejoin="round" aria-hidden="true">
+                <path d="m4 12.5 5 5L20 6.5"/>
+              </svg>
+              <span>الخطة تتحدّث معكِ مع كل مرحلة</span>
+            </li>
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                   stroke-linejoin="round" aria-hidden="true">
+                <path d="m4 12.5 5 5L20 6.5"/>
+              </svg>
+              <span>أولوية في مواعيد الحصة</span>
+            </li>
+            </ul>
+          </div>
+          <div class="tier__grid" data-reveal data-delay="1">
+          <div class="tier__sys">
+            <div class="tier__syshead">
+              <span class="tier__mins">30 دقيقة</span>
+              <h4>نظام الـ 30 دقيقة</h4>
+              <p>للحفظ اليومي السريع والمراجعة المركّزة</p>
+            </div>
+            <div class="tier__plans">
+            <div class="plan">
+              <span class="plan__label">4 حصص</span>
+              <span class="plan__price">300 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">8 حصص</span>
+              <span class="plan__price">550 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">12 حصة</span>
+              <span class="plan__price">750 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">16 حصة</span>
+              <span class="plan__price">1,000 <small>جنيه</small></span>
+            </div>
+            </div>
+          </div>
+          <div class="tier__sys">
+            <div class="tier__syshead">
+              <span class="tier__mins">45 دقيقة</span>
+              <h4>نظام الـ 45 دقيقة</h4>
+              <p>توازن بين الحفظ والتلاوة والتسميع</p>
+            </div>
+            <div class="tier__plans">
+            <div class="plan">
+              <span class="plan__label">4 حصص</span>
+              <span class="plan__price">450 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">8 حصص</span>
+              <span class="plan__price">750 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">12 حصة</span>
+              <span class="plan__price">1,050 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">16 حصة</span>
+              <span class="plan__price">1,350 <small>جنيه</small></span>
+            </div>
+            </div>
+          </div>
+          <div class="tier__sys">
+            <div class="tier__syshead">
+              <span class="tier__mins">60 دقيقة</span>
+              <h4>نظام الـ 60 دقيقة</h4>
+              <p>حصة شاملة — تجويد وتلاوة وتسميع</p>
+            </div>
+            <div class="tier__plans">
+            <div class="plan">
+              <span class="plan__label">4 حصص</span>
+              <span class="plan__price">550 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">8 حصص</span>
+              <span class="plan__price">950 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">12 حصة</span>
+              <span class="plan__price">1,350 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">16 حصة</span>
+              <span class="plan__price">1,650 <small>جنيه</small></span>
+            </div>
+            </div>
+          </div>
+          </div>
+          <div class="tier__cta" data-reveal data-delay="1">
+            <a class="btn btn--block tier__btn" href="pricing.html"
+               data-wa data-msg="السلام عليكم، حابّة أعرف تفاصيل أكثر عن الباقات الذهبية">احجزي الباقة الذهبية</a>
+          </div>
+        </section>
+        <section class="tier tier--groups" data-tier="groups">
+          <div class="tier__banner" data-reveal data-delay="2">
+            <span class="tier__badge">أقل تكلفة للحصة</span>
+            <h3 class="tier__name">باقات المجموعات</h3>
+            <p class="tier__tagline">مع أهلكِ وأبناءكِ</p>
+            <p class="tier__desc">الحصة الجماعية بأقل تكلفة: البنت أو الولد وأمّه أو أخته في نفس الوقت، والمعلمة تخصّص لكل واحد فيهم.</p>
+            <ul class="tier__feats">
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                   stroke-linejoin="round" aria-hidden="true">
+                <path d="m4 12.5 5 5L20 6.5"/>
+              </svg>
+              <span>٦٠ دقيقة — الحصة كلها</span>
+            </li>
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                   stroke-linejoin="round" aria-hidden="true">
+                <path d="m4 12.5 5 5L20 6.5"/>
+              </svg>
+              <span>أقل تكلفة للحصة على الإطلاق</span>
+            </li>
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                   stroke-linejoin="round" aria-hidden="true">
+                <path d="m4 12.5 5 5L20 6.5"/>
+              </svg>
+              <span>متابعة فردية لكل طفل</span>
+            </li>
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                   stroke-linejoin="round" aria-hidden="true">
+                <path d="m4 12.5 5 5L20 6.5"/>
+              </svg>
+              <span>مثالية للأسر والأخوات</span>
+            </li>
+            </ul>
+          </div>
+          <div class="tier__grid tier__grid--single" data-reveal data-delay="2">
+          <div class="tier__sys">
+            <div class="tier__syshead">
+              <span class="tier__mins">60 دقيقة</span>
+              <h4>نظام الـ 60 دقيقة</h4>
+              <p>حصة شاملة — تجويد وتلاوة وتسميع</p>
+            </div>
+            <div class="tier__plans">
+            <div class="plan">
+              <span class="plan__label">4 حصص</span>
+              <span class="plan__price">150 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">8 حصص</span>
+              <span class="plan__price">250 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">12 حصة</span>
+              <span class="plan__price">350 <small>جنيه</small></span>
+            </div>
+            <div class="plan">
+              <span class="plan__label">16 حصة</span>
+              <span class="plan__price">450 <small>جنيه</small></span>
+            </div>
+            </div>
+          </div>
+          </div>
+          <div class="tier__cta" data-reveal data-delay="2">
+            <a class="btn btn--block tier__btn" href="pricing.html"
+               data-wa data-msg="السلام عليكم، حابّة أعرف تفاصيل أكثر عن باقات المجموعات">اسألي عن المجموعة</a>
+          </div>
+        </section>
 <!--qwr:pricing-cards:end-->
-      </div>
     </div>
   </section>
 
@@ -194,7 +474,8 @@
     <div class="container">
       <div class="sec-head sec-head--center">
         <span class="kicker">مقارنة سريعة</span>
-        <h2>الأسعار في جدول واحد</h2>
+        <h2>الفئاتان في جدول واحد</h2>
+        <p>باقات المجموعات نظامها 60 دقيقة فقط، وموجود تحت الجدول.</p>
         <div class="rule"></div>
       </div>
 <!--qwr:price-table:start-->
@@ -202,16 +483,28 @@
         <table class="table">
           <thead>
             <tr>
+              <th class="table__tier" colspan="3">الباقات التقليدية</th><th class="table__tier" colspan="3">الباقات الذهبية</th>
+            </tr>
+            <tr>
               <th>عدد الحصص</th>
+              <th>نظام الـ 30 دقيقة</th>
+              <th>نظام الـ 45 دقيقة</th>
+              <th>نظام الـ 60 دقيقة</th>
               <th>نظام الـ 30 دقيقة</th>
               <th>نظام الـ 45 دقيقة</th>
               <th>نظام الـ 60 دقيقة</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td class="table__head-cell">4 حصص</td><td class="num">200</td><td class="num">280</td><td class="num">350</td></tr>            <tr><td class="table__head-cell">8 حصص</td><td class="num">350</td><td class="num">500</td><td class="num">620</td></tr>            <tr><td class="table__head-cell">12 حصة</td><td class="num">500</td><td class="num">700</td><td class="num">880</td></tr>            <tr><td class="table__head-cell">16 حصة</td><td class="num">650</td><td class="num">900</td><td class="num">1,100</td></tr>
+            <tr><th scope="row" class="table__head-cell">4 حصص</th><td class="num">200</td><td class="num">280</td><td class="num">350</td><td class="num">300</td><td class="num">450</td><td class="num">550</td></tr>
+<tr><th scope="row" class="table__head-cell">8 حصص</th><td class="num">350</td><td class="num">500</td><td class="num">620</td><td class="num">550</td><td class="num">750</td><td class="num">950</td></tr>
+<tr><th scope="row" class="table__head-cell">12 حصة</th><td class="num">500</td><td class="num">700</td><td class="num">880</td><td class="num">750</td><td class="num">1,050</td><td class="num">1,350</td></tr>
+<tr><th scope="row" class="table__head-cell">16 حصة</th><td class="num">650</td><td class="num">900</td><td class="num">1,100</td><td class="num">1,000</td><td class="num">1,350</td><td class="num">1,650</td></tr>
           </tbody>
         </table>
+      <div class="tier-ones" data-reveal>
+          <p class="tier-one"><strong>باقات المجموعات</strong> (نظام الـ 60 دقيقة): 4 حصص <b>150</b> · 8 حصص <b>250</b> · 12 حصة <b>350</b> · 16 حصة <b>450</b></p>
+      </div>
       </div>
 <!--qwr:price-table:end-->
     </div>

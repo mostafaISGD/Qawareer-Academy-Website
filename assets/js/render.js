@@ -142,56 +142,208 @@
   /* ==================================================================
      PACKAGES — price cards
      ================================================================== */
-  function priceCards() {
-    return visible(data().packages).map(function (pk, i) {
-      var rows = (pk.plans || []).map(function (pl) {
-        return '            <div class="plan"><span class="plan__label">' +
-          esc(pl.sessions) + '</span><span class="plan__price">' +
-          esc(pl.price) + ' <small>جنيه</small></span></div>';
+  /* ==================================================================
+     PRICING TIERS
+
+     Model (content.js -> pricing):
+       systems[]   the session lengths, defined once: 30 / 45 / 60 minutes
+       plans[]     the bundles, defined once: 4 / 8 / 12 / 16 sessions
+       tiers[]     each tier points at systems by id and carries its own
+                    prices array, parallel to plans[]
+
+     A tier with three rows renders three cards side by side. The groups tier
+     has one row, so it renders as a single wide card with the four bundles
+     laid out horizontally -- a lone card in a three-column grid reads as a
+     mistake rather than a choice.
+     ================================================================== */
+
+  function pr() {
+    return data().pricing || {};
+  }
+
+  function prSystems() {
+    return pr().systems || [];
+  }
+
+  function prPlans() {
+    return pr().plans || [];
+  }
+
+  function prTiers() {
+    return visible(pr().tiers || []).sort(function (a, b) {
+      return (a.order || 0) - (b.order || 0);
+    });
+  }
+
+  function prSystem(id) {
+    var all = prSystems();
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].id === id) return all[i];
+    }
+    return { id: id, name: id, subtitle: '' };
+  }
+
+  /* one plan row: "8 حصص   350 جنيه" */
+  function planRow(price, label) {
+    return [
+      '            <div class="plan">',
+      '              <span class="plan__label">' + esc(label) + '</span>',
+      '              <span class="plan__price">' + esc(price) +
+        ' <small>' + esc(pr().currency || 'جنيه') + '</small></span>',
+      '            </div>'
+    ].join('\n');
+  }
+
+  /* one system card inside a tier */
+  function tierSystemCard(tier, row) {
+    var sys = prSystem(row.system);
+    var plans = prPlans();
+    var prices = row.prices || [];
+
+    var rows = '';
+    for (var i = 0; i < plans.length; i++) {
+      if (!prices[i]) continue;
+      rows += (rows ? '\n' : '') + planRow(prices[i], plans[i].label);
+    }
+
+    return [
+      '          <div class="tier__sys">',
+      '            <div class="tier__syshead">',
+      '              <span class="tier__mins">' +
+        esc(pr().plans && sys.minutes ? sys.minutes : sys.minutes) + ' دقيقة</span>',
+      '              <h4>' + esc(sys.name) + '</h4>',
+      '              <p>' + esc(sys.subtitle || '') + '</p>',
+      '            </div>',
+      '            <div class="tier__plans">',
+      rows,
+      '            </div>',
+      '          </div>'
+    ].filter(Boolean).join('\n');
+  }
+
+  /* the whole tier: coloured banner + feature list + system cards */
+  function priceTiers() {
+    var tiers = prTiers();
+    if (!tiers.length) return '';
+
+    return tiers.map(function (tier, i) {
+      var theme = tier.theme || 'classic';
+      var rows = tier.rows || [];
+      var single = rows.length < 2;
+
+      var cards = rows.map(function (r) {
+        return tierSystemCard(tier, r);
       }).join('\n');
 
-      var cls = 'price-card' + (pk.featured ? ' price-card--featured' : '');
-      var btn = 'btn--gold' + (pk.featured ? '' : ' btn--green');
+      /* Each tier's button pre-fills its own WhatsApp text, so the message
+         says which offer the enquiry is about. shell.py reads data-msg and
+         falls back to one generic sentence when it is absent. */
+      var waMsg = 'السلام عليكم، حابّة أعرف تفاصيل أكثر عن ' +
+        (tier.name || 'باقات أكاديمية قوارير');
+
+      var features = (tier.features || []).map(function (f) {
+        return [
+          '            <li>',
+          '              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"',
+          '                   stroke="currentColor" stroke-width="3" stroke-linecap="round"',
+          '                   stroke-linejoin="round" aria-hidden="true">',
+          '                <path d="m4 12.5 5 5L20 6.5"/>',
+          '              </svg>',
+          '              <span>' + esc(f) + '</span>',
+          '            </li>'
+        ].join('\n');
+      }).join('\n');
 
       return [
-        '        <div class="' + cls + '" data-reveal' + delay(i) + '>',
-        '          <div class="price-card__head">',
-        '            <h3>' + esc(pk.name) + '</h3>',
-        '            <p>' + esc(pk.subtitle) + '</p>',
+        '        <section class="tier tier--' + esc(theme) +
+          (tier.featured ? ' is-featured' : '') + '" data-tier="' + esc(tier.id) + '">',
+        '          <div class="tier__banner" data-reveal' + delay(i) + '>',
+        tier.badge
+          ? '            <span class="tier__badge">' + esc(tier.badge) + '</span>'
+          : '',
+        '            <h3 class="tier__name">' + esc(tier.name) + '</h3>',
+        '            <p class="tier__tagline">' + esc(tier.tagline || '') + '</p>',
+        '            <p class="tier__desc">' + esc(tier.description || '') + '</p>',
+        features
+          ? '            <ul class="tier__feats">' + NL + features + NL + '            </ul>'
+          : '',
         '          </div>',
-        '          <div class="price-card__body">',
-        rows,
-        '            <a class="btn ' + btn + ' btn--block mt-4" href="pricing.html" data-wa>' +
-          esc(pk.cta || 'اختاري باقتكِ') + '</a>',
+        '          <div class="tier__grid' + (single ? ' tier__grid--single' : '') +
+          '" data-reveal' + delay(i) + '>',
+        cards,
         '          </div>',
-        '        </div>'
-      ].join('\n');
+        '          <div class="tier__cta" data-reveal' + delay(i) + '>',
+        '            <a class="btn btn--block tier__btn" href="pricing.html"',
+        '               data-wa data-msg="' + esc(waMsg) + '">' +
+          esc(tier.cta || 'اختاري باقتكِ') + '</a>',
+        '          </div>',
+        '        </section>'
+      ].filter(Boolean).join('\n');
     }).join('\n');
   }
 
   /* ==================================================================
-     PACKAGES — comparison table
+     PRICING — comparison table
+
+     One block per tier that has more than one system. Comparing 3 systems
+     across 2 tiers is already 7 columns; adding the third would be a wall of
+     numbers nobody reads, so the groups tier gets its own compact row below.
      ================================================================== */
   function priceTable() {
-    var pkgs = visible(data().packages);
-    if (pkgs.length < 2) return '';
+    var p = pr();
+    var plans = prPlans();
+    if (!plans.length) return '';
 
-    var max = Math.max.apply(null, pkgs.map(function (p) {
-      return (p.plans || []).length;
-    }));
+    var multi = prTiers().filter(function (t) { return (t.rows || []).length > 1; });
+    if (!multi.length) return '';
 
-    var rows = '';
-    for (var r = 0; r < max; r++) {
+    // header: two tiers, each spanning its system count
+    var headCells = '';
+    var colspan = 0;
+    multi.forEach(function (t, i) {
+      var n = t.rows.length;
+      headCells += (i ? '' : '              ') +
+        '<th class="table__tier" colspan="' + n + '">' + esc(t.name) + '</th>';
+      colspan += n;
+    });
+
+    var subCells = '              <th>عدد الحصص</th>';
+    multi.forEach(function (t) {
+      t.rows.forEach(function (r) {
+        subCells += NL + '              <th>' + esc(prSystem(r.system).name) + '</th>';
+      });
+    });
+
+    var bodyRows = '';
+    plans.forEach(function (pl, pi) {
       var cells = '';
-      for (var c = 0; c < pkgs.length; c++) {
-        var pl = (pkgs[c].plans || [])[r];
-        cells += pl
-          ? '<td class="num">' + esc(pl.price) + '</td>'
-          : '<td>—</td>';
-      }
-      rows += '            <tr><td class="table__head-cell">' +
-        esc(((pkgs[0].plans || [])[r] || {}).sessions || '') +
-        '</td>' + cells + '</tr>';
+      multi.forEach(function (t) {
+        t.rows.forEach(function (r) {
+          var v = (r.prices || [])[pi];
+          cells += v
+            ? '<td class="num">' + esc(v) + '</td>'
+            : '<td>—</td>';
+        });
+      });
+      bodyRows += (pi ? NL : '            ') +
+        '<tr><th scope="row" class="table__head-cell">' + esc(pl.label) +
+        '</th>' + cells + '</tr>';
+    });
+
+    // the groups tier: its own small line, since it is 60 minutes only
+    var single = prTiers().filter(function (t) { return (t.rows || []).length === 1; });
+    var singleBlock = '';
+    if (single.length) {
+      var lines = single.map(function (t) {
+        var r = t.rows[0];
+        var cells = (r.prices || []).map(function (v, i) {
+          return plans[i] ? esc(plans[i].label) + ' <b>' + esc(v) + '</b>' : '';
+        }).filter(Boolean).join(' · ');
+        return '          <p class="tier-one"><strong>' + esc(t.name) + '</strong> (' +
+          esc(prSystem(r.system).name) + '): ' + cells + '</p>';
+      }).join(NL);
+      singleBlock = NL + '      <div class="tier-ones" data-reveal>' + NL +
+        lines + NL + '      </div>';
     }
 
     return [
@@ -199,16 +351,18 @@
       '        <table class="table">',
       '          <thead>',
       '            <tr>',
-      '              <th>عدد الحصص</th>',
-      pkgs.map(function (p) { return '              <th>' + esc(p.name) + '</th>'; }).join('\n'),
+      headCells,
+      '            </tr>',
+      '            <tr>',
+      subCells,
       '            </tr>',
       '          </thead>',
       '          <tbody>',
-      rows,
+      bodyRows,
       '          </tbody>',
-      '        </table>',
+      '        </table>' + singleBlock,
       '      </div>'
-    ].join('\n');
+    ].join(NL);
   }
 
   /* ==================================================================
@@ -861,7 +1015,7 @@
     esc: esc,
     programCards: programCards,
     programDetails: programDetails,
-    priceCards: priceCards,
+    priceTiers: priceTiers,
     priceTable: priceTable,
     priceNotes: priceNotes,
     reviews: reviews,

@@ -158,6 +158,48 @@ body { background: var(--cream); }
   min-height: 240px;
 }
 
+/* pricing tier editor: one row per system, a price box per bundle. The plan
+   labels are printed above each box from pricing.plans, so the columns line
+   up by construction instead of by eye. */
+.adm-pricerow {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 13px 14px;
+  margin-bottom: 10px;
+  background: var(--cream);
+}
+.adm-pricerow__head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 11px;
+}
+.adm-pricerow__head .adm-sel { flex: 1; }
+
+.adm-pricerow__cells {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 9px;
+}
+.adm-pricecell .adm-label {
+  font-size: .78rem;
+  color: var(--muted);
+  margin-bottom: 5px;
+  white-space: nowrap;
+}
+.adm-pricecell .adm-field { margin-bottom: 0; }
+/* prices are digits: keep them left-to-right so 1,100 does not read as 110,1 */
+.adm-pricecell .adm-in {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 9px 6px;
+}
+
+@media (max-width: 700px) {
+  .adm-pricerow__cells { grid-template-columns: repeat(2, 1fr); }
+}
+
 /* list editor (arrays) */
 .adm-list { display: flex; flex-direction: column; gap: 9px; }
 .adm-li {
