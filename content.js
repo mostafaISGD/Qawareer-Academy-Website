@@ -555,7 +555,7 @@ window.CONTENT = {
   ],
   "sections": {
     "articles": {
-      "visible": false
+      "visible": true
     },
     "reviews": {
       "visible": true
@@ -689,5 +689,5 @@ window.CONTENT = {
       }
     }
   },
-  "updatedAt": "2026-10-07T20:58:37.615Z"
+  "updatedAt": "2026-10-07T20:59:46.704Z"
 };
