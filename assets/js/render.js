@@ -366,6 +366,89 @@
      across 2 tiers is already 7 columns; adding the third would be a wall of
      numbers nobody reads, so the groups tier gets its own compact row below.
      ================================================================== */
+  /* ==================================================================
+     PRICING — homepage teaser cards
+     The homepage shows a compact preview of the three tiers. Rendered
+     from the same pricing data as the full pricing page, so names,
+     features and price ranges can never drift apart.
+     ================================================================== */
+  function priceRange(tier) {
+    var nums = [];
+    (tier.rows || []).forEach(function (r) {
+      (r.prices || []).forEach(function (p) {
+        var n = parseInt(String(p).replace(/[^\d]/g, ''), 10);
+        if (!isNaN(n)) nums.push(n);
+      });
+    });
+    if (!nums.length) return '';
+    var min = Math.min.apply(null, nums);
+    var max = Math.max.apply(null, nums);
+    function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+    return 'تبدأ من ' + fmt(min) + ' إلى ' + fmt(max) + ' جنيه';
+  }
+
+  function priceCards() {
+    var tiers = prTiers();
+    if (!tiers.length) return '';
+
+    var cards = tiers.map(function (tier, i) {
+      var theme = tier.theme || 'classic';
+      var features = (tier.features || []).slice(0, 4).map(function (f) {
+        return [
+          '            <li>',
+          '              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"',
+          '                   stroke="currentColor" stroke-width="3" stroke-linecap="round"',
+          '                   stroke-linejoin="round" aria-hidden="true">',
+          '                <path d="m4 12.5 5 5L20 6.5"/>',
+          '              </svg>',
+          '              <span>' + esc(f) + '</span>',
+          '            </li>'
+        ].join('\n');
+      }).join('\n');
+
+      var range = priceRange(tier);
+
+      return [
+        '        <section class="tier tier--' + esc(theme) + ' tier--teaser"' +
+          (tier.featured ? ' is-featured' : '') + ' data-tier="' + esc(tier.id) + '">',
+        '          <div class="tier__banner" data-reveal' + delay(i) + '>',
+        tier.badge
+          ? '            <span class="tier__badge">' + esc(tier.badge) + '</span>'
+          : '',
+        '            <h3 class="tier__name">' + esc(tier.name) + '</h3>',
+        '            <p class="tier__tagline">' + esc(tier.tagline || '') + '</p>',
+        '            <p class="tier__desc">' + esc(tier.description || '') + '</p>',
+        features
+          ? '            <ul class="tier__feats">\n' + features + '\n            </ul>'
+          : '',
+        '          </div>',
+        range
+          ? '          <p class="tier__price-range">' + esc(range) + '</p>'
+          : '',
+        '        </section>'
+      ].filter(Boolean).join('\n');
+    }).join('\n');
+
+    return [
+      '      <div class="sec-head sec-head--center">',
+      '        <span class="kicker">الأسعار</span>',
+      '        <h2>باقات مرنة تناسب الجميع</h2>',
+      '        <p>ثلاث فئات، وكل فئة فيها أنظمة الحصة الثلاث (30 و 45 و 60 دقيقة) بأربع باقات (4 و 8 و 12 و 16 حصة).</p>',
+      '        <div class="rule"></div>',
+      '      </div>',
+      '',
+      '      <div class="grid g-3">',
+      cards,
+      '      </div>',
+      '',
+      '      <div class="center mt-4">',
+      '        <a class="btn btn--gold" href="pricing.html" data-wa data-msg="السلام عليكم، حابّة أعرف تفاصيل الباقات والأسعار">عرض تفاصيل الباقات',
+      '          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>',
+      '        </a>',
+      '      </div>'
+    ].join('\n');
+  }
+
   function priceTable() {
     var p = pr();
     var plans = prPlans();
@@ -1163,6 +1246,7 @@
     programCards: programCards,
     programDetails: programDetails,
     priceTiers: priceTiers,
+    priceCards: priceCards,
     priceTable: priceTable,
     priceNotes: priceNotes,
     reviews: reviews,
