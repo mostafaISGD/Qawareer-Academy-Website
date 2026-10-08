@@ -559,8 +559,6 @@
       addLabel: '+ أضيفي فئة أسعار', add: addPackage },
     { id: 'reviews', label: 'الآراء', icon: '⭐', build: buildReviews,
       addLabel: '+ أضيفي رأياً جديداً', add: addReview },
-    { id: 'articles', label: 'المقالات', icon: '📰', build: buildArticles,
-      addLabel: '+ أضيفي مقالاً', add: addArticle },
     { id: 'faq', label: 'الأسئلة', icon: '❓', build: buildFaq,
       addLabel: '+ أضيفي سؤالاً جديداً', add: addFaq },
     { id: 'pages', label: 'الصفحات', icon: '📄', build: buildPages },
@@ -717,8 +715,6 @@
    either — which means it is not indexed before you are ready for it. */
 
 var SEC_META = [
-  { key: 'articles',  title: 'المقالات والشروحات',
-    where: 'صفحة المقالات + قسم في الصفحة الرئيسية' },
   { key: 'reviews',   title: 'آراء الطالبات',
     where: 'الصفحة الرئيسية + صفحة آراء الطالبات' },
   { key: 'faq',       title: 'الأسئلة الشائعة',
@@ -1522,9 +1518,7 @@ function buildSections(host) {
         'stats':          'stats',
         'pricing-cards':  'priceCards',
         'reviews':        'reviewSlider',
-        'articles-teaser': 'articleTeaser',
         'faq':            'faq',
-        'soon:articles':  'soon:articles',
         'soon:reviews':   'soon:reviews',
         'soon:faq':       'soon:faq'
       } },
@@ -1551,10 +1545,6 @@ function buildSections(host) {
     { file: 'faq.html', regions: {
         'faq': 'faq',
         'soon:faq': 'soon:faq'
-      } },
-    { file: 'articles.html', regions: {
-        'articles': 'articleCards',
-        'soon:articles': 'soon:articles'
       } },
     { file: 'contact.html', regions: {
         'soon:faq': 'soon:faq'

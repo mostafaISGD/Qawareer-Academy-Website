@@ -588,59 +588,6 @@
     img.addEventListener('click', close);
   })();
 
-  /* ==================================================================
-     9d. ARTICLES — category filter
-
-     Plain show/hide. The articles are all in the HTML already; this only
-     narrows what is on screen, so it costs nothing and works without JS
-     (every article simply stays visible).
-     ================================================================== */
-  (function artFilter() {
-    var bar = $('[data-art-filter]');
-    if (!bar) return;
-
-    var buttons = $$('button', bar);
-    var scope = bar.closest('main') || document;
-    var cards = $$('.art', scope);
-    var empty = $('[data-art-empty]', scope);
-    if (!cards.length) return;
-
-    function apply(cat) {
-      var shown = 0;
-      cards.forEach(function (card) {
-        var tag = card.querySelector('[data-cat]');
-        var match = !cat || (tag && tag.getAttribute('data-cat') === cat);
-        card.classList.toggle('is-hidden', !match);
-        if (match) shown++;
-      });
-
-      buttons.forEach(function (b) {
-        b.classList.toggle('is-on', (b.getAttribute('data-filter') || '') === cat);
-      });
-
-      if (empty) empty.hidden = shown > 0;
-
-      // a hidden card must not stay in the reveal queue forever
-      $$('[data-reveal]', scope).forEach(function (el) {
-        if (!el.classList.contains('is-hidden')) el.classList.add('is-in');
-      });
-    }
-
-    buttons.forEach(function (b) {
-      b.addEventListener('click', function () {
-        apply((b.getAttribute('data-filter') || '').trim());
-      });
-    });
-
-    // deep link: articles.html#الحفظ opens that category directly
-    var hash = decodeURIComponent((location.hash || '').replace(/^#/, '')).trim();
-    if (hash) {
-      var known = buttons.some(function (b) {
-        return (b.getAttribute('data-filter') || '') === hash;
-      });
-      if (known) apply(hash);
-    }
-  })();
 
   /* ==================================================================
      10. NAV — mark active link based on current filename

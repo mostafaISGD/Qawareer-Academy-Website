@@ -2047,15 +2047,15 @@ a.contact-card__val:hover { color: var(--gold-d); }
 
 /* --------------------------------------------------------------------------
    26. FLOATING ACTIONS
-   Two rails: left = WhatsApp + Telegram, right = Up + Down
-   On mobile (<640px) collapses to single column
+   Two rails on desktop: left = WhatsApp + Telegram, right = Down + Up
+   On mobile (<640px): single column on LEFT, above mobile nav
    -------------------------------------------------------------------------- */
 .floaties {
   position: fixed;
   inset-block-end: 22px;
   inset-inline-start: 22px;
   inset-inline-end: 22px;
-  z-index: 180;
+  z-index: 190; /* above mobile-nav (185) */
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -2201,29 +2201,31 @@ a.contact-card__val:hover { color: var(--gold-d); }
   .cta-band { margin-inline: 14px; }
 
   .floaties {
-    inset-block-end: 78px;
-    inset-inline-start: 14px;
+    /* clear the bottom nav, so the floaters are never tucked behind it */
+    inset-block-end: calc(74px + env(safe-area-inset-bottom));
+    inset-inline: 14px;
+    /* opposite edges: the first rail (WhatsApp/Telegram) sits at the inline
+       start, the second (down/up) at the inline end. In RTL that puts the
+       contact buttons under the thumb and the scroll buttons out of their way. */
+    justify-content: space-between;
+    gap: 10px;
   }
   .floater { width: 50px; height: 50px; }
 }
 
-/* Floaties mobile: collapse to single column at 640px */
 @media (max-width: 640px) {
-  .floaties {
-    inset-inline-start: 14px;
-    inset-inline-end: 14px;
-    justify-content: flex-start;
-  }
-  .floaties__rail--right {
-    order: -1;
-  }
   .floaties__rail {
-    flex-direction: column;
+    /* stays column-reverse: each rail is its own vertical stack at the edge,
+       and up must sit above down here exactly as it does on the desktop */
+    flex-direction: column-reverse;
     gap: 10px;
   }
 }
 
-  /* Mobile bottom nav */
+/* --- Mobile bottom nav ----------------------------------------------------
+   Small screens only. This used to sit outside the media query, so the nav
+   showed on desktop too and the body carried a permanent 62px gap for it. */
+@media (max-width: 760px) {
   .mobile-nav {
     display: flex;
     position: fixed;
@@ -2549,6 +2551,29 @@ a.contact-card__val:hover { color: var(--gold-d); }
 }
 
 .tier__plans { padding: 8px 14px 6px; flex: 1; }
+
+/* --- the homepage teaser -------------------------------------------------
+   Same three tiers as pricing.html, minus the price grid. Without it the cards
+   would each end at their own height, so the price line would sit at three
+   different levels. Letting the banner take the slack puts all three price
+   lines on one baseline, and drops the fixed min-height the full cards need. */
+.tier--teaser { min-height: 0; }
+.tier--teaser .tier__banner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.tier__price-range {
+  margin: 0;
+  padding: 0 26px 26px;
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 1.02rem;
+  text-align: center;
+  color: var(--tier-ink);
+  background: var(--paper);
+}
+.tier--teaser .tier__price-range { margin-top: auto; }
 
 /* --- the premium lift ------------------------------------------------- */
 .tier.is-featured .tier__sys { box-shadow: var(--sh-gold); }
