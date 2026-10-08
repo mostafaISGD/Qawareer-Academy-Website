@@ -2047,15 +2047,26 @@ a.contact-card__val:hover { color: var(--gold-d); }
 
 /* --------------------------------------------------------------------------
    26. FLOATING ACTIONS
+   Two rails: left = WhatsApp + Telegram, right = Up + Down
+   On mobile (<640px) collapses to single column
    -------------------------------------------------------------------------- */
 .floaties {
   position: fixed;
   inset-block-end: 22px;
   inset-inline-start: 22px;
+  inset-inline-end: 22px;
   z-index: 180;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.floaties__rail {
   display: flex;
   flex-direction: column-reverse;
   gap: 12px;
+  pointer-events: auto;
 }
 
 .floater {
@@ -2073,8 +2084,10 @@ a.contact-card__val:hover { color: var(--gold-d); }
 .floater:hover { transform: translateY(-4px) scale(1.06); }
 
 .floater--wa { background: #25d366; }
+.floater--tg { background: #0088cc; }
 .floater--top { background: var(--green); opacity: 0; visibility: hidden; }
 .floater--top.is-visible { opacity: 1; visibility: visible; }
+.floater--bottom { background: var(--green); }
 
 /* WhatsApp pulse */
 .floater--wa::after {
@@ -2192,6 +2205,23 @@ a.contact-card__val:hover { color: var(--gold-d); }
     inset-inline-start: 14px;
   }
   .floater { width: 50px; height: 50px; }
+}
+
+/* Floaties mobile: collapse to single column at 640px */
+@media (max-width: 640px) {
+  .floaties {
+    inset-inline-start: 14px;
+    inset-inline-end: 14px;
+    justify-content: flex-start;
+  }
+  .floaties__rail--right {
+    order: -1;
+  }
+  .floaties__rail {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
 
   /* Mobile bottom nav */
   .mobile-nav {
@@ -2333,6 +2363,9 @@ a.contact-card__val:hover { color: var(--gold-d); }
   --tier-chip-ink: #ffffff;
 
   margin-bottom: 34px;
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
 }
 .tier--golden {
   /* both stops stay light: the ink on this banner is dark brown, so a
@@ -2340,16 +2373,17 @@ a.contact-card__val:hover { color: var(--gold-d); }
   --tier:          #d9ad47;
   --tier-deep:     #b8912f;
   --tier-soft:     var(--gold-soft);
-  --tier-ink:      var(--gold-d);
+  --tier-ink:      #5a451a;  /* lighter gold text for better readability */
+
   --tier-border:   var(--gold);
 
-  --tier-on:       #33260a;
-  --tier-on-90:    rgba(51, 38, 10, .92);
-  --tier-on-88:    rgba(51, 38, 10, .88);
-  --tier-on-75:    rgba(51, 38, 10, .78);
+  --tier-on:       #5a451a;   /* lighter text on gold banner */
+  --tier-on-90:    rgba(90, 69, 26, .92);
+  --tier-on-88:    rgba(90, 69, 26, .88);
+  --tier-on-75:    rgba(90, 69, 26, .78);
   --tier-on-18:    rgba(255, 255, 255, .42);
   --tier-on-30:    rgba(255, 255, 255, .70);
-  --tier-chip-ink: #33260a;
+  --tier-chip-ink: #5a451a;
 }
 .tier--groups {
   --tier:          #0d5a60;
@@ -2458,7 +2492,8 @@ a.contact-card__val:hover { color: var(--gold-d); }
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
-  align-items: start;
+  flex: 1;
+  align-items: stretch;
 }
 /* a tier with one system gets one centred card, sized like a normal column so
    the stacked plan rows keep the same label-to-price spacing as the other two
