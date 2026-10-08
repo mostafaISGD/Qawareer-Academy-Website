@@ -735,7 +735,7 @@ window.CONTENT = {
       "audience": "النساء والأطفال",
       "location": "أونلاين بالكامل",
       "siteUrl": "",
-      "gaId": "",
+      "gaId": "G-TZHM6KJGDS",
       "localStats": true
     },
     "announcement": {
@@ -884,7 +884,7 @@ window.CONTENT = {
               },
               {
                 "label": "تيليجرام",
-                "href": "https://t.me/QawareerAcademy"
+                "href": "https://t.me/QawreerAcademy"
               },
               {
                 "label": "إنستجرام",
@@ -896,7 +896,7 @@ window.CONTENT = {
       },
       "social": {
         "whatsapp": "201130830390",
-        "telegram": "QawareerAcademy",
+        "telegram": "QawreerAcademy",
         "instagram": "Qawareer.Academy",
         "email": "QawarirAcademy@gmail.com"
       }
@@ -1079,5 +1079,5 @@ window.CONTENT = {
       }
     }
   },
-  "updatedAt": "2026-10-08T23:48:58.208Z"
+  "updatedAt": "2026-10-08T23:52:09.359Z"
 };
