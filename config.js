@@ -16,6 +16,6 @@ window.SITE = {
   "audience": "النساء والأطفال",
   "location": "أونلاين بالكامل",
   "siteUrl": "",
-  "gaId": "",
+  "gaId": "G-TZHM6KJGDS",
   "localStats": true
 };
