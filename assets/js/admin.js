@@ -617,6 +617,8 @@
     { id: 'announcement', label: 'إعلان', icon: '📢', build: buildAnnouncement },
     { id: 'sectionOrder', label: 'ترتيب الأقسام', icon: '↕️', build: buildSectionOrder },
     { id: 'navigation', label: 'القائمة', icon: '🧭', build: buildNavigation },
+    { id: 'texts', label: 'النصوص', icon: '📝', build: buildTexts },
+    { id: 'seo', label: 'SEO', icon: '🔎', build: buildSeo },
     { id: 'programs', label: 'البرامج', icon: '📚', build: buildPrograms,
       addLabel: '+ أضيفي برنامجاً', add: addProgram },
     { id: 'packages', label: 'الفئات', icon: '💳', build: buildPackages,
@@ -1956,6 +1958,186 @@ function buildSections(host) {
     });
   }
 
+  /* ---------- TEXTS (all static copy) ---------- */
+  function buildTexts(host) {
+    var note = document.createElement('div');
+    note.className = 'adm-note';
+    note.innerHTML = 'كل النصوص الثابتة في الموقع. اكتب في خانة البحث لفلترة القائمة، وعدّل أي نص — التعديل بيحفظ في <code>settings.texts</code> وبيتطبق عند النشر.';
+    host.appendChild(note);
+
+    var search = document.createElement('input');
+    search.type = 'search';
+    search.placeholder = '🔍 ابحثي في النصوص...';
+    search.style.width = '100%';
+    search.style.padding = '10px 12px';
+    search.style.marginBottom = '16px';
+    search.style.fontSize = '1rem';
+    search.style.border = '1px solid var(--line)';
+    search.style.borderRadius = 'var(--r)';
+    search.style.background = 'var(--bg)';
+    host.appendChild(search);
+
+    var texts = C.settings.texts || {};
+    var keys = Object.keys(texts).sort();
+    var container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.gap = '12px';
+    host.appendChild(container);
+
+    function renderList(filter) {
+      container.innerHTML = '';
+      keys.filter(function(k) { return k.toLowerCase().indexOf(filter.toLowerCase()) !== -1; })
+        .forEach(function (key) {
+          var val = texts[key];
+          var card = document.createElement('div');
+          card.className = 'adm-card';
+          card.style.padding = '12px';
+
+          var head = document.createElement('div');
+          head.style.display = 'flex';
+          head.style.alignItems = 'flex-start';
+          head.style.gap = '10px';
+          head.style.marginBottom = '8px';
+
+          var keySpan = document.createElement('code');
+          keySpan.textContent = key;
+          keySpan.style.flex = '1';
+          keySpan.style.fontSize = '.85rem';
+          keySpan.style.background = 'var(--bg-alt)';
+          keySpan.style.padding = '4px 8px';
+          keySpan.style.borderRadius = 'var(--r-sm)';
+          head.appendChild(keySpan);
+
+          var copyBtn = document.createElement('button');
+          copyBtn.type = 'button';
+          copyBtn.className = 'adm-mini';
+          copyBtn.textContent = '📋';
+          copyBtn.title = 'نسخ المفتاح';
+          copyBtn.addEventListener('click', function () {
+            navigator.clipboard.writeText(key);
+            toast('تم نسخ المفتاح: ' + key, 'ok');
+          });
+          head.appendChild(copyBtn);
+
+          card.appendChild(head);
+
+          var isArray = Array.isArray(val);
+          if (isArray) {
+            val.forEach(function (item, i) {
+              var row = document.createElement('div');
+              row.style.display = 'flex';
+              row.style.gap = '8px';
+              row.style.marginBottom = '8px';
+              
+              var idx = document.createElement('span');
+              idx.textContent = (i + 1) + '.';
+              idx.style.color = 'var(--muted)';
+              idx.style.minWidth = '24px';
+              row.appendChild(idx);
+              
+              if (typeof item === 'object') {
+                Object.keys(item).forEach(function (k) {
+                  var inp = document.createElement('input');
+                  inp.type = 'text';
+                  inp.value = item[k];
+                  inp.style.flex = '1';
+                  inp.addEventListener('input', function () {
+                    texts[key][i][k] = inp.value;
+                    markDirty();
+                  });
+                  row.appendChild(inp);
+                });
+              } else {
+                var inp = document.createElement('input');
+                inp.type = 'text';
+                inp.value = item;
+                inp.style.flex = '1';
+                inp.addEventListener('input', function () {
+                  texts[key][i] = inp.value;
+                  markDirty();
+                });
+                row.appendChild(inp);
+              }
+              
+              var del = document.createElement('button');
+              del.type = 'button';
+              del.className = 'adm-mini is-del';
+              del.textContent = '🗑';
+              del.addEventListener('click', function () {
+                texts[key].splice(i, 1);
+                markDirty();
+                renderList(search.value);
+              });
+              row.appendChild(del);
+              card.appendChild(row);
+            });
+            
+            var addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.className = 'btn btn--green btn--sm';
+            addBtn.textContent = '+ إضافة عنصر';
+            addBtn.addEventListener('click', function () {
+              if (val.length && typeof val[0] === 'object') {
+                var newItem = {};
+                Object.keys(val[0]).forEach(function (k) { newItem[k] = ''; });
+                texts[key].push(newItem);
+              } else {
+                texts[key].push('');
+              }
+              markDirty();
+              renderList(search.value);
+            });
+            card.appendChild(addBtn);
+          } else {
+            var inp = document.createElement('textarea');
+            inp.className = 'adm-ta';
+            inp.value = val;
+            inp.style.minHeight = '60px';
+            inp.style.width = '100%';
+            inp.addEventListener('input', function () {
+              texts[key] = inp.value;
+              markDirty();
+            });
+            card.appendChild(inp);
+          }
+
+          container.appendChild(card);
+        });
+    }
+
+    search.addEventListener('input', function () { renderList(search.value); });
+    renderList('');
+  }
+
+  /* ---------- SEO per page ---------- */
+  function buildSeo(host) {
+    var note = document.createElement('div');
+    note.className = 'adm-note';
+    note.innerHTML = 'عنوان الصفحة والوصف والكلمات المفتاحية لكل صفحة. ده اللي بيظهر في نتائج جوجل ومشاركة الروابط.';
+    host.appendChild(note);
+
+    var seo = C.settings.seo || {};
+    var pages = Object.keys(seo).sort();
+
+    pages.forEach(function (page) {
+      var card = document.createElement('div');
+      card.className = 'adm-card';
+      card.style.marginBottom = '16px';
+
+      var title = document.createElement('div');
+      title.className = 'adm-card__title';
+      title.textContent = page;
+      card.appendChild(title);
+
+      card.appendChild(field('Title (عنوان الصفحة)', 'يظهر في تبويب المتصفح ونتائج البحث', seo[page].title, function (v) { seo[page].title = v; }));
+      card.appendChild(field('Description (الوصف)', 'يظهر تحت العنوان في نتائج البحث (أفضل 150-160 حرف)', seo[page].description, function (v) { seo[page].description = v; }, true));
+      card.appendChild(field('Keywords (كلمات مفتاحية)', 'مفصولة بفواصل', seo[page].keywords, function (v) { seo[page].keywords = v; }));
+
+      host.appendChild(card);
+    });
+  }
+
   function countFor(id) {
     switch (id) {
       case 'sections': return SEC_META.filter(function (m) {
@@ -1973,6 +2155,8 @@ function buildSections(host) {
       case 'announcement': return (C.settings && C.settings.announcement && C.settings.announcement.visible) ? 1 : 0;
       case 'sectionOrder': return Object.keys(C.settings.sectionOrder || {}).length;
       case 'navigation': return 1;
+      case 'texts': return Object.keys(C.settings.texts || {}).length;
+      case 'seo': return Object.keys(C.settings.seo || {}).length;
       default: return 0;
     }
   }
@@ -2135,6 +2319,10 @@ function buildSections(host) {
         html = window.RENDER.applySectionOrder(html);
         /* inject navigation (header/footer/social) from settings */
         html = window.RENDER.applyNavigation(html);
+        /* inject static texts from settings.texts */
+        html = window.RENDER.applyTexts(html);
+        /* inject SEO meta tags from settings.seo */
+        html = window.RENDER.applySeo(html);
         return html;
       });
     });

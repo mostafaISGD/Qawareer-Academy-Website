@@ -1341,6 +1341,66 @@
     }).join('\n');
   }
 
+  /* ---- texts: replace static copy from settings.texts ---- */
+  function applyTexts(html) {
+    var texts = (settings().texts || {});
+    var keys = Object.keys(texts);
+    
+    // Replace texts using data-text-key attributes
+    keys.forEach(function (key) {
+      var val = texts[key];
+      if (val === undefined || val === null) return;
+      
+      var escapedVal = esc(String(val));
+      var regex = new RegExp('data-text-key="' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"', 'g');
+      html = html.replace(regex, 'data-text-key="' + key + '">' + escapedVal);
+      
+      // Also replace in elements that have the key as a comment marker
+      var commentRegex = new RegExp('<!--text:' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ':start-->[\\s\\S]*?<!--text:' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ':end-->', 'g');
+      html = html.replace(commentRegex, '<!--text:' + key + ':start-->' + escapedVal + '<!--text:' + key + ':end-->');
+    });
+    
+    return html;
+  }
+
+  /* ---- SEO: inject meta tags from settings.seo ---- */
+  function applySeo(html) {
+    var seo = (settings().seo || {});
+    var pageFile = html.indexOf('index.html') !== -1 ? 'index' : 
+                   html.indexOf('about.html') !== -1 ? 'about' :
+                   html.indexOf('programs.html') !== -1 ? 'programs' :
+                   html.indexOf('pricing.html') !== -1 ? 'pricing' :
+                   html.indexOf('testimonials.html') !== -1 ? 'testimonials' :
+                   html.indexOf('materials.html') !== -1 ? 'materials' :
+                   html.indexOf('faq.html') !== -1 ? 'faq' :
+                   html.indexOf('contact.html') !== -1 ? 'contact' : null;
+    
+    if (!pageFile || !seo[pageFile]) return html;
+    
+    var pageSeo = seo[pageFile];
+    
+    // Replace title
+    if (pageSeo.title) {
+      html = html.replace(/<title>[^<]*<\/title>/, '<title>' + esc(pageSeo.title) + '</title>');
+      html = html.replace(/<meta property="og:title" content="[^"]*"/, '<meta property="og:title" content="' + esc(pageSeo.title) + '"');
+      html = html.replace(/<meta name="twitter:title" content="[^"]*"/, '<meta name="twitter:title" content="' + esc(pageSeo.title) + '"');
+    }
+    
+    // Replace description
+    if (pageSeo.description) {
+      html = html.replace(/<meta name="description" content="[^"]*"/, '<meta name="description" content="' + esc(pageSeo.description) + '"');
+      html = html.replace(/<meta property="og:description" content="[^"]*"/, '<meta property="og:description" content="' + esc(pageSeo.description) + '"');
+      html = html.replace(/<meta name="twitter:description" content="[^"]*"/, '<meta name="twitter:description" content="' + esc(pageSeo.description) + '"');
+    }
+    
+    // Replace keywords
+    if (pageSeo.keywords) {
+      html = html.replace(/<meta name="keywords" content="[^"]*"/, '<meta name="keywords" content="' + esc(pageSeo.keywords) + '"');
+    }
+    
+    return html;
+  }
+
   /* ==================================================================
      EXPORT
      ================================================================== */
@@ -1377,6 +1437,8 @@
     applySettings: applySettings,
     applySectionOrder: applySectionOrder,
     applyNavigation: applyNavigation,
+    applyTexts: applyTexts,
+    applySeo: applySeo,
     SEC_ORDER: SEC_ORDER,
     SEC_REGIONS: SEC_REGIONS
   };
