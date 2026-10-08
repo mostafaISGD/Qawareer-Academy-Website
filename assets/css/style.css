@@ -1952,6 +1952,26 @@ picture.hero__logo-pic > img {
   font-size: 1.05rem;
 }
 
+/* 404 illustration: soft magnifier over the page-hero gradient */
+.error-illustration {
+  width: clamp(88px, 14vw, 120px);
+  height: clamp(88px, 14vw, 120px);
+  margin-inline: auto;
+  margin-bottom: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(255, 255, 255, .25);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  animation: err-float 4s ease-in-out infinite;
+}
+@keyframes err-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-7px); }
+}
+
 /* Breadcrumb */
 .crumbs {
   display: flex;
