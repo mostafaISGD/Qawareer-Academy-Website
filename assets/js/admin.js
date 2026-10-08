@@ -807,14 +807,14 @@ function buildSections(host) {
   note.innerHTML =
     'المفتاح ده بيحكم في <strong>اللي بيشوفه الزائرة بس</strong>، ' +
     'وأنتِ بتقدري تكتبي وتعدّلي عادي. ' +
-    'لما تقفلي أي قسم، الزائرة بتشوف لوحة «قريباً» بدل المحتوى، ' +
-    'والمحتوى بيتشال من صفحة الموقع كلها — فمحدش بيشوفه ولا جوجل ' +
-    'لما يكون مقفول. مش محتاجة تحذفي حاجة؛ ارجعي المفتاح تاني في أي وقت.';
+    'لما تقفلي أي قسم، اختاري: <strong>يختفي خالص</strong> (مافيش حاجة) ' +
+    'أو <strong>يظهر «قريباً»</strong> (لوحة مكان المحتوى). ' +
+    'المحتوى بيتفضل في اللوحة، ارجعي المفتاح تاني في أي وقت.';
   host.appendChild(note);
 
   SEC_META.forEach(function (m) {
     var s = secState(m.key);
-    var on = s.visible !== false;
+    var state = s.visible === true ? 'on' : (s.visible === 'soon' ? 'soon' : 'off');
 
     var card = document.createElement('div');
     card.className = 'adm-card';
@@ -828,36 +828,46 @@ function buildSections(host) {
     var tools = document.createElement('div');
     tools.className = 'adm-card__tools';
 
-    var sw = document.createElement('label');
-    sw.className = 'adm-toggle';
-    sw.title = on ? 'ظاهر للزائرة' : 'مخفي — الزائرة تشوف «قريباً»';
-    sw.innerHTML = '<input type="checkbox"' + (on ? ' checked' : '') + '>' +
-                   '<span class="adm-toggle__ui"></span>';
-    $('input', sw).addEventListener('change', function (e) {
-      s.visible = e.target.checked;
-      sw.title = s.visible ? 'ظاهر للزائرة' : 'مخفي — الزائرة تشوف «قريباً»';
-      var vis = s.visible !== false;
-      state.textContent = stateText(vis);
-      state.classList.toggle('adm-hint--warn', !vis);
-      renderTabs();          // refresh the count in the tab label
-      markDirty();
+    // Three-state segmented control
+    var wrap = document.createElement('div');
+    wrap.style.display = 'flex';
+    wrap.style.gap = '6px';
+    wrap.style.alignItems = 'center';
+    wrap.style.background = 'var(--bg-alt)';
+    wrap.style.padding = '4px';
+    wrap.style.borderRadius = 'var(--r)';
+
+    var states = [
+      { val: 'on', label: '✅ ظاهر', title: 'الزائرة تشوف المحتوى طبيعي' },
+      { val: 'soon', label: '🕐 قريباً', title: 'الزائرة تشوف لوحة «قريباً بإذن الله»' },
+      { val: 'off', label: '🚫 مخفي', title: 'القسم يختفي خالص، مفيش حاجة تظهر' }
+    ];
+
+    states.forEach(function (st) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'adm-seg-btn' + (state === st.val ? ' is-on' : '');
+      btn.textContent = st.label;
+      btn.title = st.title;
+      btn.style.padding = '6px 12px';
+      btn.style.border = 'none';
+      btn.style.background = state === st.val ? 'var(--green)' : 'transparent';
+      btn.style.color = state === st.val ? '#fff' : 'var(--ink)';
+      btn.style.borderRadius = 'var(--r-sm)';
+      btn.style.cursor = 'pointer';
+      btn.style.fontSize = '.8rem';
+      btn.style.transition = 'var(--t)';
+      btn.addEventListener('click', function () {
+        s.visible = st.val;
+        markDirty();
+        renderTab();
+      });
+      wrap.appendChild(btn);
     });
-    tools.appendChild(sw);
+
+    tools.appendChild(wrap);
     head.appendChild(tools);
     card.appendChild(head);
-
-    function stateText(vis) {
-      return vis
-        ? 'ظاهر للزائرة على كل الصفحات.'
-        : 'مخفي الآن. الزائرة تشوف «قريباً بإذن الله» مكان القسم.';
-    }
-
-    var state = document.createElement('p');
-    state.className = 'adm-hint mt-2';
-    state.textContent = stateText(on);
-    if (!on) state.classList.add('adm-hint--warn');
-    card.appendChild(state);
-
     host.appendChild(card);
   });
 }

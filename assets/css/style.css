@@ -2494,30 +2494,29 @@ a.contact-card__val:hover { color: var(--gold-d); }
   flex-direction: column;
 }
 .tier--golden {
-  /* both stops stay light: the ink on this banner is dark brown, so a
-     light->dark gradient would drop it to 2.5:1 at the dark end */
-  --tier:          #d9ad47;
-  --tier-deep:     #b8912f;
+  /* Rich gold gradient with light text for good contrast */
+  --tier:          #d4a017;
+  --tier-deep:     #b8860b;
   --tier-soft:     var(--gold-soft);
-  --tier-ink:      #3d2a05;  /* darker gold text for better contrast */
+  --tier-ink:      #fef9ec;  /* light cream text */
 
   --tier-border:   var(--gold);
 
-  --tier-on:       #2d1f05;   /* dark text on gold banner for WCAG AA */
-  --tier-on-90:    rgba(45, 31, 5, .95);
-  --tier-on-88:    rgba(45, 31, 5, .92);
-  --tier-on-75:    rgba(45, 31, 5, .85);
-  --tier-on-18:    rgba(255, 255, 255, .42);
-  --tier-on-30:    rgba(255, 255, 255, .70);
-  --tier-chip-ink: #3d2a05;
+  --tier-on:       #fef9ec;   /* light text on gold gradient */
+  --tier-on-90:    rgba(254, 249, 236, .95);
+  --tier-on-88:    rgba(254, 249, 236, .92);
+  --tier-on-75:    rgba(254, 249, 236, .85);
+  --tier-on-18:    rgba(20, 15, 5, .42);
+  --tier-on-30:    rgba(20, 15, 5, .70);
+  --tier-chip-ink: #fef9ec;
 }
 
-/* Dark mode for golden tier */
+/* Dark mode for golden tier - lighter text on darker gold */
 [data-theme='dark'] .tier--golden {
   --tier:          #c9963a;
   --tier-deep:     #a67c2a;
   --tier-soft:     rgba(201, 150, 58, .18);
-  --tier-ink:      #f5e6b8;
+  --tier-ink:      #fef9ec;
   --tier-border:   #d4b85a;
   --tier-on:       #fef9ec;
   --tier-on-90:    rgba(254, 249, 236, .95);
@@ -2525,7 +2524,7 @@ a.contact-card__val:hover { color: var(--gold-d); }
   --tier-on-75:    rgba(254, 249, 236, .85);
   --tier-on-18:    rgba(20, 15, 5, .42);
   --tier-on-30:    rgba(20, 15, 5, .70);
-  --tier-chip-ink: #f5e6b8;
+  --tier-chip-ink: #fef9ec;
 }
 .tier--groups {
   --tier:          #0d5a60;
