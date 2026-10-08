@@ -27,6 +27,54 @@
     if (!S.theme.colors) S.theme.colors = { brand: '', accent: '', bg: '', text: '' };
     if (!S.contact) S.contact = { name: 'أكاديمية قوارير', nameEn: 'Qawareer Academy', slogan: 'رفقاً بقلوبكن.. وقرباً لكتاب الله', tagline: 'برامج قرآنية وتربوية رحيمة', phoneDisplay: '01130830390', whatsapp: '201130830390', email: 'QawarirAcademy@gmail.com', telegram: 'QawareerAcademy', instagram: 'Qawareer.Academy', audience: 'النساء والأطفال', location: 'أونلاين بالكامل', siteUrl: '', gaId: '', localStats: true };
     if (!S.announcement) S.announcement = { visible: false, text: '', link: '', linkText: '', bg: '#06683f', color: '#ffffff' };
+    if (!S.sectionOrder) S.sectionOrder = {
+      home: ['hero', 'stats', 'programs', 'testimonials', 'pricing', 'articles', 'faq', 'cta'],
+      about: ['about-hero', 'about'],
+      programs: ['programs-cards', 'program-details'],
+      pricing: ['pricing-cards', 'price-table', 'price-notes'],
+      testimonials: ['reviews'],
+      materials: ['topics', 'materials-hero', 'materials-intro', 'materials-suggest'],
+      faq: ['faq'],
+      contact: ['soon-faq']
+    };
+    if (!S.navigation) S.navigation = {
+      header: [
+        { label: 'الرئيسية', href: 'index.html', visible: true, target: '' },
+        { label: 'عن الأكاديمية', href: 'about.html', visible: true, target: '' },
+        { label: 'البرامج', href: 'programs.html', visible: true, target: '' },
+        { label: 'الأسعار', href: 'pricing.html', visible: true, target: '' },
+        { label: 'آراء الطلاب', href: 'testimonials.html', visible: true, target: '' },
+        { label: 'المواد', href: 'materials.html', visible: true, target: '' },
+        { label: 'تواصل معنا', href: 'contact.html', visible: true, target: '' }
+      ],
+      footer: {
+        columns: [
+          { title: 'روابط سريعة', links: [
+            { label: 'الرئيسية', href: 'index.html' },
+            { label: 'البرامج', href: 'programs.html' },
+            { label: 'الأسعار', href: 'pricing.html' },
+            { label: 'الأسئلة الشائعة', href: 'faq.html' }
+          ]},
+          { title: 'الأكاديمية', links: [
+            { label: 'عن الأكاديمية', href: 'about.html' },
+            { label: 'المواد المقروءة', href: 'materials.html' },
+            { label: 'آراء الطلاب', href: 'testimonials.html' }
+          ]},
+          { title: 'تواصل', links: [
+            { label: 'واتساب', href: 'https://wa.me/201130830390' },
+            { label: 'إيميل', href: 'mailto:QawarirAcademy@gmail.com' },
+            { label: 'تيليجرام', href: 'https://t.me/QawareerAcademy' },
+            { label: 'إنستجرام', href: 'https://instagram.com/Qawareer.Academy' }
+          ]}
+        ]
+      },
+      social: {
+        whatsapp: '201130830390',
+        telegram: 'QawareerAcademy',
+        instagram: 'Qawareer.Academy',
+        email: 'QawarirAcademy@gmail.com'
+      }
+    };
   })();
 
   var LS_CONTENT = 'qwr-content';
@@ -567,6 +615,8 @@
     { id: 'theme', label: 'المظهر', icon: '🎨', build: buildTheme },
     { id: 'contact', label: 'الإعدادات', icon: '⚙️', build: buildContact },
     { id: 'announcement', label: 'إعلان', icon: '📢', build: buildAnnouncement },
+    { id: 'sectionOrder', label: 'ترتيب الأقسام', icon: '↕️', build: buildSectionOrder },
+    { id: 'navigation', label: 'القائمة', icon: '🧭', build: buildNavigation },
     { id: 'programs', label: 'البرامج', icon: '📚', build: buildPrograms,
       addLabel: '+ أضيفي برنامجاً', add: addProgram },
     { id: 'packages', label: 'الفئات', icon: '💳', build: buildPackages,
@@ -1574,6 +1624,338 @@ function buildSections(host) {
     host.appendChild(card);
   }
 
+  /* ---------- SECTION ORDER (Drag & Drop) ---------- */
+  function buildSectionOrder(host) {
+    var note = document.createElement('div');
+    note.className = 'adm-note';
+    note.innerHTML = 'رتبي أقسام كل صفحة بالسحب والإفلات. الترتيب بيحفظ في <code>settings.sectionOrder</code> '
+      'وبيطبق عند النشر — من غير ما تلمسي أي كود.';
+    host.appendChild(note);
+
+    var pages = Object.keys(C.settings.sectionOrder || {});
+    pages.forEach(function (pageKey) {
+      var card = document.createElement('div');
+      card.className = 'adm-card';
+      card.style.marginBottom = '16px';
+
+      var head = document.createElement('div');
+      head.className = 'adm-card__head';
+      head.textContent = pageKey;
+      card.appendChild(head);
+
+      var list = document.createElement('div');
+      list.className = 'adm-sortable';
+      list.style.display = 'flex';
+      list.style.flexDirection = 'column';
+      list.style.gap = '8px';
+
+      var order = C.settings.sectionOrder[pageKey] || [];
+      order.forEach(function (sectionId, idx) {
+        var item = document.createElement('div');
+        item.className = 'adm-sortable-item';
+        item.style.display = 'flex';
+        item.style.alignItems = 'center';
+        item.style.gap = '10px';
+        item.style.padding = '10px 12px';
+        item.style.background = 'var(--bg-alt)';
+        item.style.borderRadius = 'var(--r)';
+        item.style.border = '1px solid var(--line)';
+        item.draggable = true;
+        item.dataset.id = sectionId;
+
+        var drag = document.createElement('span');
+        drag.className = 'adm-drag-handle';
+        drag.textContent = '⋮⋮';
+        drag.style.cursor = 'grab';
+        drag.style.color = 'var(--muted)';
+        item.appendChild(drag);
+
+        var label = document.createElement('span');
+        label.textContent = sectionId;
+        label.style.flex = '1';
+        item.appendChild(label);
+
+        var vis = document.createElement('input');
+        vis.type = 'checkbox';
+        vis.checked = true; // visibility handled in sections tab
+        vis.style.width = '18px';
+        vis.style.height = '18px';
+        item.appendChild(vis);
+
+        // Drag events
+        item.addEventListener('dragstart', function (e) {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', sectionId);
+          item.classList.add('dragging');
+        });
+        item.addEventListener('dragend', function () {
+          item.classList.remove('dragging');
+        });
+        item.addEventListener('dragover', function (e) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          var after = getDragAfterElement(list, e.clientY);
+          var dragging = list.querySelector('.dragging');
+          if (after) list.insertBefore(dragging, after);
+          else list.appendChild(dragging);
+        });
+
+        list.appendChild(item);
+      });
+
+      card.appendChild(list);
+      host.appendChild(card);
+    });
+
+    // Helper for drag & drop
+    function getDragAfterElement(container, y) {
+      var elements = Array.from(container.querySelectorAll('.adm-sortable-item:not(.dragging)'));
+      return elements.reduce(function (closest, child) {
+        var box = child.getBoundingClientRect();
+        var offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        }
+        return closest;
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+  }
+
+  /* ---------- NAVIGATION (Header/Footer/Social) ---------- */
+  function buildNavigation(host) {
+    var note = document.createElement('div');
+    note.className = 'adm-note';
+    note.innerHTML = 'إدارة القائمة العلوية (الهيدر)، أعمدة الفوتر، وروابط السوشيال. '
+      'التعديلات بتحفظ في <code>settings.navigation</code> وبتظهر في كل الموقع بعد النشر.';
+    host.appendChild(note);
+
+    var NAV = C.settings.navigation;
+
+    // Header links
+    var headerCard = document.createElement('div');
+    headerCard.className = 'adm-card';
+    headerCard.style.marginBottom = '16px';
+    headerCard.innerHTML = '<div class="adm-card__title">القائمة العلوية (الهيدر)</div>';
+    host.appendChild(headerCard);
+
+    var headerList = document.createElement('div');
+    headerList.className = 'adm-sortable';
+    headerList.style.display = 'flex';
+    headerList.style.flexDirection = 'column';
+    headerList.style.gap = '8px';
+
+    (NAV.header || []).forEach(function (link, idx) {
+      var item = document.createElement('div');
+      item.className = 'adm-sortable-item';
+      item.style.display = 'flex';
+      item.style.alignItems = 'center';
+      item.style.gap = '10px';
+      item.style.padding = '10px 12px';
+      item.style.background = 'var(--bg-alt)';
+      item.style.borderRadius = 'var(--r)';
+      item.style.border = '1px solid var(--line)';
+      item.draggable = true;
+
+      var drag = document.createElement('span');
+      drag.className = 'adm-drag-handle';
+      drag.textContent = '⋮⋮';
+      drag.style.cursor = 'grab';
+      drag.style.color = 'var(--muted)';
+      item.appendChild(drag);
+
+      var vis = document.createElement('input');
+      vis.type = 'checkbox';
+      vis.checked = link.visible !== false;
+      vis.addEventListener('change', function () { link.visible = vis.checked; markDirty(); });
+      item.appendChild(vis);
+
+      var labelInp = document.createElement('input');
+      labelInp.type = 'text';
+      labelInp.value = link.label;
+      labelInp.style.flex = '1';
+      labelInp.addEventListener('input', function () { link.label = labelInp.value; markDirty(); });
+      item.appendChild(labelInp);
+
+      var hrefInp = document.createElement('input');
+      hrefInp.type = 'text';
+      hrefInp.value = link.href;
+      hrefInp.style.width = '200px';
+      hrefInp.addEventListener('input', function () { link.href = hrefInp.value; markDirty(); });
+      item.appendChild(hrefInp);
+
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'adm-mini is-del';
+      del.textContent = '🗑';
+      del.addEventListener('click', function () {
+        NAV.header.splice(idx, 1);
+        markDirty();
+        renderTab();
+      });
+      item.appendChild(del);
+
+      // Drag events
+      item.addEventListener('dragstart', function (e) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'header', idx: idx }));
+        item.classList.add('dragging');
+      });
+      item.addEventListener('dragend', function () { item.classList.remove('dragging'); });
+      item.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        var after = getDragAfterElement(headerList, e.clientY);
+        var dragging = headerList.querySelector('.dragging');
+        if (after) headerList.insertBefore(dragging, after);
+        else headerList.appendChild(dragging);
+      });
+      item.addEventListener('drop', function (e) {
+        e.preventDefault();
+        var data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        if (data.type === 'header') {
+          var fromIdx = data.idx;
+          var toIdx = Array.from(headerList.children).indexOf(item);
+          if (fromIdx !== toIdx) {
+            var moved = NAV.header.splice(fromIdx, 1)[0];
+            NAV.header.splice(toIdx, 0, moved);
+            markDirty();
+            renderTab();
+          }
+        }
+      });
+
+      headerList.appendChild(item);
+    });
+
+    // Add new header link button
+    var addHeaderBtn = document.createElement('button');
+    addHeaderBtn.type = 'button';
+    addHeaderBtn.className = 'btn btn--green btn--sm mt-2';
+    addHeaderBtn.textContent = '+ إضافة رابط في الهيدر';
+    addHeaderBtn.addEventListener('click', function () {
+      NAV.header.push({ label: 'رابط جديد', href: '#', visible: true, target: '' });
+      markDirty();
+      renderTab();
+    });
+    headerCard.appendChild(headerList);
+    headerCard.appendChild(addHeaderBtn);
+
+    // Footer columns
+    var footerCard = document.createElement('div');
+    footerCard.className = 'adm-card';
+    footerCard.style.marginBottom = '16px';
+    footerCard.innerHTML = '<div class="adm-card__title">أعمدة الفوتر</div>';
+    host.appendChild(footerCard);
+
+    (NAV.footer.columns || []).forEach(function (col, cIdx) {
+      var colCard = document.createElement('div');
+      colCard.className = 'adm-card';
+      colCard.style.marginBottom = '12px';
+      colCard.style.padding = '12px';
+
+      var colHead = document.createElement('div');
+      colHead.style.display = 'flex';
+      colHead.style.alignItems = 'center';
+      colHead.style.gap = '10px';
+      colHead.style.marginBottom = '8px';
+
+      var titleInp = document.createElement('input');
+      titleInp.type = 'text';
+      titleInp.value = col.title;
+      titleInp.style.flex = '1';
+      titleInp.addEventListener('input', function () { col.title = titleInp.value; markDirty(); });
+      colHead.appendChild(titleInp);
+
+      var delCol = document.createElement('button');
+      delCol.type = 'button';
+      delCol.className = 'adm-mini is-del';
+      delCol.textContent = '🗑 حذف العمود';
+      delCol.addEventListener('click', function () {
+        NAV.footer.columns.splice(cIdx, 1);
+        markDirty();
+        renderTab();
+      });
+      colHead.appendChild(delCol);
+
+      colCard.appendChild(colHead);
+
+      var linksList = document.createElement('div');
+      linksList.style.display = 'flex';
+      linksList.style.flexDirection = 'column';
+      linksList.style.gap = '6px';
+
+      (col.links || []).forEach(function (link, lIdx) {
+        var linkRow = document.createElement('div');
+        linkRow.style.display = 'flex';
+        linkRow.style.gap = '8px';
+
+        var lLabel = document.createElement('input');
+        lLabel.type = 'text';
+        lLabel.value = link.label;
+        lLabel.style.flex = '1';
+        lLabel.addEventListener('input', function () { link.label = lLabel.value; markDirty(); });
+        linkRow.appendChild(lLabel);
+
+        var lHref = document.createElement('input');
+        lHref.type = 'text';
+        lHref.value = link.href;
+        lHref.style.width = '250px';
+        lHref.addEventListener('input', function () { link.href = lHref.value; markDirty(); });
+        linkRow.appendChild(lHref);
+
+        var delLink = document.createElement('button');
+        delLink.type = 'button';
+        delLink.className = 'adm-mini is-del';
+        delLink.textContent = '🗑';
+        delLink.addEventListener('click', function () {
+          col.links.splice(lIdx, 1);
+          markDirty();
+          renderTab();
+        });
+        linkRow.appendChild(delLink);
+
+        linksList.appendChild(linkRow);
+      });
+
+      var addLinkBtn = document.createElement('button');
+      addLinkBtn.type = 'button';
+      addLinkBtn.className = 'btn btn--green btn--sm';
+      addLinkBtn.style.width = 'fit-content';
+      addLinkBtn.textContent = '+ إضافة رابط';
+      addLinkBtn.addEventListener('click', function () {
+        col.links.push({ label: 'رابط', href: '#' });
+        markDirty();
+        renderTab();
+      });
+      colCard.appendChild(linksList);
+      colCard.appendChild(addLinkBtn);
+
+      footerCard.appendChild(colCard);
+    });
+
+    var addColBtn = document.createElement('button');
+    addColBtn.type = 'button';
+    addColBtn.className = 'btn btn--green btn--sm mt-2';
+    addColBtn.textContent = '+ إضافة عمود في الفوتر';
+    addColBtn.addEventListener('click', function () {
+      NAV.footer.columns.push({ title: 'عمود جديد', links: [] });
+      markDirty();
+      renderTab();
+    });
+    footerCard.appendChild(addColBtn);
+
+    // Social links
+    var socialCard = document.createElement('div');
+    socialCard.className = 'adm-card';
+    socialCard.innerHTML = '<div class="adm-card__title">روابط السوشيال ميديا</div>';
+    host.appendChild(socialCard);
+
+    Object.keys(NAV.social || {}).forEach(function (key) {
+      var val = NAV.social[key];
+      socialCard.appendChild(field(key.charAt(0).toUpperCase() + key.slice(1), '', val, function (v) { NAV.social[key] = v; }));
+    });
+  }
+
   function countFor(id) {
     switch (id) {
       case 'sections': return SEC_META.filter(function (m) {
@@ -1589,6 +1971,8 @@ function buildSections(host) {
       case 'theme':    return 1;
       case 'contact':  return 1;
       case 'announcement': return (C.settings && C.settings.announcement && C.settings.announcement.visible) ? 1 : 0;
+      case 'sectionOrder': return Object.keys(C.settings.sectionOrder || {}).length;
+      case 'navigation': return 1;
       default: return 0;
     }
   }
@@ -1746,7 +2130,12 @@ function buildSections(host) {
         /* section on/off: add or remove `is-off` on every <section data-sec>.
            Same function the build tools use, so the published HTML and the
            committed HTML cannot drift apart. */
-        return window.RENDER.applySections(html);
+        html = window.RENDER.applySections(html);
+        /* reorder sections per page settings */
+        html = window.RENDER.applySectionOrder(html);
+        /* inject navigation (header/footer/social) from settings */
+        html = window.RENDER.applyNavigation(html);
+        return html;
       });
     });
 

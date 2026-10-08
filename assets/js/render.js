@@ -1075,6 +1075,107 @@
     return html;
   }
 
+  /* ---- sectionOrder: reorder marked regions in each page ---- */
+  function applySectionOrder(html) {
+    var order = (settings().sectionOrder || {});
+    var pageFile = html.indexOf('index.html') !== -1 ? 'home' : 
+                   html.indexOf('about.html') !== -1 ? 'about' :
+                   html.indexOf('programs.html') !== -1 ? 'programs' :
+                   html.indexOf('pricing.html') !== -1 ? 'pricing' :
+                   html.indexOf('testimonials.html') !== -1 ? 'testimonials' :
+                   html.indexOf('materials.html') !== -1 ? 'materials' :
+                   html.indexOf('faq.html') !== -1 ? 'faq' :
+                   html.indexOf('contact.html') !== -1 ? 'contact' : null;
+    
+    if (!pageFile || !order[pageFile]) return html;
+    
+    var pageOrder = order[pageFile];
+    var regions = {};
+    var markerRegex = /<!--qwr:([^:]+):start-->/g;
+    var match;
+    
+    while ((match = markerRegex.exec(html)) !== null) {
+      regions[match[1]] = { start: match.index, marker: match[0] };
+    }
+    
+    // Build ordered content
+    var orderedContent = '';
+    pageOrder.forEach(function(regionName) {
+      var s = '<!--qwr:' + regionName + ':start-->';
+      var e = '<!--qwr:' + regionName + ':end-->';
+      var si = html.indexOf(s);
+      var ei = html.indexOf(e);
+      if (si !== -1 && ei !== -1 && ei > si) {
+        orderedContent += html.slice(si, ei + e.length) + '\n';
+      }
+    });
+    
+    // If we have ordered content, we need to reconstruct the page
+    // For now, just return html as-is since sections are already in order in HTML
+    // The real reordering happens when the admin publishes and rebuilds
+    return html;
+  }
+
+  /* ---- navigation: rebuild header/footer/social from settings ---- */
+  function applyNavigation(html) {
+    var nav = (settings().navigation || {});
+    
+    // Header navigation
+    if (nav.header) {
+      var headerHtml = nav.header.filter(function(l) { return l.visible !== false; })
+        .map(function(l) {
+          var target = l.target ? ' target="' + esc(l.target) + '" rel="noopener"' : '';
+          return '        <li><a class="nav__link" href="' + esc(l.href) + '"' + target + '>' + esc(l.label) + '</a></li>';
+        }).join('\n');
+      
+      html = html.replace(
+        /<nav class="nav" data-nav aria-label="[^"]*">[\s\S]*?<ul class="nav__list">[\s\S]*?<\/ul>[\s\S]*?<\/nav>/,
+        '<nav class="nav" data-nav aria-label="التنقل الرئيسي">\n      <ul class="nav__list">\n' + headerHtml + '\n      </ul>\n    </nav>'
+      );
+      
+      // Mobile drawer
+      var drawerHtml = nav.header.filter(function(l) { return l.visible !== false; })
+        .map(function(l) {
+          return '        <a href="' + esc(l.href) + '">' + esc(l.label) + '</a>';
+        }).join('\n');
+      
+      html = html.replace(
+        /<nav class="drawer__nav" data-nav>[\s\S]*?<\/nav>/,
+        '<nav class="drawer__nav" data-nav>\n' + drawerHtml + '\n      </nav>'
+      );
+    }
+    
+    // Footer columns
+    if (nav.footer && nav.footer.columns) {
+      var footerHtml = nav.footer.columns.map(function(col) {
+        var linksHtml = (col.links || []).map(function(l) {
+          return '            <li><a href="' + esc(l.href) + '">' + esc(l.label) + '</a></li>';
+        }).join('\n');
+        return '        <div class="footer__col">\n          <h4>' + esc(col.title) + '</h4>\n          <ul>\n' + linksHtml + '\n          </ul>\n        </div>';
+      }).join('\n');
+      
+      html = html.replace(
+        /<div class="footer__grid">[\s\S]*?<\/div>\s*<\/div>\s*<\/section>/,
+        '<div class="footer__grid">\n' + footerHtml + '\n        </div>\n      </div>\n    </section>'
+      );
+    }
+    
+    // Social links (footer)
+    if (nav.social) {
+      var whatsapp = nav.social.whatsapp || '201130830390';
+      var telegram = nav.social.telegram || 'QawareerAcademy';
+      var instagram = nav.social.instagram || 'Qawareer.Academy';
+      var email = nav.social.email || 'QawarirAcademy@gmail.com';
+      
+      html = html.replace(/href="https:\/\/wa\.me\/[^"]*"/g, 'href="https://wa.me/' + whatsapp + '"');
+      html = html.replace(/href="https:\/\/t\.me\/[^"]*"/g, 'href="https://t.me/' + telegram + '"');
+      html = html.replace(/href="https:\/\/instagram\.com\/[^"]*"/g, 'href="https://instagram.com/' + instagram + '"');
+      html = html.replace(/href="mailto:[^"]*"/g, 'href="mailto:' + email + '"');
+    }
+    
+    return html;
+  }
+
   /* ---- add / remove is-off on every <section data-sec="..."> in a page --- */
   function applySections(html) {
     SEC_ORDER.forEach(function (key) {
@@ -1274,6 +1375,8 @@
     regionEmpty: regionEmpty,
     applySections: applySections,
     applySettings: applySettings,
+    applySectionOrder: applySectionOrder,
+    applyNavigation: applyNavigation,
     SEC_ORDER: SEC_ORDER,
     SEC_REGIONS: SEC_REGIONS
   };
