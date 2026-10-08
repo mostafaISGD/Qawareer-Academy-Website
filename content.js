@@ -565,6 +565,27 @@ window.CONTENT = {
     },
     "materials": {
       "visible": true
+    },
+    "hero": {
+      "visible": true
+    },
+    "stats": {
+      "visible": true
+    },
+    "why": {
+      "visible": true
+    },
+    "programs": {
+      "visible": true
+    },
+    "testimonials": {
+      "visible": true
+    },
+    "pricing": {
+      "visible": true
+    },
+    "cta": {
+      "visible": true
     }
   },
   "pages": {
@@ -718,10 +739,10 @@ window.CONTENT = {
       "localStats": true
     },
     "announcement": {
-      "visible": false,
-      "text": "",
-      "link": "",
-      "linkText": "",
+      "visible": true,
+      "text": "ززمممززموزخزه",
+      "link": "65665",
+      "linkText": " ؤثيؤثؤصؤصؤيؤصثؤ",
       "bg": "#06683f",
       "color": "#ffffff"
     },
@@ -800,7 +821,7 @@ window.CONTENT = {
         {
           "label": "المواد",
           "href": "materials.html",
-          "visible": true,
+          "visible": false,
           "target": ""
         },
         {
@@ -1058,5 +1079,5 @@ window.CONTENT = {
       }
     }
   },
-  "updatedAt": "2026-10-08T18:01:21.386Z"
+  "updatedAt": "2026-10-08T23:40:27.062Z"
 };
