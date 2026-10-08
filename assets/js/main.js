@@ -216,6 +216,31 @@
   })();
 
   /* ==================================================================
+     7b. BACK TO BOTTOM
+     ================================================================== */
+  (function backBottom() {
+    var btn = $('.floater--bottom');
+    if (!btn) return;
+
+    var ticking = false;
+    function update() {
+      var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      // Show when not at bottom (within 100px threshold)
+      btn.classList.toggle('is-visible', window.scrollY < maxScroll - 100);
+      ticking = false;
+    }
+    window.addEventListener('scroll', function () {
+      if (!ticking) { window.requestAnimationFrame(update); ticking = true; }
+    }, { passive: true });
+
+    btn.addEventListener('click', function () {
+      var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      window.scrollTo({ top: maxScroll, behavior: reduceMotion ? 'auto' : 'smooth' });
+    });
+    update();
+  })();
+
+  /* ==================================================================
      8. SMOOTH ANCHORS (respect reduced motion + header offset)
      ================================================================== */
   (function smoothAnchors() {
@@ -443,6 +468,24 @@
       if (document.hidden) stopTimer();
       else restartTimer();
     });
+
+    /* ---------- touch swipe for mobile ---------- */
+    var touchStartX = 0;
+    var touchStartTime = 0;
+    view.addEventListener('touchstart', function (e) {
+      touchStartX = e.touches[0].clientX;
+      touchStartTime = Date.now();
+    }, { passive: true });
+    view.addEventListener('touchend', function (e) {
+      var dx = e.changedTouches[0].clientX - touchStartX;
+      var dt = Date.now() - touchStartTime;
+      // Swipe threshold: 50px horizontal, less than 300ms, and more horizontal than vertical
+      if (Math.abs(dx) > 50 && dt < 300) {
+        // RTL: swipe left (negative dx) = next, swipe right (positive dx) = prev
+        if (dx < 0) goTo(index + 1);
+        else goTo(index - 1);
+      }
+    }, { passive: true });
 
     /* ---------- a manual swipe updates the dots ---------- */
     var scrollEnd = null;
