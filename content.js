@@ -691,7 +691,7 @@ window.CONTENT = {
   },
   "settings": {
     "theme": {
-      "name": "gold",
+      "name": "teal",
       "mode": "auto",
       "showDarkToggle": true,
       "colors": {
@@ -1058,5 +1058,5 @@ window.CONTENT = {
       }
     }
   },
-  "updatedAt": "2026-10-08T17:52:58.576Z"
+  "updatedAt": "2026-10-08T18:01:21.386Z"
 };
