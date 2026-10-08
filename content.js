@@ -730,7 +730,7 @@ window.CONTENT = {
       "phoneDisplay": "01130830390",
       "whatsapp": "201130830390",
       "email": "QawarirAcademy@gmail.com",
-      "telegram": "QawareerAcademy",
+      "telegram": "QawreerAcademy",
       "instagram": "Qawareer.Academy",
       "audience": "النساء والأطفال",
       "location": "أونلاين بالكامل",
@@ -1079,5 +1079,5 @@ window.CONTENT = {
       }
     }
   },
-  "updatedAt": "2026-10-08T23:45:26.722Z"
+  "updatedAt": "2026-10-08T23:48:58.208Z"
 };
