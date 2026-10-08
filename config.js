@@ -11,7 +11,7 @@ window.SITE = {
   "phoneDisplay": "01130830390",
   "whatsapp": "201130830390",
   "email": "QawarirAcademy@gmail.com",
-  "telegram": "QawareerAcademy",
+  "telegram": "QawreerAcademy",
   "instagram": "Qawareer.Academy",
   "audience": "النساء والأطفال",
   "location": "أونلاين بالكامل",
