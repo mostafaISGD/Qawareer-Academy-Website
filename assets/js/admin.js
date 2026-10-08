@@ -781,12 +781,18 @@
    either — which means it is not indexed before you are ready for it. */
 
 var SEC_META = [
-  { key: 'reviews',   title: 'آراء الطالبات',
-    where: 'الصفحة الرئيسية + صفحة آراء الطالبات' },
-  { key: 'faq',       title: 'الأسئلة الشائعة',
-    where: 'الرئيسية + صفحة الأسئلة + صفحة تواصل معنا' },
-  { key: 'materials', title: 'المواد المقروءة',
-    where: 'صفحة المواد المقروءة' }
+  // Homepage sections
+  { key: 'hero',       title: 'الهيرو (الشاشة الأولى)',    where: 'الصفحة الرئيسية' },
+  { key: 'stats',      title: 'شريط الأرقام',              where: 'الصفحة الرئيسية' },
+  { key: 'why',        title: 'قسم لماذا قوارير',          where: 'الصفحة الرئيسية' },
+  { key: 'programs',   title: 'قسم البرامج',               where: 'الصفحة الرئيسية + صفحة البرامج' },
+  { key: 'testimonials',title: 'آراء الطالبات (مقدمة)',   where: 'الصفحة الرئيسية' },
+  { key: 'pricing',    title: 'معاينة الأسعار',            where: 'الصفحة الرئيسية + صفحة الأسعار' },
+  { key: 'articles',   title: 'المقالات والشروحات',       where: 'الصفحة الرئيسية + صفحة المقالات' },
+  { key: 'reviews',    title: 'آراء الطالبات',            where: 'الصفحة الرئيسية + صفحة آراء الطالبات' },
+  { key: 'faq',        title: 'الأسئلة الشائعة',          where: 'الرئيسية + صفحة الأسئلة + تواصل معنا' },
+  { key: 'cta',        title: 'شريط الدعوة للتسجيل',      where: 'الصفحة الرئيسية' },
+  { key: 'materials',  title: 'المواد المقروءة',           where: 'الصفحة الرئيسية + صفحة المواد' },
 ];
 
 function secState(key) {

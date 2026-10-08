@@ -952,7 +952,7 @@
     }
   };
 
-  var SEC_ORDER = ['articles', 'reviews', 'faq', 'materials'];
+  var SEC_ORDER = ['hero', 'stats', 'why', 'programs', 'testimonials', 'pricing', 'articles', 'reviews', 'faq', 'cta', 'materials'];
 
   /* A missing entry means "visible", so a half-edited content.js can never
      hide a section by accident. */
