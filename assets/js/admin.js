@@ -798,6 +798,10 @@ var SEC_META = [
 function secState(key) {
   if (!C.sections) C.sections = {};
   if (!C.sections[key]) C.sections[key] = { visible: true };
+  /* Normalize legacy string values saved by older versions */
+  var v = C.sections[key].visible;
+  if (v === 'on') C.sections[key].visible = true;
+  if (v === 'off') C.sections[key].visible = false;
   return C.sections[key];
 }
 
@@ -858,7 +862,8 @@ function buildSections(host) {
       btn.style.fontSize = '.8rem';
       btn.style.transition = 'var(--t)';
       btn.addEventListener('click', function () {
-        s.visible = st.val;
+        /* 'on' must be stored as boolean true, not the string 'on' */
+        s.visible = st.val === 'on' ? true : (st.val === 'off' ? false : 'soon');
         markDirty();
         renderTab();
       });
