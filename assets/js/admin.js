@@ -18,6 +18,17 @@
   var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
   var C  = window.CONTENT;
 
+  /* Settings migration — older content.js files have no `settings` key,
+     so add the defaults that match the current site exactly. */
+  (function ensureSettings() {
+    if (!C.settings) C.settings = {};
+    var S = C.settings;
+    if (!S.theme) S.theme = { name: 'green', mode: 'auto', showDarkToggle: true, colors: { brand: '', accent: '', bg: '', text: '' } };
+    if (!S.theme.colors) S.theme.colors = { brand: '', accent: '', bg: '', text: '' };
+    if (!S.contact) S.contact = { name: 'أكاديمية قوارير', nameEn: 'Qawareer Academy', slogan: 'رفقاً بقلوبكن.. وقرباً لكتاب الله', tagline: 'برامج قرآنية وتربوية رحيمة', phoneDisplay: '01130830390', whatsapp: '201130830390', email: 'QawarirAcademy@gmail.com', telegram: 'QawareerAcademy', instagram: 'Qawareer.Academy', audience: 'النساء والأطفال', location: 'أونلاين بالكامل', siteUrl: '', gaId: '', localStats: true };
+    if (!S.announcement) S.announcement = { visible: false, text: '', link: '', linkText: '', bg: '#06683f', color: '#ffffff' };
+  })();
+
   var LS_CONTENT = 'qwr-content';
   var LS_DRAFT   = 'qwr-draft';
   var LS_GH      = 'qwr-github';
@@ -553,6 +564,9 @@
      new card appears at the bottom ready to fill in. */
   var TABS = [
     { id: 'sections', label: 'الأقسام', icon: '👁', build: buildSections },
+    { id: 'theme', label: 'المظهر', icon: '🎨', build: buildTheme },
+    { id: 'contact', label: 'الإعدادات', icon: '⚙️', build: buildContact },
+    { id: 'announcement', label: 'إعلان', icon: '📢', build: buildAnnouncement },
     { id: 'programs', label: 'البرامج', icon: '📚', build: buildPrograms,
       addLabel: '+ أضيفي برنامجاً', add: addProgram },
     { id: 'packages', label: 'الفئات', icon: '💳', build: buildPackages,
@@ -1439,6 +1453,127 @@ function buildSections(host) {
      ================================================================ */
   var currentTab = TABS[0].id;
 
+  /* ---------- THEME ---------- */
+  function buildTheme(host) {
+    var note = document.createElement('div');
+    note.className = 'adm-note';
+    note.innerHTML = 'اختاري الثيمة والوضع الداكن وأي لون مخصص فوق الثيمة. ' +
+      'التعديلات بتنطبق بعد «حفظ ونشر» (المعاينة هنا للشكل بس).';
+    host.appendChild(note);
+
+    var T = C.settings.theme;
+
+    var card = document.createElement('div');
+    card.className = 'adm-card';
+
+    card.appendChild(select('الثيمة', {
+      green: 'أخضر قوارير (الافتراضي)',
+      teal: 'فيروزي',
+      gold: 'ذهبي دافئ',
+      royal: 'أزرق ملكي',
+      maroon: 'عنابي'
+    }, T.name, function (v) { T.name = v; }));
+
+    card.appendChild(select('الوضع', {
+      auto: 'تلقائي (الزائرة تختار)',
+      dark: 'داكن دائماً',
+      light: 'فاتح دائماً'
+    }, T.mode, function (v) { T.mode = v; }));
+
+    card.appendChild(toggle('إظهار زرار الوضع الداكن في الهيدر', T.showDarkToggle !== false,
+      function (v) { T.showDarkToggle = v; }));
+
+    host.appendChild(card);
+
+    var colorsCard = document.createElement('div');
+    colorsCard.className = 'adm-card';
+    colorsCard.innerHTML = '<div class="adm-card__title">ألوان مخصصة (اختياري)</div>' +
+      '<div class="adm-hint">اكتبي قيمة فارغة = استخدمي ألوان الثيمة.</div>';
+
+    [['brand', 'اللون الأساسي'], ['accent', 'اللون الثانوي (الذهبي)'],
+     ['bg', 'الخلفية'], ['text', 'لون النص']].forEach(function (pair) {
+      var key = pair[0], label = pair[1];
+      var row = document.createElement('div');
+      row.className = 'adm-field';
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.gap = '10px';
+      var lab = document.createElement('label');
+      lab.className = 'adm-label';
+      lab.textContent = label;
+      var inp = document.createElement('input');
+      inp.type = 'color';
+      inp.value = T.colors[key] || '#06683f';
+      inp.addEventListener('input', function () {
+        T.colors[key] = inp.value; markDirty(); val.textContent = inp.value;
+      });
+      var val = document.createElement('span');
+      val.className = 'adm-hint';
+      val.textContent = T.colors[key] || '(من الثيمة)';
+      var clear = document.createElement('button');
+      clear.type = 'button';
+      clear.className = 'adm-mini';
+      clear.textContent = 'إلغاء';
+      clear.addEventListener('click', function () {
+        T.colors[key] = ''; markDirty(); val.textContent = '(من الثيمة)';
+      });
+      row.appendChild(lab); row.appendChild(inp); row.appendChild(val); row.appendChild(clear);
+      colorsCard.appendChild(row);
+    });
+
+    host.appendChild(colorsCard);
+  }
+
+  /* ---------- CONTACT ---------- */
+  function buildContact(host) {
+    var note = document.createElement('div');
+    note.className = 'adm-note';
+    note.innerHTML = 'بيانات التواصل محفوظة مرة واحدة في <code>settings.contact</code> ' +
+      'وبتتكتب تلقائياً في <code>config.js</code> عند النشر — فتتغيّر في كل روابط الموقع.';
+    host.appendChild(note);
+
+    var S = C.settings.contact;
+    var card = document.createElement('div');
+    card.className = 'adm-card';
+
+    card.appendChild(field('اسم الأكاديمية', '', S.name, function (v) { S.name = v; }));
+    card.appendChild(field('الاسم بالإنجليزي', '', S.nameEn, function (v) { S.nameEn = v; }));
+    card.appendChild(field('الشعار', '', S.slogan, function (v) { S.slogan = v; }));
+    card.appendChild(field('الوصف القصير', '', S.tagline, function (v) { S.tagline = v; }));
+    card.appendChild(field('رقم الهاتف (كما يظهر)', '', S.phoneDisplay, function (v) { S.phoneDisplay = v; }));
+    card.appendChild(field('واتساب (بدون + أو صفر)', '', S.whatsapp, function (v) { S.whatsapp = v; }));
+    card.appendChild(field('الإيميل', '', S.email, function (v) { S.email = v; }));
+    card.appendChild(field('تيليجرام', '', S.telegram, function (v) { S.telegram = v; }));
+    card.appendChild(field('إنستجرام', '', S.instagram, function (v) { S.instagram = v; }));
+    card.appendChild(field('الجمهور', '', S.audience, function (v) { S.audience = v; }));
+    card.appendChild(field('المكان', '', S.location, function (v) { S.location = v; }));
+    card.appendChild(field('رابط الموقع (siteUrl)', 'اختياري', S.siteUrl, function (v) { S.siteUrl = v; }));
+    card.appendChild(field('Google Analytics ID', 'اتركيه فاضي لإيقاف الإحصائيات', S.gaId, function (v) { S.gaId = v; }));
+
+    host.appendChild(card);
+  }
+
+  /* ---------- ANNOUNCEMENT ---------- */
+  function buildAnnouncement(host) {
+    var note = document.createElement('div');
+    note.className = 'adm-note';
+    note.innerHTML = 'شريط إعلان أعلى الموقع. فعّليه واكتبي الرسالة، وهيظهر لكل الزوار بعد النشر.';
+    host.appendChild(note);
+
+    var A = C.settings.announcement;
+    var card = document.createElement('div');
+    card.className = 'adm-card';
+
+    card.appendChild(toggle('إظهار الشريط', A.visible === true, function (v) { A.visible = v; }));
+    card.appendChild(field('النص', '', A.text, function (v) { A.text = v; }));
+    card.appendChild(field('رابط الزرار (اختياري)', '', A.link, function (v) { A.link = v; }));
+    card.appendChild(field('نص الزرار', '', A.linkText, function (v) { A.linkText = v; }));
+    card.appendChild(field('لون الخلفية', 'مثال: #06683f', A.bg, function (v) { A.bg = v; }));
+    card.appendChild(field('لون النص', 'مثال: #ffffff', A.color, function (v) { A.color = v; }));
+
+    host.appendChild(card);
+  }
+
   function countFor(id) {
     switch (id) {
       case 'sections': return SEC_META.filter(function (m) {
@@ -1451,6 +1586,9 @@ function buildSections(host) {
       case 'faq':      return C.faq.length;
       case 'pages':    return Object.keys(C.pages || {}).length;
       case 'home':     return 1;
+      case 'theme':    return 1;
+      case 'contact':  return 1;
+      case 'announcement': return (C.settings && C.settings.announcement && C.settings.announcement.visible) ? 1 : 0;
       default: return 0;
     }
   }
@@ -1634,6 +1772,17 @@ function buildSections(host) {
     return header + 'window.CONTENT = ' + body + ';\n';
   }
 
+  function configJsText() {
+    var c = (C.settings && C.settings.contact) || {};
+    var body = JSON.stringify(c, null, 2);
+    return '/* ==========================================================================\n' +
+      '   أكاديمية قوارير — Qawareer Academy\n' +
+      '   الإعدادات المركزية — غيّر هنا مرة واحدة فقط\n' +
+      '   (تولّدت من لوحة التحكم — عدّليها من تبويب «الإعدادات»)\n' +
+      '   ========================================================================== */\n' +
+      'window.SITE = ' + body + ';\n';
+  }
+
   function download(name, text, mime) {
     var blob = new Blob([text], { type: mime || 'text/plain;charset=utf-8' });
     var url = URL.createObjectURL(blob);
@@ -1744,6 +1893,14 @@ function buildSections(host) {
               contentJsText(), g.token, existing ? existing.sha : null, msg);
           })
           .then(function () {
+            // regenerate config.js from the central contact settings
+            return getFile(g.owner, g.repo, g.branch, 'config.js', g.token)
+              .then(function (existing) {
+                return putFile(g.owner, g.repo, g.branch, 'config.js',
+                  configJsText(), g.token, existing ? existing.sha : null, msg);
+              });
+          })
+          .then(function () {
             // then every touched page, one after another (rate limits)
             return files.reduce(function (chain, f) {
               return chain.then(function () {
@@ -1776,6 +1933,7 @@ function buildSections(host) {
     rebuildPages()
       .then(function (files) {
         download('content.js', contentJsText(), 'text/javascript;charset=utf-8');
+        download('config.js', configJsText(), 'text/javascript;charset=utf-8');
         setTimeout(function () {
           files.forEach(function (f, i) {
             setTimeout(function () {

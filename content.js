@@ -689,5 +689,42 @@ window.CONTENT = {
       }
     }
   },
-  "updatedAt": "2026-10-07T20:59:46.704Z"
+  "settings": {
+    "theme": {
+      "name": "green",
+      "mode": "auto",
+      "showDarkToggle": true,
+      "colors": {
+        "brand": "",
+        "accent": "",
+        "bg": "",
+        "text": ""
+      }
+    },
+    "contact": {
+      "name": "أكاديمية قوارير",
+      "nameEn": "Qawareer Academy",
+      "slogan": "رفقاً بقلوبكن.. وقرباً لكتاب الله",
+      "tagline": "برامج قرآنية وتربوية رحيمة",
+      "phoneDisplay": "01130830390",
+      "whatsapp": "201130830390",
+      "email": "QawarirAcademy@gmail.com",
+      "telegram": "QawareerAcademy",
+      "instagram": "Qawareer.Academy",
+      "audience": "النساء والأطفال",
+      "location": "أونلاين بالكامل",
+      "siteUrl": "",
+      "gaId": "",
+      "localStats": true
+    },
+    "announcement": {
+      "visible": false,
+      "text": "",
+      "link": "",
+      "linkText": "",
+      "bg": "#06683f",
+      "color": "#ffffff"
+    }
+  },
+  "updatedAt": "2026-10-08T00:00:00.000Z"
 };

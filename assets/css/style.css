@@ -90,6 +90,130 @@
 }
 
 /* --------------------------------------------------------------------------
+   2b. THEME PRESETS
+   Each theme swaps the brand scale + gold accent. The default is "green",
+   which is already :root, so it needs no override.
+   -------------------------------------------------------------------------- */
+[data-theme-name='teal'] {
+  --green:        #0e7490;
+  --green-d:      #155e75;
+  --green-dd:     #083344;
+  --green-l:      #0891b2;
+  --green-soft:   #e0f2f7;
+  --gold:         #d4a24e;
+  --gold-d:       #9a6b23;
+  --gold-l:       #ecc988;
+  --gold-soft:    #faf3e3;
+  --green-h:      #2dd4bf;
+}
+[data-theme-name='teal'][data-theme='dark'],
+[data-theme='dark'][data-theme-name='teal'] {
+  --green-soft:  rgba(14, 116, 144, .20);
+  --gold-soft:   rgba(212, 162, 78, .14);
+  --cream:       #0e1a1f;
+  --paper:       #14262c;
+  --ink:         #e6f2f5;
+  --ink-2:       #b6cdd4;
+  --muted:       #8aa6b0;
+  --line:        #234049;
+  --line-2:      #2f5561;
+  --bg:          #0d1b20;
+  --bg-alt:      #14262c;
+  --text:        #e6f2f5;
+  --text-soft:   #b6cdd4;
+  --green-h:     #38c8e8;
+}
+
+[data-theme-name='gold'] {
+  --green:        #9a6b23;
+  --green-d:      #7a5117;
+  --green-dd:     #54350c;
+  --green-l:      #b98630;
+  --green-soft:   #faf3e3;
+  --gold:         #c08a2e;
+  --gold-d:       #8f6315;
+  --gold-l:       #ecc988;
+  --gold-soft:    #fdf6e7;
+  --green-h:      #d9a441;
+}
+[data-theme='dark'][data-theme-name='gold'] {
+  --green-soft:  rgba(154, 107, 35, .22);
+  --gold-soft:   rgba(192, 138, 46, .16);
+  --cream:       #1a150c;
+  --paper:       #241d12;
+  --ink:         #f4ead6;
+  --ink-2:       #d6c6a4;
+  --muted:       #ac9a76;
+  --line:        #3a2f1d;
+  --line-2:      #4d3f27;
+  --bg:          #1c1710;
+  --bg-alt:      #241d12;
+  --text:        #f4ead6;
+  --text-soft:   #d6c6a4;
+  --green-h:     #e0b25c;
+}
+
+[data-theme-name='royal'] {
+  --green:        #1d4ed8;
+  --green-d:      #1e40af;
+  --green-dd:     #172c6e;
+  --green-l:      #2563eb;
+  --green-soft:   #e6ecfd;
+  --gold:         #c9a53f;
+  --gold-d:       #93741f;
+  --gold-l:       #e6cb78;
+  --gold-soft:    #faf3e0;
+  --green-h:      #6d9bff;
+}
+[data-theme='dark'][data-theme-name='royal'] {
+  --green-soft:  rgba(29, 78, 216, .22);
+  --gold-soft:   rgba(201, 165, 63, .14);
+  --cream:       #0f1424;
+  --paper:       #171f38;
+  --ink:         #e4eafa;
+  --ink-2:       #b9c5e2;
+  --muted:       #8b98bb;
+  --line:        #273356;
+  --line-2:      #34426e;
+  --bg:          #101730;
+  --bg-alt:      #171f38;
+  --text:        #e4eafa;
+  --text-soft:   #b9c5e2;
+  --green-h:     #7fa4ff;
+}
+
+[data-theme-name='maroon'] {
+  --green:        #8b2d3a;
+  --green-d:      #6d1f2c;
+  --green-dd:     #4c131e;
+  --green-l:      #a63a4a;
+  --green-soft:   #f8e8e9;
+  --gold:         #caa959;
+  --gold-d:       #856b30;
+  --gold-l:       #e0c07a;
+  --gold-soft:    #faf3e3;
+  --green-h:      #e0758a;
+}
+[data-theme='dark'][data-theme-name='maroon'] {
+  --green-soft:  rgba(139, 45, 58, .22);
+  --gold-soft:   rgba(202, 169, 89, .14);
+  --cream:       #1c1114;
+  --paper:       #28161b;
+  --ink:         #f4e4e7;
+  --ink-2:       #d8b9bf;
+  --muted:       #b08e95;
+  --line:        #3d222a;
+  --line-2:      #54303b;
+  --bg:          #1e1317;
+  --bg-alt:      #28161b;
+  --text:        #f4e4e7;
+  --text-soft:   #d8b9bf;
+  --green-h:     #f08296;
+}
+
+/* Manual color overrides set from the admin panel win over presets. */
+
+/* --------------------------------------------------------------------------
    3. RESET & BASE
    -------------------------------------------------------------------------- */
 *, *::before, *::after { box-sizing: border-box; }
@@ -2629,3 +2753,9 @@ a.contact-card__val:hover { color: var(--gold-d); }
   .tier__name { font-size: 1.45rem; }
   .tier__banner { padding: 24px 22px 22px; }
 }
+"
+
+/* Announcement bar (controlled from the admin panel) */
+.announce { padding: 10px 0; font-weight: 700; font-size: .95rem; text-align: center; }
+.announce a { color: inherit; text-decoration: underline; margin-inline-start: 8px; }
+"
