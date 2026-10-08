@@ -555,7 +555,7 @@ window.CONTENT = {
   ],
   "sections": {
     "articles": {
-      "visible": true
+      "visible": false
     },
     "reviews": {
       "visible": true
