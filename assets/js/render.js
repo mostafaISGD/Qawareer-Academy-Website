@@ -920,6 +920,76 @@
      search engines, whereas deleting it would quietly and permanently lose it
      the next time the owner re-enables the section from the panel. */
 
+  /* ---- settings: theme + announcement + dark toggle ---- */
+  function settings() { return data().settings || {}; }
+
+  function themeName() {
+    var t = settings().theme || {};
+    return t.name && t.name !== 'green' ? t.name : '';
+  }
+
+  function themeOverrideCss() {
+    var c = (settings().theme && settings().theme.colors) || {};
+    var rules = [];
+    if (c.brand)  rules.push('--green: ' + c.brand + '; --brand: ' + c.brand + ';');
+    if (c.accent) rules.push('--gold: ' + c.accent + '; --accent: ' + c.accent + ';');
+    if (c.bg)     rules.push('--bg: ' + c.bg + ';');
+    if (c.text)   rules.push('--text: ' + c.text + '; --ink: ' + c.text + ';');
+    return rules.length ? ':root { ' + rules.join(' ') + ' }' : '';
+  }
+
+  function announcementHtml() {
+    var a = settings().announcement || {};
+    if (!a.visible || !a.text) return '';
+    var link = a.link ? ' <a href="' + esc(a.link) + '">' + esc(a.linkText || 'اعرفي أكتر') + '</a>' : '';
+    return '<div class="announce" style="background:' + esc(a.bg || '#06683f') +
+           ';color:' + esc(a.color || '#fff') + '">' +
+           '<div class="container center">' + esc(a.text) + link + '</div></div>';
+  }
+
+  function applySettings(html) {
+    /* strip anything we injected on a previous rebuild so this is idempotent */
+    html = html.replace(/<style id="qwr-theme">[\s\S]*?<\/style>\s*/g, '');
+    html = html.replace(/<!--qwr:announcement:start-->[\s\S]*?<!--qwr:announcement:end-->\s*/g, '');
+
+    /* theme name */
+    var name = themeName();
+    html = html.replace(/<html([^>]*)>/, function (m, attrs) {
+      attrs = attrs.replace(/\sdata-theme-name="[^"]*"/g, '');
+      if (name) attrs += ' data-theme-name="' + name + '"';
+      return '<html' + attrs + '>';
+    });
+
+    /* forced dark/light mode */
+    var mode = (settings().theme || {}).mode || 'auto';
+    html = html.replace(/<html([^>]*)>/, function (m, attrs) {
+      attrs = attrs.replace(/\sdata-theme="[^"]*"/g, '');
+      attrs = attrs.replace(/\sdata-theme-forced="[^"]*"/g, '');
+      if (mode === 'dark') attrs += ' data-theme="dark"';
+      if (mode !== 'auto') attrs += ' data-theme-forced="' + mode + '"';
+      return '<html' + attrs + '>';
+    });
+
+    /* color overrides */
+    var css = themeOverrideCss();
+    if (css) {
+      html = html.replace('</head>', '<style id="qwr-theme">' + css + '</style>\n</head>');
+    }
+
+    /* dark-mode toggle button visibility */
+    var showToggle = (settings().theme || {}).showDarkToggle !== false && mode === 'auto';
+    if (!showToggle) {
+      html = html.replace(/<button[^>]*data-theme-toggle[^>]*>[\s\S]*?<\/button>/, '');
+    }
+
+    /* announcement bar */
+    var ann = announcementHtml();
+    if (ann) {
+      html = html.replace(/(<body[^>]*>)/, '$1\n<!--qwr:announcement:start-->\n' + ann + '\n<!--qwr:announcement:end-->');
+    }
+    return html;
+  }
+
   /* ---- add / remove is-off on every <section data-sec="..."> in a page --- */
   function applySections(html) {
     SEC_ORDER.forEach(function (key) {
@@ -954,7 +1024,7 @@
           return open + inner.replace(/<details class="faq__item"[\s\S]*?<\/details>/g, '') + close;
         });
     });
-    return html;
+    return applySettings(html);
   }
 
   /* ==================================================================
@@ -1117,6 +1187,7 @@
     secEmpty: secEmpty,
     regionEmpty: regionEmpty,
     applySections: applySections,
+    applySettings: applySettings,
     SEC_ORDER: SEC_ORDER,
     SEC_REGIONS: SEC_REGIONS
   };

@@ -36,10 +36,17 @@
     var saved = null;
     try { saved = localStorage.getItem(KEY); } catch (e) {}
 
-    if (saved === 'dark') root.setAttribute('data-theme', 'dark');
-    if (saved === 'light') root.removeAttribute('data-theme');
+    /* If the site was published with a forced light/dark mode, respect the
+       server-baked attribute and ignore the visitor's saved choice. */
+    var forced = root.getAttribute('data-theme-forced');
+    if (forced === 'dark') root.setAttribute('data-theme', 'dark');
+    if (forced === 'light') root.removeAttribute('data-theme');
+
+    if (saved === 'dark' && !forced) root.setAttribute('data-theme', 'dark');
+    if (saved === 'light' && !forced) root.removeAttribute('data-theme');
 
     if (!btn) return;
+    if (forced) { btn.style.display = 'none'; return; }
 
     btn.addEventListener('click', function () {
       var isDark = root.getAttribute('data-theme') === 'dark';
