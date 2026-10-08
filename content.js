@@ -564,7 +564,7 @@ window.CONTENT = {
       "visible": true
     },
     "materials": {
-      "visible": true
+      "visible": false
     },
     "hero": {
       "visible": true
@@ -1079,5 +1079,5 @@ window.CONTENT = {
       }
     }
   },
-  "updatedAt": "2026-10-08T23:42:12.930Z"
+  "updatedAt": "2026-10-08T23:45:26.722Z"
 };
