@@ -724,7 +724,162 @@ window.CONTENT = {
       "linkText": "",
       "bg": "#06683f",
       "color": "#ffffff"
+    },
+    "sectionOrder": {
+      "home": [
+        "hero",
+        "stats",
+        "programs",
+        "testimonials",
+        "pricing",
+        "articles",
+        "faq",
+        "cta"
+      ],
+      "about": [
+        "about-hero",
+        "about"
+      ],
+      "programs": [
+        "programs-cards",
+        "program-details"
+      ],
+      "pricing": [
+        "pricing-cards",
+        "price-table",
+        "price-notes"
+      ],
+      "testimonials": [
+        "reviews"
+      ],
+      "materials": [
+        "topics",
+        "materials-hero",
+        "materials-intro",
+        "materials-suggest"
+      ],
+      "faq": [
+        "faq"
+      ],
+      "contact": [
+        "soon-faq"
+      ]
+    },
+    "navigation": {
+      "header": [
+        {
+          "label": "الرئيسية",
+          "href": "index.html",
+          "visible": true,
+          "target": ""
+        },
+        {
+          "label": "عن الأكاديمية",
+          "href": "about.html",
+          "visible": true,
+          "target": ""
+        },
+        {
+          "label": "البرامج",
+          "href": "programs.html",
+          "visible": true,
+          "target": ""
+        },
+        {
+          "label": "الأسعار",
+          "href": "pricing.html",
+          "visible": true,
+          "target": ""
+        },
+        {
+          "label": "آراء الطلاب",
+          "href": "testimonials.html",
+          "visible": true,
+          "target": ""
+        },
+        {
+          "label": "المواد",
+          "href": "materials.html",
+          "visible": true,
+          "target": ""
+        },
+        {
+          "label": "تواصل معنا",
+          "href": "contact.html",
+          "visible": true,
+          "target": ""
+        }
+      ],
+      "footer": {
+        "columns": [
+          {
+            "title": "روابط سريعة",
+            "links": [
+              {
+                "label": "الرئيسية",
+                "href": "index.html"
+              },
+              {
+                "label": "البرامج",
+                "href": "programs.html"
+              },
+              {
+                "label": "الأسعار",
+                "href": "pricing.html"
+              },
+              {
+                "label": "الأسئلة الشائعة",
+                "href": "faq.html"
+              }
+            ]
+          },
+          {
+            "title": "الأكاديمية",
+            "links": [
+              {
+                "label": "عن الأكاديمية",
+                "href": "about.html"
+              },
+              {
+                "label": "المواد المقروءة",
+                "href": "materials.html"
+              },
+              {
+                "label": "آراء الطلاب",
+                "href": "testimonials.html"
+              }
+            ]
+          },
+          {
+            "title": "تواصل",
+            "links": [
+              {
+                "label": "واتساب",
+                "href": "https://wa.me/201130830390"
+              },
+              {
+                "label": "إيميل",
+                "href": "mailto:QawarirAcademy@gmail.com"
+              },
+              {
+                "label": "تيليجرام",
+                "href": "https://t.me/QawareerAcademy"
+              },
+              {
+                "label": "إنستجرام",
+                "href": "https://instagram.com/Qawareer.Academy"
+              }
+            ]
+          }
+        ]
+      },
+      "social": {
+        "whatsapp": "201130830390",
+        "telegram": "QawareerAcademy",
+        "instagram": "Qawareer.Academy",
+        "email": "QawarirAcademy@gmail.com"
+      }
     }
   },
-  "updatedAt": "2026-10-08T15:36:48.525Z"
+  "updatedAt": "2026-10-08T17:05:43.468Z"
 };
