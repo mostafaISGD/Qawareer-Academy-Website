@@ -991,7 +991,10 @@
   function sectionVisible(key) {
     var s = (data().sections || {})[key];
     if (!s) return true;
-    return s.visible; // true, 'soon', or false
+    var v = s.visible;
+    if (v === 'on') return true;   /* legacy string value */
+    if (v === 'off') return false; /* legacy string value */
+    return v; // true, 'soon', or false
   }
 
   function sectionState() {
