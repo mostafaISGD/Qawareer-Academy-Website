@@ -929,7 +929,28 @@
   };
 
   /* The "قريباً" panel shown in place of a hidden section. */
+  /* The "قريباً" panel shown in place of a hidden section. */
   var SEC_SOON = {
+    hero: {
+      ico: '\u{1F3E0}',
+      title: 'الشاشة الرئيسية',
+      text: 'بنجهّز الواجهة الجديدة. تابعينا، هننشرها أول ما تخلص بإذن الله.'
+    },
+    stats: {
+      ico: '\u{1F4CA}',
+      title: 'الأرقام والإحصائيات',
+      text: 'بنحدث الأرقام. ارجعي تاني تلاقينها هنا.'
+    },
+    why: {
+      ico: '\u{2753}',
+      title: 'لماذا قوارير؟',
+      text: 'بنكتب الأسباب بالتفصيل. قريباً هتلاقيها هنا.'
+    },
+    programs: {
+      ico: '\u{1F4DA}',
+      title: 'برامجنا',
+      text: 'بنضيف برامج جديدة. اطلعي على اللي متاح دلوقتي من صفحة البرامج.'
+    },
     articles: {
       ico: '\u{1F4F0}',
       title: 'المقالات والشروحات',
@@ -945,20 +966,32 @@
       title: 'الأسئلة الشائعة',
       text: 'بنكتب الآن أهم الأسئلة التي تتكرر علينا. اسألينا في واتسابلو ونجاوبك على طول.'
     },
+    pricing: {
+      ico: '\u{1F4B0}',
+      title: 'الأسعار والباقات',
+      text: 'بنراجع الأسعار. التفاصيل في صفحة الأسعار.'
+    },
+    cta: {
+      ico: '\u{1F4E8}',
+      title: 'تواصل معنا',
+      text: 'مستنيين رسالتك. راسلينا على واتساب ونرد عليكي.'
+    },
     materials: {
       ico: '\u{1F4DA}',
       title: 'المواد المقروءة',
-      text: 'مكتبة المواد قيد الإعداد. قولينا أي مادة تحتاجينها ونبدأ بيها.'
+      text: 'مكتبة المواد قيد الإعداد. قوليني أي مادة تحتاجينها ونبدأ بيها.'
     }
-  };
+  };;
 
   var SEC_ORDER = ['hero', 'stats', 'why', 'programs', 'testimonials', 'pricing', 'articles', 'reviews', 'faq', 'cta', 'materials'];
 
   /* A missing entry means "visible", so a half-edited content.js can never
-     hide a section by accident. */
+     hide a section by accident.
+     Returns: true (show content), 'soon' (show soon panel), false (hide completely) */
   function sectionVisible(key) {
     var s = (data().sections || {})[key];
-    return !(s && s.visible === false);
+    if (!s) return true;
+    return s.visible; // true, 'soon', or false
   }
 
   function sectionState() {
@@ -1179,36 +1212,38 @@
   /* ---- add / remove is-off on every <section data-sec="..."> in a page --- */
   function applySections(html) {
     SEC_ORDER.forEach(function (key) {
-      var off = !sectionVisible(key);
+      var vis = sectionVisible(key);
+      var isOff = vis === false;
+      var isSoon = vis === 'soon';
+
       var re = new RegExp('<section([^>]*\\sdata-sec="' + key + '"[^>]*)>', 'g');
       html = html.replace(re, function (m, attrs) {
         if (!/\sclass="/.test(attrs)) {
-          return '<section' + attrs + ' class="' + (off ? 'is-off' : '') + '">';
+          return '<section' + attrs + ' class="' + (isOff || isSoon ? 'is-off' : '') + '">';
         }
         return '<section' + attrs.replace(
           /\sclass="([^"]*)"/,
           function (c, cls) {
             var list = cls.split(/\s+/).filter(Boolean)
               .filter(function (x) { return x !== 'is-off'; });
-            if (off) list.push('is-off');
+            if (isOff || isSoon) list.push('is-off');
             return ' class="' + list.join(' ') + '"';
           }) + '>';
       });
 
-      if (!off) return;
+      if (!isSoon) return;
 
-      /* The contact page carries a short hand-written FAQ rather than a
-         rendered region. It sits inside <section data-sec="faq">, so it is
-         hidden along with everything else -- this takes the items out of the
-         source too, so a hidden FAQ is nowhere in the file. The attribute
-         order inside <section> is not fixed, hence the check in the callback
-         rather than in the pattern. */
-      html = html.replace(
-        /(<section[^>]*data-sec="faq"[^>]*>)([\s\S]*?)(<\/section>)/g,
-        function (m, open, inner, close) {
-          if (open.indexOf('is-off') === -1) return m;
-          return open + inner.replace(/<details class="faq__item"[\s\S]*?<\/details>/g, '') + close;
+      /* Inject "قريباً" panel after the specific hidden section */
+      var soonHtml = secSoon(key);
+      if (soonHtml) {
+        var sectionRe = new RegExp(
+          '(<section[^>]*\\sdata-sec="' + key + '"[^>]*>[\\s\\S]*?<\\/section\\s*>)',
+          'g'
+        );
+        html = html.replace(sectionRe, function (m, fullSection) {
+          return fullSection + '\n' + soonHtml;
         });
+      }
     });
     return applySettings(html);
   }
