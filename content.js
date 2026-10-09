@@ -712,7 +712,7 @@ window.CONTENT = {
   },
   "settings": {
     "theme": {
-      "name": "royal",
+      "name": "green",
       "mode": "auto",
       "showDarkToggle": true,
       "colors": {
@@ -1079,5 +1079,5 @@ window.CONTENT = {
       }
     }
   },
-  "updatedAt": "2026-10-09T01:47:32.097Z"
+  "updatedAt": "2026-10-09T18:11:30.553Z"
 };
