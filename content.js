@@ -573,7 +573,7 @@ window.CONTENT = {
       "visible": true
     },
     "why": {
-      "visible": true
+      "visible": false
     },
     "programs": {
       "visible": true
@@ -1079,5 +1079,5 @@ window.CONTENT = {
       }
     }
   },
-  "updatedAt": "2026-10-09T18:11:30.553Z"
+  "updatedAt": "2026-10-09T22:41:50.884Z"
 };
