@@ -712,7 +712,7 @@ window.CONTENT = {
   },
   "settings": {
     "theme": {
-      "name": "teal",
+      "name": "royal",
       "mode": "auto",
       "showDarkToggle": true,
       "colors": {
@@ -745,12 +745,6 @@ window.CONTENT = {
       "linkText": " ؤثيؤثؤصؤصؤيؤصثؤ",
       "bg": "#06683f",
       "color": "#ffffff"
-    },
-    "home": {
-      "reviews": {
-        "random": true,
-        "count": 3
-      }
     },
     "sectionOrder": {
       "home": [
@@ -1085,5 +1079,5 @@ window.CONTENT = {
       }
     }
   },
-  "updatedAt": "2026-10-08T23:52:09.359Z"
+  "updatedAt": "2026-10-09T01:47:32.097Z"
 };
