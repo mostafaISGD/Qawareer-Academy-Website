@@ -255,9 +255,10 @@
     </div>
   </section>
 
-  <!-- ================= INTRO / WHY ================= -->
-  <section class="section section--alt on-dark" data-sec="why" style="background:linear-gradient(160deg,var(--green) 0%,var(--green-dd) 100%)">
+  <!-- ================= INTRO / ABOUT ================= -->
+  <section class="section band-brand on-dark" data-sec="about-intro">
     <div class="container">
+<!--qwr:about-intro:start-->
       <div class="sec-head sec-head--center">
         <span class="kicker">من نحن</span>
         <h2>تعليم قرآني برحمة، يليق بكِ</h2>
@@ -282,35 +283,48 @@
           <p class="card__text">متابعة أسبوعية إنسانية تشجيعية، وأسبوع بدون لوم مهما كان الانقطاع.</p>
         </article>
       </div>
+<!--qwr:about-intro:end-->
     </div>
   </section>
 
   <!-- ================= VIDEO ================= -->
-  <section class="section">
+  <section class="section" data-sec="video">
     <div class="container">
+<!--qwr:video:start-->
       <div class="sec-head sec-head--center">
         <span class="kicker">فيديو تعريفي</span>
         <h2>تعرّفي على أكاديمية قوارير</h2>
         <p>دقيقة واحدة تلخّص رسالتنا وطريقتنا.</p>
         <div class="rule"></div>
       </div>
+
       <div class="video" data-reveal="zoom">
         <div class="video__frame">
           <iframe
             src="https://www.youtube-nocookie.com/embed/y1TUN9ivr-Q"
-            title="فيديو تعريفي بأكاديمية قوارير"
+            title="تعرّفي على أكاديمية قوارير"
             loading="lazy"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowfullscreen></iframe>
         </div>
         <p class="video__cap">جزء عم كامل — أسلوب متّبع في تعليم وتحفيظ القرآن الكريم للأطفال</p>
       </div>
+<!--qwr:video:end-->
     </div>
   </section>
   <!-- ================= PROGRAMS ================= -->
   <section class="section" data-sec="programs">
     <div class="container">
-      <!--qwr:programs-cards:start-->
+<!--qwr:programs-head:start-->
+      <div class="sec-head sec-head--center">
+        <span class="kicker">البرامج</span>
+        <h2>أربعة برامج تبدأ من حيث أنتِ</h2>
+        <p>كل برنامج مصمّم لمرحلة معيّنة — اختاري الأقرب لوضعكِ دلوقتي، أو تعرّفي على الباقي من صفحة البرامج.</p>
+        <div class="rule"></div>
+      </div>
+<!--qwr:programs-head:end-->
+      <div class="grid g-progs">
+<!--qwr:programs-cards:start-->
       <article class="prog" data-reveal>
         <div class="prog__head">
           <div class="prog__num">1</div>
@@ -565,38 +579,21 @@
   <section class="section is-off" id="materials" data-sec="materials">
     <div class="container">
 <!--qwr:materials-block:start-->
-      <div class="sec-head sec-head--center">
-        <span class="kicker">المواد</span>
-        <h2>مكتبة عملية تساعدكِ في البيت</h2>
-        <p>أدلة وورق مراجعة وأنشطة مناسبة للطفل، كلها متاحة مجاناً ومباشرة — تنفع في أي وقت، من غير ما تحتاجي تحفظي منظّم.</p>
-        <div class="rule"></div>
-      </div>
-      <div class="block-cta" data-reveal>
-        <a class="btn btn--green" href="materials.html">تصفّحي المواد</a>
-      </div>
+
 <!--qwr:materials-block:end-->
-<!--qwr:soon:materials:start-->
-      <div class="sec-soon">
-        <div class="container center">
-          <div class="sec-soon__ico" aria-hidden="true">📚</div>
-          <span class="chip chip--gold">قريباً بإذن الله</span>
-          <h2>المواد</h2>
-          <p class="muted">بنجهّز مكتبة المواد والأدلة. تابعينا، أو اسألينا في واتسابلو ويصلك أول دليل.</p>
-          <a class="btn btn--green mt-3" href="#" data-wa>نبهيني عند الجاهزية</a>
-        </div>
-      </div>
-<!--qwr:soon:materials:end-->
     </div>
   </section>
 
   <!-- ================= WHY QAWAREER ================= -->
-  <section class="section on-dark" style="background:linear-gradient(165deg,var(--green) 0%,var(--green-dd) 100%)">
+  <section class="section band-brand on-dark" data-sec="why">
     <div class="container">
+<!--qwr:why:start-->
       <div class="sec-head sec-head--center">
         <span class="kicker">لماذا قوارير؟</span>
         <h2>أربعة أسباب يخلّوكِ تختارينا</h2>
         <div class="rule"></div>
       </div>
+
       <div class="grid g-4">
         <article class="card card--glass" data-reveal>
           <div class="card__ico">🎓</div>
@@ -613,12 +610,13 @@
           <h3 class="card__title">متابعة مستمرة</h3>
           <p class="card__text">خريطة قرآنية أسبوعية وتقرير ختامي يوضّح ما أُنجز.</p>
         </article>
-        <article class="card card--glass" data-reveal data-delay="3">
+        <article class="card card--glass" data-reveal>
           <div class="card__ico">💚</div>
           <h3 class="card__title">بلا لوم ولا ضغط</h3>
           <p class="card__text">لو انقطعتِ، بنرجّعكِ بلطف. الخطة بتتعدّل مع ظروفكِ.</p>
         </article>
       </div>
+<!--qwr:why:end-->
     </div>
   </section>
 
@@ -771,17 +769,6 @@
         <a class="btn btn--outline" href="testimonials.html">اقرئي المزيد من الآراء</a>
       </div>
     </div>
-<!--qwr:soon:reviews:start-->
-      <div class="sec-soon">
-        <div class="container center">
-          <div class="sec-soon__ico" aria-hidden="true">⭐</div>
-          <span class="chip chip--gold">قريباً بإذن الله</span>
-          <h2>آراء الطالبات</h2>
-          <p class="muted">بنجمع الآن آراء طالباتنا وأمهاتنا. أول ما تكفي نلمسها هننشرها هنا بإذن الله.</p>
-          <a class="btn btn--green mt-3" href="#" data-wa>نبهيني عند الجاهزية</a>
-        </div>
-      </div>
-<!--qwr:soon:reviews:end-->
   </section>
   <!-- ================= FAQ ================= -->
   <section class="section section--alt" data-sec="faq">
@@ -842,17 +829,6 @@
 <!--qwr:faq:end-->
       </div>
     </div>
-<!--qwr:soon:faq:start-->
-      <div class="sec-soon">
-        <div class="container center">
-          <div class="sec-soon__ico" aria-hidden="true">❓</div>
-          <span class="chip chip--gold">قريباً بإذن الله</span>
-          <h2>الأسئلة الشائعة</h2>
-          <p class="muted">بنكتب الآن أهم الأسئلة التي تتكرر علينا. اسألينا في واتسابلو ونجاوبك على طول.</p>
-          <a class="btn btn--green mt-3" href="#" data-wa>نبهيني عند الجاهزية</a>
-        </div>
-      </div>
-<!--qwr:soon:faq:end-->
   </section>
 
   <!-- ================= CTA ================= -->

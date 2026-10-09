@@ -31,6 +31,71 @@
     if (!S.home.reviews) S.home.reviews = { random: true, count: 3 };
     if (S.home.reviews.random == null) S.home.reviews.random = true;
     if (S.home.reviews.count == null) S.home.reviews.count = 3;
+
+    /* `why` used to point at the "من نحن" block while the panel labelled it
+       "لماذا قوارير" -- so a saved setting for one actually controlled the
+       other. The two blocks have their own keys now, and the old value moves
+       to the block it really controlled. `why` starts clean (missing =
+       visible), and the dead `testimonials` key folds into `reviews`. */
+    if (!C.sections) C.sections = {};
+    if (C.sections.why && !C.sections['about-intro']) {
+      C.sections['about-intro'] = C.sections.why;
+      delete C.sections.why;
+    }
+    if (C.sections.testimonials && !C.sections.reviews) {
+      C.sections.reviews = C.sections.testimonials;
+    }
+    delete C.sections.testimonials;
+
+    /* home blocks + their cards, so the panel can edit every word in them */
+    if (!C.home) C.home = {};
+    if (!C.home.blocks) C.home.blocks = {};
+    if (!C.home.cards) C.home.cards = {};
+    if (!C.home.video) C.home.video = {
+      url: 'y1TUN9ivr-Q',
+      caption: 'جزء عم كامل — أسلوب متّبع في تعليم وتحفيظ القرآن الكريم للأطفال'
+    };
+    if (!C.home.blocks.aboutIntro) C.home.blocks.aboutIntro = {
+      kicker: 'من نحن',
+      title: 'تعليم قرآني برحمة، يليق بكِ',
+      lead: 'في قوارير مش بنقدّم حصص حفظ وخلاص — بنصمّم مسار شخصي لكل طالبة وطفل.'
+    };
+    if (!C.home.blocks.video) C.home.blocks.video = {
+      kicker: 'فيديو تعريفي',
+      title: 'تعرّفي على أكاديمية قوارير',
+      lead: 'دقيقة واحدة تلخّص رسالتنا وطريقتنا.'
+    };
+    if (!C.home.blocks.why) C.home.blocks.why = {
+      kicker: 'لماذا قوارير؟',
+      title: 'أربعة أسباب يخلّوكِ تختارينا',
+      lead: ''
+    };
+    if (!C.home.blocks.programs) C.home.blocks.programs = {
+      kicker: 'البرامج',
+      title: 'أربعة برامج تبدأ من حيث أنتِ',
+      lead: 'كل برنامج مصمّم لمرحلة معيّنة — اختاري الأقرب لوضعكِ دلوقتي، أو تعرّفي على الباقي من صفحة البرامج.'
+    };
+    if (!C.home.blocks.materials) C.home.blocks.materials = {
+      kicker: 'المواد',
+      title: 'مكتبة عملية تساعدكِ في البيت',
+      lead: 'أدلة وورق مراجعة وأنشطة مناسبة للطفل، كلها متاحة مجاناً ومباشرة — تنفع في أي وقت، من غير ما تحتاجي تحفظي منظّم.',
+      cta: 'تصفّحي المواد'
+    };
+    if (!C.home.cards.aboutIntro) {
+      C.home.cards.aboutIntro = [
+        { ico: '💻', title: 'أونلاين في أي وقت', text: 'من بيتكِ ومن أي مكان، بمواعيد مرنة تناسب جدولكِ وظروفكِ.' },
+        { ico: '🗺️', title: 'خريطة قرآنية', text: 'متابعة واضحة لكل مقطع: قيد الحفظ، يحتاج تثبيت، ثابت، أو يحتاج استعادة.' },
+        { ico: '🤝', title: 'رفقة بلا ضغط', text: 'متابعة أسبوعية إنسانية تشجيعية، وأسبوع بدون لوم مهما كان الانقطاع.' }
+      ];
+    }
+    if (!C.home.cards.why) {
+      C.home.cards.why = [
+        { ico: '🎓', title: 'معلّمات مؤهّلات', text: 'فريق معلمات متخصّصات في التعليم القرآني بأساليب تربوية حديثة.' },
+        { ico: '🎯', title: 'مراعاة الفروق', text: 'خطة مخصّصة لكل طالبة حسب مستواها ووقتها وقدرتها.' },
+        { ico: '📈', title: 'متابعة مستمرة', text: 'خريطة قرآنية أسبوعية وتقرير ختامي يوضّح ما أُنجز.' },
+        { ico: '💚', title: 'بلا لوم ولا ضغط', text: 'لو انقطعتِ، بنرجّعكِ بلطف. الخطة بتتعدّل مع ظروفكِ.' }
+      ];
+    }
     if (!S.sectionOrder) S.sectionOrder = {
       home: ['hero', 'stats', 'programs', 'testimonials', 'pricing', 'articles', 'faq', 'cta'],
       about: ['about-hero', 'about'],
@@ -785,18 +850,19 @@
    either — which means it is not indexed before you are ready for it. */
 
 var SEC_META = [
-  // Homepage sections
+  // Homepage sections. `binary: true` = ظاهر / مخفي only, no «قريباً».
   { key: 'hero',       title: 'الهيرو (الشاشة الأولى)',    where: 'الصفحة الرئيسية' },
   { key: 'stats',      title: 'شريط الأرقام',              where: 'الصفحة الرئيسية' },
-  { key: 'why',        title: 'قسم لماذا قوارير',          where: 'الصفحة الرئيسية' },
-  { key: 'programs',   title: 'قسم البرامج',               where: 'الصفحة الرئيسية + صفحة البرامج' },
-  { key: 'testimonials',title: 'آراء الطالبات (مقدمة)',   where: 'الصفحة الرئيسية' },
+  { key: 'about-intro',title: 'من نحن',                    where: 'الصفحة الرئيسية', binary: true },
+  { key: 'video',      title: 'فيديو تعريفي',              where: 'الصفحة الرئيسية', binary: true },
+  { key: 'programs',   title: 'قسم البرامج',               where: 'الصفحة الرئيسية + صفحة البرامج', binary: true },
+  { key: 'why',        title: 'لماذا قوارير؟',             where: 'الصفحة الرئيسية', binary: true },
   { key: 'pricing',    title: 'معاينة الأسعار',            where: 'الصفحة الرئيسية + صفحة الأسعار' },
-  { key: 'articles',   title: 'المقالات والشروحات',       where: 'الصفحة الرئيسية + صفحة المقالات' },
   { key: 'reviews',    title: 'آراء الطالبات',            where: 'الصفحة الرئيسية + صفحة آراء الطالبات' },
   { key: 'faq',        title: 'الأسئلة الشائعة',          where: 'الرئيسية + صفحة الأسئلة + تواصل معنا' },
   { key: 'cta',        title: 'شريط الدعوة للتسجيل',      where: 'الصفحة الرئيسية' },
   { key: 'materials',  title: 'المواد المقروءة',           where: 'الصفحة الرئيسية + صفحة المواد' },
+  { key: 'articles',   title: 'المقالات والشروحات',       where: 'صفحة المقالات (لسه مفيش صفحة)' },
 ];
 
 function secState(key) {
@@ -806,6 +872,8 @@ function secState(key) {
   var v = C.sections[key].visible;
   if (v === 'on') C.sections[key].visible = true;
   if (v === 'off') C.sections[key].visible = false;
+  /* binary blocks have no "قريباً" state, so never show one as selected */
+  if (v === 'soon' && window.RENDER.secIsBinary(key)) C.sections[key].visible = true;
   return C.sections[key];
 }
 
@@ -815,8 +883,8 @@ function buildSections(host) {
   note.innerHTML =
     'المفتاح ده بيحكم في <strong>اللي بيشوفه الزائرة بس</strong>، ' +
     'وأنتِ بتقدري تكتبي وتعدّلي عادي. ' +
-    'لما تقفلي أي قسم، اختاري: <strong>يختفي خالص</strong> (مافيش حاجة) ' +
-    'أو <strong>يظهر «قريباً»</strong> (لوحة مكان المحتوى). ' +
+    'لما تقفلي أي قسم، اختاري: <strong>يختفي خالص</strong> (مافيش حاجة — ' +
+    'ولا الخلفية ولا الفراغ) أو <strong>يظهر «قريباً»</strong> (لوحة مكان المحتوى). ' +
     'المحتوى بيتفضل في اللوحة، ارجعي المفتاح تاني في أي وقت.';
   host.appendChild(note);
 
@@ -836,7 +904,8 @@ function buildSections(host) {
     var tools = document.createElement('div');
     tools.className = 'adm-card__tools';
 
-    // Three-state segmented control
+    // Segmented control. Binary blocks get two buttons: a "قريباً" panel on a
+    // section that already exists reads oddly, so those are on/off only.
     var wrap = document.createElement('div');
     wrap.style.display = 'flex';
     wrap.style.gap = '6px';
@@ -848,8 +917,9 @@ function buildSections(host) {
     var states = [
       { val: 'on', label: '✅ ظاهر', title: 'الزائرة تشوف المحتوى طبيعي' },
       { val: 'soon', label: '🕐 قريباً', title: 'الزائرة تشوف لوحة «قريباً بإذن الله»' },
-      { val: 'off', label: '🚫 مخفي', title: 'القسم يختفي خالص، مفيش حاجة تظهر' }
+      { val: 'off', label: '🚫 مخفي', title: 'القسم يختفي خالص — خلفيته الفراغة كمان' }
     ];
+    if (m.binary) states = states.filter(function (st) { return st.val !== 'soon'; });
 
     states.forEach(function (st) {
       var btn = document.createElement('button');
@@ -1549,6 +1619,69 @@ function buildSections(host) {
     cc.appendChild(field('النص', '', h.cta.text, function (v) { h.cta.text = v; }, true));
     cc.appendChild(field('نص الزرار', '', h.cta.button, function (v) { h.cta.button = v; }));
     host.appendChild(cc);
+
+    /* من نحن · لماذا قوارير · الفيديو · عنوان البرامج */
+    buildHomeBlocks(host);
+  }
+
+  /* ---- the four blocks that used to be hand-written in index.html ----
+       من نحن · لماذا قوارير؟ · فيديو تعريفي · عنوان البرامج.
+       Each one is a heading plus a body, edited here and written into the
+       page by a marked region on every publish. */
+  function blockHeadCard(h, title, key) {
+    var b = h.blocks[key];
+    var card = document.createElement('div');
+    card.className = 'adm-card';
+    card.innerHTML = '<div class="adm-card__title">' + esc(title) + '</div>';
+    card.appendChild(field('العنوان الصغير (فوق العنوان)', '', b.kicker, function (v) { b.kicker = v; }));
+    card.appendChild(field('العنوان', '', b.title, function (v) { b.title = v; }));
+    card.appendChild(field('الجملة الوصفية', 'اتركيها فاضية لو مش هتكتبي حاجة', b.lead, function (v) { b.lead = v; }, true));
+    return card;
+  }
+
+  function glassCardEditor(host, list, title) {
+    var card = document.createElement('div');
+    card.className = 'adm-card';
+    card.innerHTML = '<div class="adm-card__title">' + esc(title) + '</div>' +
+      '<div class="adm-hint">الكروت دي بتظهر بالترتيب ده على الموقع.</div>';
+    host.appendChild(card);
+
+    list.forEach(function (c, i) {
+      var row = document.createElement('div');
+      row.className = 'adm-row';
+      row.appendChild(field('الأيقونة ' + (i + 1), 'emoji', c.ico, function (v) { c.ico = v; }));
+      row.appendChild(field('العنوان ' + (i + 1), '', c.title, function (v) { c.title = v; }));
+      card.appendChild(row);
+      card.appendChild(field('النص ' + (i + 1), '', c.text, function (v) { c.text = v; }, true));
+    });
+  }
+
+  function buildHomeBlocks(host) {
+    var h = C.home;
+    var note = document.createElement('div');
+    note.className = 'adm-note';
+    note.innerHTML = 'البلوكات دي كانت مكتوبة في الصفحة نفسها، فكانت <strong>مش قابلة ' +
+      'للتعديل ولا للإخفاء</strong>. دلوقتي بتعدّليها من هنا، والإخفاء من تبويب «الأقسام».';
+    host.appendChild(note);
+
+    host.appendChild(blockHeadCard(h, 'بلوك «من نحن»', 'aboutIntro'));
+    glassCardEditor(host, h.cards.aboutIntro, 'كروت «من نحن»');
+
+    host.appendChild(blockHeadCard(h, 'بلوك «لماذا قوارير؟»', 'why'));
+    glassCardEditor(host, h.cards.why, 'أسباب اختيارنا');
+
+    host.appendChild(blockHeadCard(h, 'بلوك «فيديو تعريفي»', 'video'));
+    var vcard = host.lastChild;
+    vcard.appendChild(field('رابط الفيديو', 'كود الفيديو أو الرابط كامل', h.video.url, function (v) { h.video.url = v; }));
+    vcard.appendChild(field('وصف تحت الفيديو', '', h.video.caption, function (v) { h.video.caption = v; }, true));
+
+    host.appendChild(blockHeadCard(h, 'عنوان بلوك «البرامج»', 'programs'));
+
+    /* the homepage teaser for the materials page -- its region was in the
+       markup but nothing rewrote it, so these words were frozen */
+    var mcard = blockHeadCard(h, 'بلوك «المواد» (معاينة في الرئيسية)', 'materials');
+    mcard.appendChild(field('نص الزرار', '', h.blocks.materials.cta, function (v) { h.blocks.materials.cta = v; }));
+    host.appendChild(mcard);
   }
 
   /* ================================================================
@@ -2271,13 +2404,16 @@ function buildSections(host) {
      ================================================================ */
   var PAGE_MAP = [
     { file: 'index.html', regions: {
+        'about-intro':   'aboutIntroBlock',
+        'video':         'videoBlock',
+        'programs-head': 'programsHead',
         'programs-cards': 'programCards',
         'stats':          'stats',
         'pricing-cards':  'priceCards',
+        'why':            'whyBlock',
+        'materials-block': 'materialsTeaser',
         'reviews':        'reviewSlider',
-        'faq':            'faq',
-        'soon:reviews':   'soon:reviews',
-        'soon:faq':       'soon:faq'
+        'faq':            'faq'
       } },
     { file: 'programs.html', regions: {
         'programs-cards':  'programCardsLocal',
@@ -2289,23 +2425,20 @@ function buildSections(host) {
         'price-notes':  'priceNotes'
       } },
     { file: 'testimonials.html', regions: {
-        'reviews': 'reviewsAll',
-        'soon:reviews': 'soon:reviews'
+        'reviews': 'reviewsAll'
       } },
     { file: 'materials.html', regions: {
         'topics':            'topics',
         'materials-hero':    'pageHeroText:materials',
         'materials-intro':   'materialsIntro',
-        'materials-suggest': 'materialsSuggest',
-        'soon:materials':    'soon:materials'
+        'materials-suggest': 'materialsSuggest'
       } },
     { file: 'faq.html', regions: {
-        'faq': 'faq',
-        'soon:faq': 'soon:faq'
+        'faq': 'faq'
       } },
-    { file: 'contact.html', regions: {
-        'soon:faq': 'soon:faq'
-      } },
+    /* no marked regions left, but the page still needs the section / nav /
+       texts / seo passes applied to it */
+    { file: 'contact.html', regions: {} },
     { file: 'about.html', regions: {
         'about-hero': 'pageHeroText:about',
         'about':      'aboutBody'
@@ -2341,10 +2474,6 @@ function buildSections(host) {
           } else if (spec.indexOf('pageHeroText:') === 0) {
             // the <h1> + subtitle pair inside .page-hero
             fresh = window.RENDER.pageHeroText(spec.split(':')[1]);
-          } else if (spec.indexOf('soon:') === 0) {
-            // the "قريباً" panel. Always written; CSS shows it only when the
-            // section is switched off.
-            fresh = window.RENDER.secSoon(spec.slice(5));
           } else {
             var fn = window.RENDER[spec];
             if (typeof fn !== 'function') {
