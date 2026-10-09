@@ -315,9 +315,21 @@ p { text-wrap: pretty; }
 }
 .container-narrow { max-width: var(--container-narrow); }
 
-.section { padding-block: clamp(52px, 7vw, 96px); }
+/* Vertical rhythm: these used to be generous enough that eleven sections
+   stacked up to more than a full screen of pure whitespace. Tightened to
+   roughly 60% of the old values -- the page reads the same, it just stops
+   feeling like it never ends. */
+.section { padding-block: clamp(32px, 4vw, 56px); }
 .section--alt { background: var(--bg-alt); }
-.section--tight { padding-block: clamp(38px, 5vw, 62px); }
+.section--tight { padding-block: clamp(26px, 3.4vw, 44px); }
+
+/* The deep green band behind the two glass-card blocks (من نحن and
+   لماذا قوارير). This was an inline gradient on each section, written twice
+   with two slightly different angles -- which is why the two bands never
+   lined up. One class now, so they cannot drift apart again. */
+.band-brand {
+  background: linear-gradient(160deg, var(--green) 0%, var(--green-dd) 100%);
+}
 
 .grid { display: grid; gap: 22px; }
 .g-2 { grid-template-columns: repeat(2, 1fr); }
@@ -328,6 +340,29 @@ p { text-wrap: pretty; }
 .g-auto { grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
 .g-auto-lg { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
 
+/* Program tiles on the homepage: three square-ish columns.
+   The homepage had no grid wrapper at all, so four full-width cards stacked
+   one under another and made the page twice as long as it needed to be. */
+.g-progs {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+@media (max-width: 980px) { .g-progs { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .g-progs { grid-template-columns: 1fr; } }
+
+/* Square-ish body: the header stacks above the number's title rather than
+   sitting beside it, which keeps the card close to 1:1 without fixing an
+   aspect-ratio -- any amount of text still fits (the foot stays pinned to
+   the bottom, so the arrows line up across the row). */
+.g-progs .prog__head {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 22px;
+}
+.g-progs .prog__body { padding: 18px 22px 20px; }
+
 .stack > * + * { margin-top: var(--gap, 16px); }
 .center { text-align: center; }
 .mt-auto { margin-top: auto; }
@@ -335,7 +370,7 @@ p { text-wrap: pretty; }
 /* --------------------------------------------------------------------------
    6. SECTION HEADING
    -------------------------------------------------------------------------- */
-.sec-head { margin-bottom: clamp(30px, 4vw, 52px); }
+.sec-head { margin-bottom: clamp(20px, 2.5vw, 34px); }
 .sec-head--center { text-align: center; }
 
 .kicker {
@@ -716,7 +751,7 @@ p { text-wrap: pretty; }
 .hero {
   position: relative;
   overflow: hidden;
-  padding-block: calc(var(--header-h) + clamp(48px, 7vw, 88px)) clamp(56px, 8vw, 104px);
+  padding-block: calc(var(--header-h) + clamp(34px, 4.4vw, 56px)) clamp(36px, 5vw, 64px);
   background:
     radial-gradient(1100px 560px at 88% -14%, rgba(202, 169, 89, .32), transparent 62%),
     radial-gradient(760px 440px at 4% 110%, rgba(202, 169, 89, .16), transparent 60%),
@@ -1899,9 +1934,9 @@ picture.hero__logo-pic > img {
     linear-gradient(150deg, var(--green) 0%, var(--green-dd) 100%);
   color: #fff;
   text-align: center;
-  padding-block: clamp(48px, 6vw, 76px);
+  padding-block: clamp(32px, 4.2vw, 52px);
   border-radius: var(--r-lg);
-  margin-block: clamp(30px, 5vw, 60px);
+  margin-block: clamp(18px, 2.6vw, 34px);
 }
 .cta-band::before {
   content: '';
@@ -1929,7 +1964,7 @@ picture.hero__logo-pic > img {
 .page-hero {
   position: relative;
   overflow: hidden;
-  padding-block: calc(var(--header-h) + clamp(40px, 5vw, 66px)) clamp(40px, 5vw, 62px);
+  padding-block: calc(var(--header-h) + clamp(28px, 3.4vw, 44px)) clamp(28px, 3.4vw, 42px);
   background:
     radial-gradient(900px 420px at 86% -20%, rgba(202, 169, 89, .28), transparent 62%),
     linear-gradient(155deg, var(--green) 0%, var(--green-dd) 100%);
@@ -2099,7 +2134,7 @@ a.contact-card__val:hover { color: var(--gold-d); }
 .footer {
   background: var(--green-dd);
   color: rgba(255, 255, 255, .78);
-  padding-block: clamp(44px, 5vw, 64px) 0;
+  padding-block: clamp(34px, 4vw, 50px) 0;
   margin-top: auto;
 }
 
@@ -2329,6 +2364,9 @@ a.contact-card__val:hover { color: var(--gold-d); }
   .header__actions .btn { display: none; }
   .g-3 { grid-template-columns: repeat(2, 1fr); }
   .g-3.g-pricing { grid-template-columns: repeat(2, 1fr); }
+  /* already two-up by this width; the 980px rule covers it, this is the
+     safety net for anything between 640 and 900 */
+  .g-progs { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 760px) {
@@ -2441,16 +2479,26 @@ a.contact-card__val:hover { color: var(--gold-d); }
 
 
 /* --------------------------------------------------------------------------
-   18. SECTION VISIBILITY  ("قريباً")
+   18. SECTION VISIBILITY
 
-   A section that is switched off in the admin panel keeps its own markup but
-   gains `is-off` on the <section>. That hides the real content and reveals the
-   .sec-soon block that sits next to it. Nothing here needs JavaScript, so the
-   page still reads correctly with scripting off.
+   Two states, two mechanisms, and the distinction matters:
 
-   The content itself is removed from the HTML by render.js when the section is
-   off (the renderers return an empty string), so this is only about what the
-   visitor sees.
+     is-off   "مخفي"    the whole <section> goes, background and padding with
+                         it. Nothing is left behind -- no band, no gap.
+     is-soon  "قريباً"  the section keeps its band (so the page still reads as
+                         one piece) but swaps its content for the .sec-soon
+                         panel, which must be a DIRECT child of the section.
+
+   This used to be a single `is-off` that only hid `> .container`. That left the
+   section box standing: any inline background gradient stayed visible and the
+   padding left an empty band. Worse, the .sec-soon panel sat *inside* the
+   container in the markup, so the rule that hid the container also hid the
+   panel -- the "قريباً" state showed nothing at all.
+
+   Nothing here needs JavaScript, so the page still reads correctly with
+   scripting off. The content itself is removed from the HTML by render.js when
+   a section is fully switched off (the renderers return an empty string), so
+   this is only about what the visitor sees.
    -------------------------------------------------------------------------- */
 .sec-soon {
   padding: 46px 26px;
@@ -2472,8 +2520,13 @@ a.contact-card__val:hover { color: var(--gold-d); }
 }
 
 .sec-soon { display: none; }
-[data-sec].is-off > .container { display: none; }
-[data-sec].is-off > .sec-soon { display: block; }
+
+/* "مخفي": the section leaves no trace at all */
+[data-sec].is-off { display: none; }
+
+/* "قريباً": the band stays, the content is swapped for the panel */
+[data-sec].is-soon > .container { display: none; }
+[data-sec].is-soon > .sec-soon { display: block; }
 
 
 /* --------------------------------------------------------------------------

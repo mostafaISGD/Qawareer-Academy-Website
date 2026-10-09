@@ -49,6 +49,7 @@
      PROGRAMS — cards (home + programs page overview)
      ================================================================== */
   function programCards(linkPrefix) {
+    if (offSection('programs')) return '';
     var prefix = (linkPrefix === undefined) ? 'programs.html' : linkPrefix;
     return visible(data().programs).map(function (p, i) {
       return [
@@ -78,6 +79,7 @@
      PROGRAMS — full detail blocks
      ================================================================== */
   function programDetails() {
+    if (offSection('programs')) return '';
     return visible(data().programs).map(function (p) {
       return [
         '      <article class="prog-detail mb-4" id="' + esc(p.id) + '" data-reveal>',
@@ -302,6 +304,7 @@
 
   /* the whole tier: coloured banner + feature list + system cards */
   function priceTiers() {
+    if (offSection('pricing')) return '';
     var tiers = prTiers();
     if (!tiers.length) return '';
 
@@ -390,6 +393,7 @@
   }
 
   function priceCards() {
+    if (offSection('pricing')) return '';
     var tiers = prTiers();
     if (!tiers.length) return '';
 
@@ -452,6 +456,7 @@
   }
 
   function priceTable() {
+    if (offSection('pricing')) return '';
     var p = pr();
     var plans = prPlans();
     if (!plans.length) return '';
@@ -531,6 +536,7 @@
      PRICE NOTES
      ================================================================== */
   function priceNotes() {
+    if (offSection('pricing')) return '';
     var n = data().priceNotes;
     if (!n || n.visible === false) return '';
 
@@ -740,6 +746,134 @@
   }
 
   /* ==================================================================
+     HOME BLOCKS  (من نحن · لماذا قوارير · فيديو تعريفي · عنوان البرامج)
+
+     These four blocks were hand-written in index.html, which meant the panel
+     could neither switch them off nor edit a word in them. They live in
+     content.js now and are rewritten on every publish from a marked region.
+
+     Each block is two pieces: a heading (sec-head) and a body, so the title
+     can be edited without touching the cards underneath it.
+     ================================================================== */
+
+  function homeBlock(name) {
+    return (data().home && data().home.blocks &&
+            data().home.blocks[name]) || {};
+  }
+
+  function cardsOf(name) {
+    var all = data().home && data().home.cards && data().home.cards[name];
+    return visible(all);
+  }
+
+  /* The kicker + <h2> + lead + rule that opens every block. */
+  function secHeadHtml(name, withLead) {
+    var b = homeBlock(name);
+    if (!b.kicker && !b.title) return '';
+    return [
+      '      <div class="sec-head sec-head--center">',
+      b.kicker ? '        <span class="kicker">' + esc(b.kicker) + '</span>' : '',
+      b.title  ? '        <h2>' + esc(b.title) + '</h2>' : '',
+      (withLead !== false && b.lead) ? '        <p>' + esc(b.lead) + '</p>' : '',
+      '        <div class="rule"></div>',
+      '      </div>'
+    ].filter(Boolean).join('\n');
+  }
+
+  /* A row of glass cards. `cols` picks the grid width class. */
+  function glassCards(name, cols) {
+    var list = cardsOf(name);
+    if (!list.length) return '';
+    var inner = list.map(function (c, i) {
+      return [
+        '        <article class="card card--glass" data-reveal' + delay(i) + '>',
+        c.ico ? '          <div class="card__ico">' + esc(c.ico) + '</div>' : '',
+        '          <h3 class="card__title">' + esc(c.title) + '</h3>',
+        c.text ? '          <p class="card__text">' + esc(c.text) + '</p>' : '',
+        '        </article>'
+      ].filter(Boolean).join('\n');
+    }).join('\n');
+    return '      <div class="grid ' + (cols || 'g-3') + '">\n' + inner + '\n      </div>';
+  }
+
+  function aboutIntroBlock() {
+    if (offSection('about-intro')) return '';
+    return [secHeadHtml('aboutIntro'), glassCards('aboutIntro', 'g-3')]
+      .filter(Boolean).join('\n\n');
+  }
+
+  function whyBlock() {
+    if (offSection('why')) return '';
+    return [secHeadHtml('why'), glassCards('why', 'g-4')]
+      .filter(Boolean).join('\n\n');
+  }
+
+  /* Only the heading — the cards come from the shared programCards(). */
+  function programsHead() {
+    if (offSection('programs')) return '';
+    return secHeadHtml('programs');
+  }
+
+  /* Only the heading — the cards come from the shared programCards(). */
+  function programsHead() {
+    if (offSection('programs')) return '';
+    return secHeadHtml('programs');
+  }
+
+  /* The homepage teaser for the materials page. Its region existed in the
+     markup but nothing ever rewrote it, so the words on the homepage were
+     frozen in the HTML while the materials page itself stayed editable. */
+  function materialsTeaser() {
+    if (offSection('materials')) return '';
+    var b = homeBlock('materials');
+    var head = secHeadHtml('materials');
+    var cta = [
+      '      <div class="block-cta" data-reveal>',
+      '        <a class="btn btn--green" href="materials.html">' +
+        esc(b.cta || 'تصفّحي المواد') + '</a>',
+      '      </div>'
+    ].join('\n');
+    return head ? head + '\n\n' + cta : cta;
+  }
+
+  /* The YouTube embed. The owner may paste either a bare video id or any of
+     the URL shapes YouTube hands out, so normalise here rather than making
+     them learn which one this field wants. */
+  function videoEmbedUrl() {
+    var v = (data().home && data().home.video) || {};
+    var raw = String(v.url || '').trim();
+    if (!raw) return '';
+    if (/^[\w-]{6,}$/.test(raw)) return 'https://www.youtube-nocookie.com/embed/' + raw;
+
+    var m = raw.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{6,})/);
+    if (m) return 'https://www.youtube-nocookie.com/embed/' + m[1];
+    return raw;   // some other host: use whatever was given
+  }
+
+  function videoBlock() {
+    if (offSection('video')) return '';
+    var v = (data().home && data().home.video) || {};
+    var src = videoEmbedUrl();
+    var out = [secHeadHtml('video')];
+    if (src) {
+      out.push([
+        '      <div class="video" data-reveal="zoom">',
+        '        <div class="video__frame">',
+        '          <iframe',
+        '            src="' + esc(src) + '"',
+        '            title="' + esc(v.title || homeBlock('video').title || 'فيديو تعريفي') + '"',
+        '            loading="lazy"',
+        '            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"',
+        '            allowfullscreen></iframe>',
+        '        </div>',
+        v.caption ? '        <p class="video__cap">' + esc(v.caption) + '</p>' : '',
+        '      </div>'
+      ].filter(Boolean).join('\n'));
+    }
+    return out.filter(Boolean).join('\n\n');
+  }
+
+  /* ==================================================================
      ARTICLES
 
      articleCards() renders the listing: one card per article with the
@@ -852,6 +986,7 @@
      without the per-article WhatsApp link, so the homepage stays tidy.
      Marked articles as featured float to the front. */
   function articleTeaser(limit) {
+    if (offSection('articles')) return '';
     if (!sectionVisible('articles')) return '';
     var list = visible(data().articles).slice();
     // featured first, then by order
@@ -902,6 +1037,7 @@
 
   /* Categories actually present in the content, for the filter row. */
   function articleCategories() {
+    if (offSection('articles')) return '';
     var seen = {};
     var out = [];
     visible(data().articles).forEach(function (a) {
@@ -932,14 +1068,19 @@
      more than one page (المقالات is on the homepage as a teaser and on its
      own page), and each copy has its own region name. */
   var SEC_REGIONS = {
+    'about-intro': ['about-intro'],
+    'video':       ['video'],
+    'programs':    ['programs-head', 'programs-cards'],
+    'why':         ['why'],
     articles:  ['articles', 'articles-teaser'],
     reviews:   ['reviews'],
     faq:       ['faq'],
-    materials: ['topics']
+    materials: ['materials-block', 'topics']
   };
 
-  /* The "قريباً" panel shown in place of a hidden section. */
-  /* The "قريباً" panel shown in place of a hidden section. */
+  /* The "قريباً" panel shown in place of a hidden section.
+     Sections listed in SEC_BINARY have no entry here on purpose: they can only
+     be on or off, so a panel for them could never be reached. */
   var SEC_SOON = {
     hero: {
       ico: '\u{1F3E0}',
@@ -950,16 +1091,6 @@
       ico: '\u{1F4CA}',
       title: 'الأرقام والإحصائيات',
       text: 'بنحدث الأرقام. ارجعي تاني تلاقينها هنا.'
-    },
-    why: {
-      ico: '\u{2753}',
-      title: 'لماذا قوارير؟',
-      text: 'بنكتب الأسباب بالتفصيل. قريباً هتلاقيها هنا.'
-    },
-    programs: {
-      ico: '\u{1F4DA}',
-      title: 'برامجنا',
-      text: 'بنضيف برامج جديدة. اطلعي على اللي متاح دلوقتي من صفحة البرامج.'
     },
     articles: {
       ico: '\u{1F4F0}',
@@ -991,9 +1122,21 @@
       title: 'المواد المقروءة',
       text: 'مكتبة المواد قيد الإعداد. قوليني أي مادة تحتاجينها ونبدأ بيها.'
     }
-  };;
+  };
 
-  var SEC_ORDER = ['hero', 'stats', 'why', 'programs', 'testimonials', 'pricing', 'articles', 'reviews', 'faq', 'cta', 'materials'];
+  var SEC_ORDER = ['hero', 'stats', 'about-intro', 'video', 'programs', 'why', 'testimonials', 'pricing', 'articles', 'reviews', 'faq', 'cta', 'materials'];
+
+  /* Blocks the owner may only switch on or off. "قريباً" would read oddly on
+     a section that already exists and is simply not wanted right now, so the
+     panel shows two buttons for these and render.js refuses the middle state. */
+  var SEC_BINARY = {
+    'about-intro': true,
+    'video':       true,
+    'programs':    true,
+    'why':         true
+  };
+
+  function secIsBinary(key) { return SEC_BINARY[key] === true; }
 
   /* A missing entry means "visible", so a half-edited content.js can never
      hide a section by accident.
@@ -1004,7 +1147,21 @@
     var v = s.visible;
     if (v === 'on') return true;   /* legacy string value */
     if (v === 'off') return false; /* legacy string value */
+    /* a binary section never shows the "قريباً" panel, even if an older
+       content.js still carries it: fall back to plain visible */
+    if (v === 'soon' && secIsBinary(key)) return true;
     return v; // true, 'soon', or false
+  }
+
+  /* True only when the section is fully switched off.
+
+     Every renderer that fills a section asks this first and returns an empty
+     string, which is what actually keeps a hidden block out of the HTML: the
+     `is-off` class alone only hides it on screen, and Google would still read
+     the words. The "قريباً" state deliberately does NOT count as off -- the
+     panel is swapped in by CSS and the real content stays in the file. */
+  function offSection(key) {
+    return sectionVisible(key) === false;
   }
 
   function sectionState() {
@@ -1079,7 +1236,11 @@
   }
 
   function applySettings(html) {
-    /* strip anything we injected on a previous rebuild so this is idempotent */
+    /* Strip anything we injected on a previous rebuild, so this is idempotent.
+       The rule that makes it hold: every strip eats ALL the whitespace that
+       follows what it removed, and every injection below re-emits an exact
+       fixed amount. Get one side to consume \r\n while the other writes \n and
+       the page drifts a few bytes on every single publish. */
     html = html.replace(/<style id="qwr-theme">[\s\S]*?<\/style>\s*/g, '');
     html = html.replace(/<!--qwr:announcement:start-->[\s\S]*?<!--qwr:announcement:end-->\s*/g, '');
 
@@ -1113,10 +1274,13 @@
       html = html.replace(/<button[^>]*data-theme-toggle[^>]*>[\s\S]*?<\/button>/, '');
     }
 
-    /* announcement bar */
+    /* announcement bar. The `\s*` after <body> is swallowed and replaced with one
+       newline, so a file that arrived with \r\n there still comes out the same
+       on the next pass. */
     var ann = announcementHtml();
     if (ann) {
-      html = html.replace(/(<body[^>]*>)/, '$1\n<!--qwr:announcement:start-->\n' + ann + '\n<!--qwr:announcement:end-->');
+      html = html.replace(/(<body[^>]*>)\s*/,
+        '$1\n<!--qwr:announcement:start-->\n' + ann + '\n<!--qwr:announcement:end-->\n');
     }
     return html;
   }
@@ -1222,41 +1386,59 @@
     return html;
   }
 
-  /* ---- add / remove is-off on every <section data-sec="..."> in a page --- */
+  /* ---- add / remove is-off / is-soon on every <section data-sec="..."> --- */
   function applySections(html) {
     SEC_ORDER.forEach(function (key) {
       var vis = sectionVisible(key);
       var isOff = vis === false;
       var isSoon = vis === 'soon';
 
+      /* strip whichever marker we added last time, then add the current one.
+         Doing both in one pass is what keeps the file idempotent: publishing
+         twice must not leave `is-off is-soon` behind. */
+      var flag = isOff ? 'is-off' : (isSoon ? 'is-soon' : '');
       var re = new RegExp('<section([^>]*\\sdata-sec="' + key + '"[^>]*)>', 'g');
       html = html.replace(re, function (m, attrs) {
-        if (!/\sclass="/.test(attrs)) {
-          return '<section' + attrs + ' class="' + (isOff || isSoon ? 'is-off' : '') + '">';
-        }
-        return '<section' + attrs.replace(
-          /\sclass="([^"]*)"/,
-          function (c, cls) {
-            var list = cls.split(/\s+/).filter(Boolean)
-              .filter(function (x) { return x !== 'is-off'; });
-            if (isOff || isSoon) list.push('is-off');
-            return ' class="' + list.join(' ') + '"';
-          }) + '>';
+        var cleaned = attrs.replace(/\s+class="([^"]*)"/, function (c, cls) {
+          var list = cls.split(/\s+/).filter(Boolean)
+            .filter(function (x) { return x !== 'is-off' && x !== 'is-soon'; });
+          if (flag) list.push(flag);
+          return ' class="' + list.join(' ') + '"';
+        });
+        if (/\sclass="/.test(attrs)) return '<section' + cleaned + '>';
+        return '<section' + attrs + ' class="' + flag + '">';
       });
+
+      /* Always drop a panel we injected on an earlier publish, whether or not this
+         run wants one back. Otherwise switching a section off "قريباً" and on
+         again would leave the old panel behind as invisible markup.
+
+         The strip has to consume EXACTLY what the injection below writes --
+         one newline, the indent, the fence, the indent, one newline. Starting
+         it at the indent instead would leave the newline in front of the
+         fence behind, and the page would gain a blank line on every publish. */
+      var fence = new RegExp(
+        '\\n[ \\t]*<!--qwr-soon:' + key + ':start-->[\\s\\S]*?' +
+        '<!--qwr-soon:' + key + ':end-->[ \\t]*\\r?\\n',
+        'g'
+      );
+      html = html.replace(fence, '');
 
       if (!isSoon) return;
 
-      /* Inject "قريباً" panel after the specific hidden section */
+      /* The panel has to be a DIRECT child of the section: the CSS hides
+         `> .container` and reveals `> .sec-soon`, so anything nested deeper
+         would be hidden along with the content it replaces. */
       var soonHtml = secSoon(key);
-      if (soonHtml) {
-        var sectionRe = new RegExp(
-          '(<section[^>]*\\sdata-sec="' + key + '"[^>]*>[\\s\\S]*?<\\/section\\s*>)',
-          'g'
-        );
-        html = html.replace(sectionRe, function (m, fullSection) {
-          return fullSection + '\n' + soonHtml;
-        });
-      }
+      if (!soonHtml) return;
+
+      var sectionRe = new RegExp(
+        '(<section[^>]*\\sdata-sec="' + key + '"[^>]*>[\\s\\S]*?)([ \\t]*<\\/section\\s*>)'
+      );
+      html = html.replace(sectionRe, function (m, open, close) {
+        return open + '\n      <!--qwr-soon:' + key + ':start-->\n' +
+               soonHtml + '\n      <!--qwr-soon:' + key + ':end-->\n' + close;
+      });
     });
     return applySettings(html);
   }
@@ -1337,6 +1519,7 @@
      FAQ
      ================================================================== */
   function faq() {
+    if (offSection('faq')) return '';
     if (!sectionVisible('faq')) return '';
     return visible(data().faq).map(function (f, i) {
       return [
@@ -1359,6 +1542,7 @@
      STATS
      ================================================================== */
   function stats() {
+    if (offSection('stats')) return '';
     var s = (data().home && data().home.stats) || [];
     return s.map(function (st, i) {
       return [
@@ -1375,6 +1559,7 @@
      MATERIALS TOPICS
      ================================================================== */
   function topics() {
+    if (offSection('materials')) return '';
     if (!sectionVisible('materials')) return '';
     var t = (data().pages && data().pages.materials && data().pages.materials.topics) || [];
     return t.map(function (x, i) {
@@ -1475,9 +1660,18 @@
     materialsSuggest: materialsSuggest,
     stats: stats,
     topics: topics,
+    /* home blocks */
+    aboutIntroBlock: aboutIntroBlock,
+    whyBlock: whyBlock,
+    programsHead: programsHead,
+    materialsTeaser: materialsTeaser,
+    videoBlock: videoBlock,
+    videoEmbedUrl: videoEmbedUrl,
+    secHeadHtml: secHeadHtml,
     /* section visibility */
     sectionVisible: sectionVisible,
     sectionState: sectionState,
+    secIsBinary: secIsBinary,
     secSoon: secSoon,
     secEmpty: secEmpty,
     regionEmpty: regionEmpty,
@@ -1488,6 +1682,7 @@
     applyTexts: applyTexts,
     applySeo: applySeo,
     SEC_ORDER: SEC_ORDER,
+    SEC_BINARY: SEC_BINARY,
     SEC_REGIONS: SEC_REGIONS
   };
 
