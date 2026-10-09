@@ -686,6 +686,15 @@
     var speed = parseInt(cfg.speed, 10) || 6000;
     var nav = cfg.nav !== false;
 
+    /* Random selection: the homepage slider can show a random
+       subset of the reviews. The full list is still rendered in
+       the HTML (so Google reads every review); main.js picks the
+       subset at view time, so each visit sees a different mix. */
+    var homeReviews = (data().settings && data().settings.home &&
+                       data().settings.home.reviews) || {};
+    var shuffle = homeReviews.random !== false;
+    var keep = parseInt(homeReviews.count, 10) || 3;
+
     var slides = list.map(function (r, i) {
       return [
         '        <div class="slider__slide" role="group" aria-roledescription="شريحة"',
@@ -706,7 +715,8 @@
 
     return [
       '      <div class="slider" data-slider data-auto="' + (auto ? '1' : '0') + '"' +
-        ' data-speed="' + speed + '" data-nav="' + (nav ? '1' : '0') + '">',
+        ' data-speed="' + speed + '" data-nav="' + (nav ? '1' : '0') + '"' +
+        (shuffle ? ' data-reviews-shuffle="1" data-reviews-count="' + keep + '"' : '') + '>',
       '        <div class="slider__view" tabindex="0" role="region"' +
         ' aria-roledescription="شريط آراء" aria-label="آراء الطالبات، استخدم الأسهم للتنقل">',
       '          <div class="slider__track">',

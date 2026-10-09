@@ -324,6 +324,41 @@
 
     var view   = $('.slider__view', root);
     var track  = $('.slider__track', root);
+
+    /* Random selection: the owner can have the homepage slider
+       show a random subset of the reviews, so every visit feels
+       fresh. This runs before the slider reads the DOM, so the
+       slides, dots and the status region all describe the
+       chosen set. The full list stays in the HTML for Google. */
+    if (track && root.getAttribute('data-reviews-shuffle') === '1') {
+      var keep = parseInt(root.getAttribute('data-reviews-count'), 10) || 3;
+      var pool = $$('.slider__slide', root);
+      if (keep > 0 && pool.length > keep) {
+        /* Fisher–Yates shuffle */
+        var order = pool.slice();
+        for (var si = order.length - 1; si > 0; si--) {
+          var sj = Math.floor(Math.random() * (si + 1));
+          var tmp = order[si]; order[si] = order[sj]; order[sj] = tmp;
+        }
+        var chosen = order.slice(0, keep);
+        /* re-appending moves the nodes, so the track ends up
+           holding exactly the chosen slides, in shuffled order */
+        chosen.forEach(function (s) { track.appendChild(s); });
+        pool.forEach(function (s) {
+          if (chosen.indexOf(s) === -1 && s.parentNode) {
+            s.parentNode.removeChild(s);
+          }
+        });
+        /* dot n pairs with slide n — trim the extras */
+        $$('.slider__dot', root).forEach(function (d, n) {
+          if (n >= keep && d.parentNode) d.parentNode.removeChild(d);
+        });
+        $$('.slider__slide', root).forEach(function (s, n) {
+          s.setAttribute('aria-label', (n + 1) + ' من ' + keep);
+        });
+      }
+    }
+
     var slides = $$('.slider__slide', root);
     if (!view || !track || slides.length < 2) return;
 
