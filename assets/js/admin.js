@@ -27,6 +27,10 @@
     if (!S.theme.colors) S.theme.colors = { brand: '', accent: '', bg: '', text: '' };
     if (!S.contact) S.contact = { name: 'أكاديمية قوارير', nameEn: 'Qawareer Academy', slogan: 'رفقاً بقلوبكن.. وقرباً لكتاب الله', tagline: 'برامج قرآنية وتربوية رحيمة', phoneDisplay: '01130830390', whatsapp: '201130830390', email: 'QawarirAcademy@gmail.com', telegram: 'QawareerAcademy', instagram: 'Qawareer.Academy', audience: 'النساء والأطفال', location: 'أونلاين بالكامل', siteUrl: '', gaId: '', localStats: true };
     if (!S.announcement) S.announcement = { visible: false, text: '', link: '', linkText: '', bg: '#06683f', color: '#ffffff' };
+    if (!S.home) S.home = { reviews: { random: true, count: 3 } };
+    if (!S.home.reviews) S.home.reviews = { random: true, count: 3 };
+    if (S.home.reviews.random == null) S.home.reviews.random = true;
+    if (S.home.reviews.count == null) S.home.reviews.count = 3;
     if (!S.sectionOrder) S.sectionOrder = {
       home: ['hero', 'stats', 'programs', 'testimonials', 'pricing', 'articles', 'faq', 'cta'],
       about: ['about-hero', 'about'],
@@ -1200,6 +1204,32 @@ function buildSections(host) {
   };
 
   function buildReviews(host) {
+    /* ---- how the homepage slider picks its reviews ----
+       The homepage can show every review, or a random
+       handful of them so each visit feels fresh. The
+       full list stays on the testimonials page. */
+    var HR = (C.settings && C.settings.home && C.settings.home.reviews) || {};
+
+    var disp = document.createElement('div');
+    disp.className = 'adm-card';
+    disp.innerHTML = '<div class="adm-card__title">شريط الآراء في الرئيسية</div>' +
+      '<div class="adm-hint">قسم «ماذا قالت طالباتنا؟» في الصفحة الرئيسية. ' +
+      'مع الاختيار العشوائي، كل زيارة بتشوف آراء مختلفة من كل الآراء الموجودة.</div>';
+    disp.appendChild(toggle('اختيار آراء عشوائية في الرئيسية', HR.random !== false,
+      function (v) {
+        if (!C.settings.home) C.settings.home = {};
+        if (!C.settings.home.reviews) C.settings.home.reviews = {};
+        C.settings.home.reviews.random = v;
+      }));
+    disp.appendChild(field('عدد الآراء المعروضة', 'لو العدد أكبر من عدد الآراء الكلي، هتعرض كل الآراء',
+      String(HR.count || 3), function (v) {
+        if (!C.settings.home) C.settings.home = {};
+        if (!C.settings.home.reviews) C.settings.home.reviews = {};
+        var n = parseInt(v, 10);
+        C.settings.home.reviews.count = (n > 0 && n < 100) ? n : 3;
+      }));
+    host.appendChild(disp);
+
     C.testimonials.forEach(function (r) {
       var card = cardShell(r, r.name, r.order, { list: 'testimonials' });
 

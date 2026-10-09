@@ -746,6 +746,12 @@ window.CONTENT = {
       "bg": "#06683f",
       "color": "#ffffff"
     },
+    "home": {
+      "reviews": {
+        "random": true,
+        "count": 3
+      }
+    },
     "sectionOrder": {
       "home": [
         "hero",
