@@ -203,6 +203,11 @@ window.CONTENT = {
         "id": "p16",
         "sessions": 16,
         "label": "16 حصة"
+      },
+      {
+        "id": "pmv1uom84",
+        "sessions": 22,
+        "label": "22 حصة"
       }
     ],
     "tiers": [
@@ -230,7 +235,8 @@ window.CONTENT = {
               "200",
               "350",
               "500",
-              "650",
+              "650",
+              "700"
             ]
           },
           {
@@ -239,7 +245,8 @@ window.CONTENT = {
               "280",
               "500",
               "700",
-              "900",
+              "900",
+              "1000"
             ]
           },
           {
@@ -248,7 +255,8 @@ window.CONTENT = {
               "350",
               "620",
               "880",
-              "1,100",
+              "1,100",
+              "1200"
             ]
           }
         ]
@@ -277,7 +285,8 @@ window.CONTENT = {
               "300",
               "550",
               "750",
-              "1,000",
+              "1,000",
+              "1100"
             ]
           },
           {
@@ -286,7 +295,8 @@ window.CONTENT = {
               "450",
               "750",
               "1,050",
-              "1,350",
+              "1,350",
+              "1500"
             ]
           },
           {
@@ -295,7 +305,8 @@ window.CONTENT = {
               "550",
               "950",
               "1,350",
-              "1,650",
+              "1,650",
+              "1800"
             ]
           }
         ]
@@ -324,7 +335,8 @@ window.CONTENT = {
               "150",
               "250",
               "350",
-              "450",
+              "450",
+              "600"
             ]
           }
         ]
@@ -572,19 +584,22 @@ window.CONTENT = {
     "stats": {
       "visible": true
     },
-    "why": {
-      "visible": true
-    },
     "programs": {
-      "visible": true
-    },
-    "testimonials": {
       "visible": true
     },
     "pricing": {
       "visible": true
     },
     "cta": {
+      "visible": true
+    },
+    "about-intro": {
+      "visible": true
+    },
+    "video": {
+      "visible": true
+    },
+    "why": {
       "visible": true
     }
   },
@@ -978,6 +993,14 @@ window.CONTENT = {
       }
     },
     "texts": {
+      /* pricing.lead is deliberately empty -- leave it that way.
+         priceIntro() writes that sentence from pricing.systems and
+         pricing.plans, so the bundle count in it cannot fall out of step with
+         the table below. A written-out version went stale twice: it said
+         "four bundles" while five were on screen, and "five bundles" after a
+         sixth was added. Set this only if the sentence should read differently
+         from the data -- it then overrides, and the data no longer shows
+         through. */
       "header.brand_name": "أكاديمية قوارير",
       "header.brand_tag": "برامج قرآنية وتربوية رحيمة",
       "header.skip_link": "تخطي إلى المحتوى الرئيسي",
@@ -1041,7 +1064,7 @@ window.CONTENT = {
       "programs.cta": "عرض كل البرامج",
       "pricing.kicker": "الأسعار",
       "pricing.title": "باقات مرنة تناسب الجميع",
-      "pricing.lead": "ثلاث فئات، وكل فئة فيها أنظمة الحصة الثلاث (30 و 45 و 60 دقيقة) بأربع باقات (4 و 8 و 12 و 16 حصة).",
+      "pricing.lead": "",
       "pricing.cta": "عرض تفاصيل الباقات",
       "pricing.comparison_title": "مقارنة سريعة",
       "pricing.groups_note": "باقات المجموعات نظامها 60 دقيقة فقط — أقل تكلفة للحصة.",
@@ -1153,7 +1176,13 @@ window.CONTENT = {
         "description": "راسلينا على واتساب، إيميل، أو تيليجرام. حجز تجريبي، استفسارات، اقتراحات — نرد عليكي في أسرع وقت.",
         "keywords": "تواصل أكاديمية قوارير، واتساب، حجز تجريبي"
       }
+    },
+    "home": {
+      "reviews": {
+        "random": true,
+        "count": 3
+      }
     }
   },
-  "updatedAt": "2026-10-09T22:45:02.014Z"
+  "updatedAt": "2026-10-10T03:45:34.178Z"
 };
