@@ -798,10 +798,10 @@ window.CONTENT = {
       "localStats": true
     },
     "announcement": {
-      "visible": true,
-      "text": "ززمممززموزخزه",
-      "link": "65665",
-      "linkText": " ؤثيؤثؤصؤصؤيؤصثؤ",
+      "visible": false,
+      "text": "",
+      "link": "",
+      "linkText": "",
       "bg": "#06683f",
       "color": "#ffffff"
     },
