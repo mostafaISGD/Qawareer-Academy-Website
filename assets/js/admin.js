@@ -1209,20 +1209,72 @@ function buildSections(host) {
     });
     planWrap.appendChild(prow);
 
+    /* Adding a bundle asks for the session count and the label.
+
+       The count is required: it is the number the bundle is actually sold as
+       (22 for a daily-except-weekend plan, say), and it is what the plans are
+       compared on. The label is what a visitor reads, and is free text so a
+       bundle can be called something other than its count -- "يوميًا ما عدا
+       الجمعة والسبت" is a better name than "22 حصة".
+
+       Before this, the button invented both: sessions came out as
+       plans.length + 1, so a fifth bundle was named "5 حصص" no matter what it
+       was for. */
     var addPlan = document.createElement('button');
     addPlan.className = 'adm-mini adm-mini--add';
     addPlan.type = 'button';
     addPlan.textContent = '+ أضيفي باقة';
+
     addPlan.addEventListener('click', function () {
-      var next = plans.length + 1;
-      plans.push({ id: 'p' + Date.now().toString(36), sessions: next, label: next + ' حصص' });
-      // one empty price cell per row, so the new column lines up
+      var input = window.prompt(
+        'عدد الحصص في الباقة (رقم):\n' +
+        'مثال: 20، أو اكتب 0 لو مش مرتبطة بعدد ثابت',
+        '');
+
+      if (input === null) return;                       // cancelled
+
+      var raw = String(input).trim();
+      if (!raw) { alert('اكتبي عدد الحصص الأول'); return; }
+
+      var n = parseInt(raw.replace(/[٠-٩]/g, function (d) {
+        return '٠١٢٣٤٥٦٧٨٩'.indexOf(d);
+      }), 10);
+
+      if (isNaN(n) || n < 0) {
+        alert('«' + raw + '» مش رقم. اكتبي رقم صحيح.');
+        return;
+      }
+      if (n === 0) {
+        alert('لو الباقة مش مرتبطة بعدد ثابت، اكتبي الاسم في خانة الاسم.');
+        return;
+      }
+
+      // a duplicate count is almost certainly a mistake, and the two would be
+      // indistinguishable on the page
+      var clash = plans.filter(function (pl) { return pl.sessions === n; });
+      if (clash.length && !confirm(
+        'فيه باقة بـ' + n + ' حصة بالفعل («' + clash[0].label + '»).\n' +
+        'تضيفي تانية؟')) return;
+
+      var name = window.prompt(
+        'الاسم اللي هيظهر على الموقع:\n' +
+        'سيبيه فاضي لو عايزة «' + n + ' حصة»',
+        n + ' حصة');
+      if (name === null) return;
+      var label = String(name).trim() || (n + ' حصة');
+
+      plans.push({ id: 'p' + Date.now().toString(36), sessions: n, label: label });
+
+      // one empty price cell per row, so the new column lines up. A row left
+      // empty simply does not appear on the page (tierSystemCard skips it), so
+      // a bundle can be added before its prices are known.
       P.tiers.forEach(function (t) {
         (t.rows || []).forEach(function (r) {
           if (!Array.isArray(r.prices)) r.prices = [];
           r.prices.push('');
         });
       });
+
       markDirty();
       renderTab();
     });
