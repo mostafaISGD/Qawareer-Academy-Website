@@ -609,6 +609,10 @@ p { text-wrap: pretty; }
   font-weight: 500;
   font-size: .95rem;
   color: var(--text-soft);
+  /* the fallback font is wider than Cairo, so while the webfont is still
+     arriving (or if it never does) these would wrap onto two lines and drag
+     the header taller for a moment on every page */
+  white-space: nowrap;
   transition: color var(--t), background var(--t);
 }
 .nav__link:hover { color: var(--green); background: var(--green-soft); }
@@ -2503,6 +2507,123 @@ a.contact-card__val:hover { color: var(--gold-d); }
   section { break-inside: avoid; }
 }
 
+
+/* --------------------------------------------------------------------------
+   17b. 404 PAGE — search + quick links
+
+   A visitor who hit a dead end is looking for one specific thing. The search is
+   the first thing on the page for that reason, and the quick links sit under it
+   for the times she cannot remember what she was after.
+   -------------------------------------------------------------------------- */
+.srch { max-width: 760px; margin-inline: auto; }
+.srch__label {
+  display: block;
+  font-size: .86rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.srch__field {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+.srch__ico {
+  position: absolute;
+  inset-inline-start: 16px;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+.srch__input {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 46px 14px 16px;   /* the icon sits on the inline-start side */
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--paper);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+}
+.srch__input:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+  border-color: var(--green);
+}
+.srch__go { flex-shrink: 0; padding-inline: 26px; }
+.srch__note {
+  margin-top: 10px;
+  font-size: .88rem;
+  color: var(--muted);
+  min-height: 1.2em;
+}
+
+.srch__results { list-style: none; margin: 18px 0 0; padding: 0; text-align: start; }
+.srch__results:empty { margin: 0; }
+.sr__item + .sr__item { border-top: 1px solid var(--line); }
+.sr__link {
+  display: grid;
+  gap: 3px;
+  padding: 14px 16px;
+  border-radius: var(--r);
+  text-decoration: none;
+  transition: background var(--t), transform var(--t);
+}
+.sr__link:hover { background: var(--bg-alt); transform: translateX(-4px); }
+.sr__link:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
+.sr__badge {
+  justify-self: start;
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--green);
+  background: var(--green-soft);
+  border-radius: var(--r-pill);
+  padding: 2px 10px;
+}
+.sr__t { font-family: var(--font-head); font-weight: 700; color: var(--text); }
+.sr__d { font-size: .9rem; color: var(--muted); }
+
+/* --- quick link cards --- */
+.ql {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--paper);
+  text-decoration: none;
+  transition: transform var(--t), box-shadow var(--t), border-color var(--t);
+}
+.ql:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--sh);
+  border-color: var(--green);
+}
+.ql:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.ql__t {
+  font-family: var(--font-head);
+  font-size: 1.06rem;
+  color: var(--green);
+  margin-bottom: 6px;
+}
+.ql__d { font-size: .9rem; color: var(--muted); flex: 1; }
+.ql__go {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: .9rem;
+  color: var(--green);
+}
+
+@media (max-width: 640px) {
+  .srch__field { flex-wrap: wrap; }
+  .srch__go { width: 100%; }
+  .srch__input { padding-inline: 44px 16px; }
+}
 
 /* --------------------------------------------------------------------------
    18. SECTION VISIBILITY

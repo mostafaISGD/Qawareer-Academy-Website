@@ -140,6 +140,151 @@
   })();
 
   /* ==================================================================
+     4b. SITE SEARCH
+
+     Lives on the 404 page, where a visitor has just hit a dead end. The index
+     is a JSON blob written into the page by render.js at publish time, so this
+     works with no server and no network round trip.
+
+     Arabic is folded before comparing (see render.js `fold`), because the
+     common spelling variants -- أ/إ/آ, ة/ه, ى/ي -- would otherwise each miss.
+     Scoring puts title matches above body matches so the thing you asked for by
+     name comes first, and every word has to appear somewhere, which keeps a
+     two-letter query from returning the whole site.
+     ================================================================== */
+  (function search() {
+    var form = $('[data-search]');
+    var box  = $('[data-search-input]');
+    var out  = $('[data-search-results]');
+    var note = $('[data-search-note]');
+    if (!form || !box || !out) return;
+
+    /* Arabic typing has a handful of interchangeable forms and people mix them
+       freely: أ/إ/آ, ة/ه, ى/ي, ؤ/ء, plus stray tatweel and harakat. Folding both
+       sides once means "الاجراءات" still finds "الإجراءات" -- without this the
+       search looks broken to anyone typing on a phone. */
+    function fold(s) {
+      return String(s == null ? '' : s)
+        .replace(/[أإآٱ]/g, 'ا')
+        .replace(/ة/g, 'ه')
+        .replace(/[ىی]/g, 'ي')
+        .replace(/[ؤئ]/g, 'ء')
+        .replace(/ـ/g, '')
+        .replace(/[ً-ٰٟ]/g, '')
+        .toLowerCase();
+    }
+
+    var raw = $('#qwr-search-index');
+    if (!raw) return;
+
+    /* The region markers live inside the <script>, and a <script> with a
+       non-JS type is raw text -- the browser hands them over verbatim rather
+       than treating them as comments. Strip them before parsing, otherwise the
+       JSON never loads and the search looks dead for no visible reason. */
+    var txt = raw.textContent.replace(/<!--[\s\S]*?-->/g, '').trim();
+
+    var items = [];
+    if (txt) {
+      try {
+        items = JSON.parse(txt) || [];
+      } catch (e) {
+        items = [];                 // a broken index must not break the page
+      }
+    }
+
+    /* folded once, up front -- the visitor types, not the index */
+    var index = items.map(function (it) {
+      return {
+        t: it.t,
+        u: it.u,
+        d: it.d || '',
+        g: it.g || '',
+        ft: fold(it.t),
+        fd: fold(it.d),
+        fk: fold(it.k)
+      };
+    });
+
+    var AR = {
+      empty:  'اكتبي كلمة أو اتنين فوق، وأنا أدوّرلك في الموقع كله.',
+      none:   'مفيش حاجة بالاسم ده. جرّبي كلمة تانية، أو اكتبي لنا على واتساب.',
+      found:  'نتيجة',
+      label:  'النتايج:'
+    };
+
+    function esc2(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function run(q) {
+      var terms = fold(q).split(/\s+/).filter(function (t) { return t.length > 1; });
+      if (!terms.length) {
+        out.innerHTML = '';
+        if (note) note.textContent = AR.empty;
+        return;
+      }
+
+      var hits = [];
+      index.forEach(function (it) {
+        var score = 0;
+        var ok = true;
+        for (var i = 0; i < terms.length; i++) {
+          var w = terms[i];
+          var inT = it.ft.indexOf(w) !== -1;
+          var inK = it.fk.indexOf(w) !== -1;
+          var inD = it.fd.indexOf(w) !== -1;
+          if (!inT && !inK && !inD) { ok = false; break; }
+          if (inT) score += 10;
+          if (inK) score += 5;
+          if (inD) score += 2;
+        }
+        if (ok) hits.push({ it: it, score: score });
+      });
+
+      hits.sort(function (a, b) { return b.score - a.score; });
+      hits = hits.slice(0, 12);
+
+      if (!hits.length) {
+        out.innerHTML = '';
+        if (note) note.textContent = AR.none;
+        return;
+      }
+
+      if (note) {
+        note.textContent = hits.length + ' ' + AR.found + ' — ' + AR.label;
+      }
+      out.innerHTML = hits.map(function (h) {
+        return '<li class="sr__item"><a class="sr__link" href="' + esc2(h.it.u) + '">' +
+          '<span class="sr__badge">' + esc2(h.it.g) + '</span>' +
+          '<span class="sr__t">' + esc2(h.it.t) + '</span>' +
+          (h.it.d ? '<span class="sr__d">' + esc2(h.it.d) + '</span>' : '') +
+          '</a></li>';
+      }).join('');
+    }
+
+    var timer = null;
+    box.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () { run(box.value); }, 140);
+    });
+
+    /* submit works without JS timing games, and Enter always lands here */
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      clearTimeout(timer);
+      run(box.value);
+    });
+
+    /* deep link: 404.html?q=الأسعار */
+    try {
+      var pre = new URLSearchParams(location.search).get('q');
+      if (pre) { box.value = pre; run(pre); }
+    } catch (e) { /* older browser: no deep link, typing still works */ }
+  })();
+
+  /* ==================================================================
      5. REVEAL ON SCROLL
      ================================================================== */
   (function reveal() {

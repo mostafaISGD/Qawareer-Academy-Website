@@ -873,6 +873,107 @@
     return out.filter(Boolean).join('\n\n');
   }
 
+  /* The "probably one of these" cards on the 404 page. Same data as the search
+     index, so a page can never appear in the search and then be missing from
+     the list beside it. */
+  function quickLinks() {
+    return [
+      { u: 'index.html',       t: 'الصفحة الرئيسية',    d: 'كل حاجة عن الأكاديمية في مكان واحد.' },
+      { u: 'programs.html',    t: 'البرامج',            d: 'الحفظ المتدرّج، إنقاذ الحفظ، التلاوة، البيت القرآني.' },
+      { u: 'pricing.html',     t: 'الأسعار والباقات',   d: 'الفئات وأنظمة الحصة والباقات.' },
+      { u: 'faq.html',         t: 'الأسئلة الشائعة',   d: 'أكثر الأسئلة التي بتتكرر علينا.' },
+      { u: 'materials.html',   t: 'المواد المقروءة',    d: 'أدلة وورق مراجعة وأنشطة للبيت.' },
+      { u: 'testimonials.html',t: 'آراء الطالبات',      d: 'تجارب طالباتنا وأمهاتنا.' },
+      { u: 'about.html',       t: 'عن الأكاديمية',      d: 'رسالتنا وطريقتنا في التعليم القرآني.' },
+      { u: 'contact.html',     t: 'تواصل معنا',         d: 'اسألينا أو احجزي عبر واتساب.' }
+    ].map(function (l) {
+      return [
+        '        <a class="ql" href="' + esc(l.u) + '">',
+        '          <h3 class="ql__t">' + esc(l.t) + '</h3>',
+        '          <p class="ql__d">' + esc(l.d) + '</p>',
+        '          <span class="ql__go">ادخلي',
+        '            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4-4.6-4.6z"/></svg>',
+        '          </span>',
+        '        </a>'
+      ].join('\n');
+    }).join('\n');
+  }
+
+  /* ==================================================================
+     SEARCH INDEX
+
+     A static site cannot answer "where is X?" with a query, so the 404 page
+     carries its own small index: this builds it from content.js and the
+     listing of pages, and main.js filters it as the visitor types.
+
+     Only entries that have somewhere real to send the reader are included --
+     an article with no page to live on would produce a result that is itself a
+     404, which on this page would be a poor joke.
+     ================================================================== */
+
+  var SEARCH_PAGES = [
+    { file: 'index.html',        title: 'الصفحة الرئيسية',        desc: 'كل حاجة عن الأكاديمية في صفحة واحدة.' },
+    { file: 'about.html',         title: 'عن الأكاديمية',          desc: 'رسالتنا وفلسفتنا وطريقتنا في التعليم القرآني.' },
+    { file: 'programs.html',      title: 'البرامج',                desc: 'كل البرامج بالتفصيل: الحفظ المتدرج، إنقاذ الحفظ، التلاوة، البيت القرآني.' },
+    { file: 'pricing.html',       title: 'الأسعار والباقات',       desc: 'كل الفئات وأنظمة الحصة والباقات.' },
+    { file: 'testimonials.html',  title: 'آراء الطالبات',          desc: 'تجارب طالباتنا وأمهاتنا مع الأكاديمية.' },
+    { file: 'materials.html',     title: 'المواد المقروءة',       desc: 'أدلة وورق مراجعة وأنشطة للبيت.' },
+    { file: 'faq.html',           title: 'الأسئلة الشائعة',       desc: 'إجابات على أكثر الأسئلة التي تتكرر علينا.' },
+    { file: 'contact.html',       title: 'تواصل معنا',             desc: 'اسألينا أو احجزي عبر واتساب.' },
+    { file: 'privacy.html',       title: 'سياسة الخصوصية',         desc: 'إزاي بنتعامل مع بياناتك.' }
+  ];
+
+  /* The spelling fold itself lives in main.js, where the comparison happens --
+     render.js only writes the index and never reads it back. */
+  function plainText(html) {
+    return String(html == null ? '' : html)
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function searchIndex() {
+    var items = [];
+
+    SEARCH_PAGES.forEach(function (p) {
+      items.push({ t: p.title, u: p.file, d: p.desc, g: 'صفحات' });
+    });
+
+    visible(data().programs).forEach(function (p) {
+      items.push({
+        t: p.title,
+        u: 'programs.html#' + p.id,
+        d: plainText(p.short),
+        g: 'برنامج',
+        k: [p.audience, p.duration, 'برنامج'].filter(Boolean).join(' ')
+      });
+    });
+
+    visible(data().faq).forEach(function (f) {
+      items.push({
+        t: f.q,
+        u: 'faq.html#' + (f.id || ''),
+        d: plainText(f.a),
+        g: 'سؤال شائع',
+        k: 'أسئلة شائعة سؤال'
+      });
+    });
+
+    visible(data().testimonials).forEach(function (r) {
+      items.push({
+        t: r.name + (r.program ? ' — ' + r.program : ''),
+        u: 'testimonials.html',
+        d: plainText(r.text),
+        g: 'رأي',
+        k: [r.program, 'آراء'].filter(Boolean).join(' ')
+      });
+    });
+
+    /* `<` is escaped as < so a stray "</script>" inside any indexed text
+     cannot close the tag early and break out into markup. */
+    return JSON.stringify(items).replace(/</g, '\\u003c');
+  }
+
   /* ==================================================================
      ARTICLES
 
@@ -1522,8 +1623,12 @@
     if (offSection('faq')) return '';
     if (!sectionVisible('faq')) return '';
     return visible(data().faq).map(function (f, i) {
+      /* The id is what makes a single question linkable -- from the search on
+         the 404 page, from a WhatsApp message, from anywhere else. Without it
+         faq.html#f3 lands at the top of the page and the reader has to hunt. */
       return [
-        '        <details class="faq__item"' + (i === 0 ? ' open' : '') + '>',
+        '        <details class="faq__item" id="' + esc(f.id || 'f' + (i + 1)) + '"' +
+          (i === 0 ? ' open' : '') + '>',
         '          <summary class="faq__q">',
         '            ' + esc(f.q),
         '            <span class="faq__ico" aria-hidden="true">',
@@ -1665,6 +1770,8 @@
     whyBlock: whyBlock,
     programsHead: programsHead,
     materialsTeaser: materialsTeaser,
+    searchIndex: searchIndex,
+    quickLinks: quickLinks,
     videoBlock: videoBlock,
     videoEmbedUrl: videoEmbedUrl,
     secHeadHtml: secHeadHtml,
