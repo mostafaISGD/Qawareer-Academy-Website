@@ -2439,6 +2439,14 @@ function buildSections(host) {
     /* no marked regions left, but the page still needs the section / nav /
        texts / seo passes applied to it */
     { file: 'contact.html', regions: {} },
+    /* the error page carries the search index and the quick links. Being in
+       this list is also what makes applySettings run on it at all, so the theme
+       and the WhatsApp number follow the panel instead of going stale. */
+    { file: '404.html', regions: {
+        'search-index': 'searchIndex',
+        'quick-links':  'quickLinks'
+      } },
+    { file: 'privacy.html', regions: {} },
     { file: 'about.html', regions: {
         'about-hero': 'pageHeroText:about',
         'about':      'aboutBody'
