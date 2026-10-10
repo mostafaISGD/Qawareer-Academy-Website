@@ -207,7 +207,7 @@ window.CONTENT = {
       {
         "id": "pmv1uom84",
         "sessions": 22,
-        "label": "22 حصة"
+        "label": "يومياً"
       }
     ],
     "tiers": [
@@ -993,14 +993,6 @@ window.CONTENT = {
       }
     },
     "texts": {
-      /* pricing.lead is deliberately empty -- leave it that way.
-         priceIntro() writes that sentence from pricing.systems and
-         pricing.plans, so the bundle count in it cannot fall out of step with
-         the table below. A written-out version went stale twice: it said
-         "four bundles" while five were on screen, and "five bundles" after a
-         sixth was added. Set this only if the sentence should read differently
-         from the data -- it then overrides, and the data no longer shows
-         through. */
       "header.brand_name": "أكاديمية قوارير",
       "header.brand_tag": "برامج قرآنية وتربوية رحيمة",
       "header.skip_link": "تخطي إلى المحتوى الرئيسي",
@@ -1184,5 +1176,5 @@ window.CONTENT = {
       }
     }
   },
-  "updatedAt": "2026-10-10T03:45:34.178Z"
+  "updatedAt": "2026-10-10T09:24:00.099Z"
 };
