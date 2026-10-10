@@ -135,7 +135,10 @@
         '            <strong>الميزة التنافسية:</strong> ' + esc(p.edge),
         '          </div>',
         '          <div class="center mt-3">',
-        '            <a class="btn btn--green" href="#" data-wa>احجزي في هذا البرنامج</a>',
+        /* data-ctx carries the program name, so the WhatsApp message asks
+           about THIS program without the message being written five times. */
+        '            <a class="btn btn--green" href="#" data-wa="program" data-ctx="' +
+          esc(p.title) + '">احجزي في هذا البرنامج</a>',
         '          </div>',
         '        </div>',
         '      </article>'
@@ -318,10 +321,13 @@
       }).join('\n');
 
       /* Each tier's button pre-fills its own WhatsApp text, so the message
-         says which offer the enquiry is about. shell.py reads data-msg and
-         falls back to one generic sentence when it is absent. */
-      var waMsg = 'السلام عليكم، حابّة أعرف تفاصيل أكثر عن ' +
-        (tier.name || 'باقات أكاديمية قوارير');
+         says which offer the enquiry is about, so the answer starts with the
+         right subject. The tier picks a message KEY rather than carrying the
+         words -- that is what lets the owner rewrite all three from the panel
+         without touching this file. A tier with an id nobody mapped falls back
+         to the general message rather than to nothing. */
+      var TIER_WA = { classic: 'tierClassic', golden: 'tierGolden', groups: 'tierGroups' };
+      var waKey = TIER_WA[tier.id] || 'general';
 
       var features = (tier.features || []).map(function (f) {
         return [
@@ -356,7 +362,7 @@
         '          </div>',
         '          <div class="tier__cta" data-reveal' + delay(i) + '>',
         '            <a class="btn btn--block tier__btn" href="pricing.html"',
-        '               data-wa data-msg="' + esc(waMsg) + '">' +
+        '               data-wa="' + esc(waKey) + '">' +
           esc(tier.cta || 'اختاري باقتكِ') + '</a>',
         '          </div>',
         '        </section>'
@@ -439,7 +445,7 @@
       '      <div class="sec-head sec-head--center">',
       '        <span class="kicker">الأسعار</span>',
       '        <h2>باقات مرنة تناسب الجميع</h2>',
-      '        <p>ثلاث فئات، وكل فئة فيها أنظمة الحصة الثلاث (30 و 45 و 60 دقيقة) بأربع باقات (4 و 8 و 12 و 16 حصة).</p>',
+      '        <p>ثلاث فئات، وكل فئة فيها أنظمة الحصة الثلاث (30 و 45 و 60 دقيقة) بخمس باقات (4 و 8 و 12 و 16 حصة، وباقة يومية ما عدا الجمعة والسبت).</p>',
       '        <div class="rule"></div>',
       '      </div>',
       '',
@@ -448,7 +454,7 @@
       '      </div>',
       '',
       '      <div class="center mt-4">',
-      '        <a class="btn btn--gold" href="pricing.html" data-wa data-msg="السلام عليكم، حابّة أعرف تفاصيل الباقات والأسعار">عرض تفاصيل الباقات',
+      '        <a class="btn btn--gold" href="pricing.html" data-wa="pricing">عرض تفاصيل الباقات',
       '          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>',
       '        </a>',
       '      </div>'
@@ -535,6 +541,50 @@
   /* ==================================================================
      PRICE NOTES
      ================================================================== */
+  /* The heading above the tiers: "three tiers ... by N bundles (...)".
+
+     Built from the data rather than written out, because the version that
+     lived directly in pricing.html said "four bundles (4, 8, 12 and 16)" the
+     whole time a fifth bundle was on screen just below it -- and it sat
+     outside every region, so no rebuild could ever correct it. The numbers now
+     follow pricing.systems and pricing.plans wherever they change. */
+  function priceIntro() {
+    if (offSection('pricing')) return '';
+
+    var systems = prSystems() || [];
+    var plans = prPlans() || [];
+    if (!systems.length || !plans.length) return '';
+
+    /* arabic-Indic digits read more naturally alongside the rest of the copy */
+    var AR = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    function ar(n) {
+      return String(n).replace(/[0-9]/g, function (d) { return AR[+d]; });
+    }
+
+    var mins = systems.map(function (s) { return ar(s.minutes); }).join(' و ');
+    var bundles = plans.map(function (p) { return esc(p.label); }).join(' و ');
+    var tierCount = (prTiers() || []).length;
+
+    var lead = (settings().texts || {})['pricing.lead'];
+    var body = lead
+      ? esc(lead)
+      : esc(ar(tierCount) + ' فئات، وكل فئة فيها أنظمة الحصة الثلاث (' + mins +
+            ' دقيقة) بـ' + ar(plans.length === 3 ? 'ثلاث' : plans.length === 4 ? 'أربع' :
+                               plans.length === 5 ? 'خمس' : ar(plans.length)) +
+            ' باقات (' + bundles + ').');
+
+    return [
+      '      <div class="sec-head sec-head--center">',
+      '        <span class="kicker">نظرة عامة</span>',
+      '        <h2>اختاري الفئة التي تناسبكِ</h2>',
+      '        <p>',
+      '          ' + body + ' كل الأسعار بـ' + esc(pr().currency || 'جنيه') + '.',
+      '        </p>',
+      '        <div class="rule"></div>',
+      '      </div>'
+    ].join('\n');
+  }
+
   function priceNotes() {
     if (offSection('pricing')) return '';
     var n = data().priceNotes;
@@ -1108,8 +1158,8 @@
       '          </details>',
       tags,
       '          <div class="art__foot">',
-      '            <a class="link-arrow" href="#" data-wa data-msg="' +
-        esc('السلام عليكم، حابّة أعرف المزيد عن مقال: ' + a.title) + '">اسأليني عن المقال',
+      '            <a class="link-arrow" href="#" data-wa="article" data-ctx="' +
+        esc(a.title) + '">اسأليني عن المقال',
       '              ' + ARROW,
       '            </a>',
       '          </div>',
@@ -1325,7 +1375,7 @@
       '          <span class="chip chip--gold">قريباً بإذن الله</span>',
       '          <h2>' + esc(s.title) + '</h2>',
       '          <p class="muted">' + esc(s.text) + '</p>',
-      '          <a class="btn btn--green mt-3" href="#" data-wa>نبهيني عند الجاهزية</a>',
+      '          <a class="btn btn--green mt-3" href="#" data-wa="notify">نبهيني عند الجاهزية</a>',
       '        </div>',
       '      </div>'
     ].join('\n');
@@ -1789,6 +1839,7 @@
     programDetails: programDetails,
     priceTiers: priceTiers,
     priceCards: priceCards,
+    priceIntro: priceIntro,
     priceTable: priceTable,
     priceNotes: priceNotes,
     reviews: reviews,

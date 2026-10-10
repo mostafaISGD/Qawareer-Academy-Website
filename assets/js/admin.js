@@ -32,6 +32,31 @@
     if (S.home.reviews.random == null) S.home.reviews.random = true;
     if (S.home.reviews.count == null) S.home.reviews.count = 3;
 
+    /* WhatsApp messages. The greeting is the one line the owner does NOT
+       edit per message -- main.js prepends it to everything, so it cannot be
+       forgotten on one button out of seventy. */
+    if (!S.waMessages) S.waMessages = {};
+    var WA_DEFAULTS = {
+      greeting: 'السلام عليكم ورحمة الله وبركاته',
+      general: 'حابّة أعرف تفاصيل أكثر عن برامج أكاديمية قوارير.',
+      trial: 'حابّة أحجز حصة تجريبية في أكاديمية قوارير.',
+      program: 'حابّة أحجز في برنامج «{program}».',
+      pricing: 'حابّة أعرف تفاصيل أكثر عن الباقات والأسعار.',
+      tierClassic: 'حابّة أعرف تفاصيل أكثر عن الباقات التقليدية.',
+      tierGolden: 'حابّة أعرف تفاصيل أكثر عن الباقات الذهبية.',
+      tierGroups: 'حابّة أعرف تفاصيل أكثر عن باقات المجموعات.',
+      faq: 'حابة اسأل عن سؤال في صفحة الأسئلة الشائعة.',
+      materials: 'حابّة أعرف المواد المتاحة للقراءة في البيت.',
+      testimonials: 'حابّة أشارك رأيي في تجربتي مع الأكاديمية.',
+      notFound: 'وصلت لصفحة غير موجودة وحابّة أستفسر عن حاجة.',
+      contact: 'حابّة أستفسر عن حاجة.',
+      article: 'حابّة أعرف المزيد عن مقال: {article}.',
+      notify: 'نبهيني لما المحتوى ده يكون جاهز.'
+    };
+    Object.keys(WA_DEFAULTS).forEach(function (k) {
+      if (S.waMessages[k] === undefined) S.waMessages[k] = WA_DEFAULTS[k];
+    });
+
     /* `why` used to point at the "من نحن" block while the panel labelled it
        "لماذا قوارير" -- so a saved setting for one actually controlled the
        other. The two blocks have their own keys now, and the old value moves
@@ -684,6 +709,7 @@
     { id: 'theme', label: 'المظهر', icon: '🎨', build: buildTheme },
     { id: 'contact', label: 'الإعدادات', icon: '⚙️', build: buildContact },
     { id: 'announcement', label: 'إعلان', icon: '📢', build: buildAnnouncement },
+    { id: 'waMessages', label: 'رسائل الواتساب', icon: '💬', build: buildWaMessages },
     { id: 'sectionOrder', label: 'ترتيب الأقسام', icon: '↕️', build: buildSectionOrder },
     { id: 'navigation', label: 'القائمة', icon: '🧭', build: buildNavigation },
     { id: 'texts', label: 'النصوص', icon: '📝', build: buildTexts },
@@ -1142,14 +1168,66 @@ function buildSections(host) {
     var planWrap = document.createElement('div');
     planWrap.className = 'adm-field';
     planWrap.innerHTML = '<span class="adm-label">عدد الحصص في كل باقة' +
-      '<span class="adm-hint">أعمدة الأسعار بتترتيب دي بالظبط</span></span>';
+      '<span class="adm-hint">أعمدة الأسعار بتترتيب دي بالظبط — لو ضفتِ أو شلتِ ' +
+      'باقة، الأسعار بتتظبط لوحدها</span></span>';
+
     var prow = document.createElement('div');
     prow.className = 'adm-row adm-row--3';
-    plans.forEach(function (pl) {
-      prow.appendChild(field('الباقة', 'مثال: 4 حصص', pl.label,
-        function (v) { pl.label = v; }));
+    plans.forEach(function (pl, pi) {
+      var cell = document.createElement('div');
+      cell.className = 'adm-planfield';
+
+      var f = field('الباقة', 'مثال: 4 حصص', pl.label, function (v) { pl.label = v; });
+      cell.appendChild(f);
+
+      /* Deleting a bundle has to delete the matching price in every row of
+         every tier. Dropping only the label would shift every later price one
+         column left and silently re-price the whole table -- 850 would become
+         the price for 8 sessions. So the removal happens on the index, and a
+         price left empty is simply not shown (see tierSystemCard). */
+      var del = document.createElement('button');
+      del.className = 'adm-mini is-del';
+      del.type = 'button';
+      del.title = 'احذفي الباقة «' + pl.label + '»';
+      del.textContent = '🗑';
+      del.addEventListener('click', function () {
+        if (plans.length <= 1) { alert('لازم فضل باقة واحدة على الأقل'); return; }
+        if (!confirm('احذفي باقة «' + pl.label + '»؟\n'
+          + 'هيتمسح سعرها من كل الفئات، والخانة الفاضية مش هتظهر على الموقع.')) return;
+
+        plans.splice(pi, 1);
+        P.tiers.forEach(function (t) {
+          (t.rows || []).forEach(function (r) {
+            if (Array.isArray(r.prices)) r.prices.splice(pi, 1);
+          });
+        });
+        markDirty();
+        renderTab();
+      });
+      cell.appendChild(del);
+      prow.appendChild(cell);
     });
     planWrap.appendChild(prow);
+
+    var addPlan = document.createElement('button');
+    addPlan.className = 'adm-mini adm-mini--add';
+    addPlan.type = 'button';
+    addPlan.textContent = '+ أضيفي باقة';
+    addPlan.addEventListener('click', function () {
+      var next = plans.length + 1;
+      plans.push({ id: 'p' + Date.now().toString(36), sessions: next, label: next + ' حصص' });
+      // one empty price cell per row, so the new column lines up
+      P.tiers.forEach(function (t) {
+        (t.rows || []).forEach(function (r) {
+          if (!Array.isArray(r.prices)) r.prices = [];
+          r.prices.push('');
+        });
+      });
+      markDirty();
+      renderTab();
+    });
+    planWrap.appendChild(addPlan);
+
     top.appendChild(planWrap);
 
     host.appendChild(top);
@@ -1789,6 +1867,128 @@ function buildSections(host) {
     host.appendChild(card);
   }
 
+  /* ---------- WHATSAPP MESSAGES ----------
+
+     Seventy-odd buttons go to WhatsApp. Their text used to be a single line
+     copied into ten pages, so nothing here could change it and a per-button
+     message (the pricing tiers, each program) had nowhere to live except a
+     hardcoded data-msg attribute.
+
+     Every button now names a key: <a data-wa="pricing">. This tab edits the
+     message behind each key, and the greeting is edited once at the top --
+     main.js puts it in front of every message, so it cannot be left off on
+     one button. */
+  var WA_KEYS = [
+    ['greeting',      'التحية (بتبدأ بيها كل رسالة)',            'بتتضاف تلقائياً لكل رسالة، مش بتكتبيها مع كل زرار'],
+    ['general',       'الرسالة العامة (الزرار الافتراضي)',       'أي زرار مش محدد ليه رسالة خاصة'],
+    ['trial',         'زر «احجزي الحصة التجريبية الآن»',          'الشريط في أسفل الصفحة الرئيسية وكل الصفحات'],
+    ['program',       'زرار «احجزي في هذا البرنامج»',             '{program} بيتبدّل باسم البرنامج تلقائياً'],
+    ['pricing',       '«عرض تفاصيل الباقات»',                    'من الصفحة الرئيسية'],
+    ['tierClassic',   '«اختاري باقتكِ» — التقليدية',              'صفحة الأسعار'],
+    ['tierGolden',    '«احجزي الباقة الذهبية»',                  'صفحة الأسعار'],
+    ['tierGroups',    '«اسألي عن المجموعة»',                      'صفحة الأسعار'],
+    ['faq',           '«اسألينا سؤالاً»',                        'صفحة الأسئلة'],
+    ['materials',     '«أخبريني بما تحتاجين»',                    'صفحة المواد'],
+    ['testimonials',  '«أرسل�� رأيكِ»',                          'صفحة الآراء'],
+    ['notFound',      '«اكتبي لنا على واتساب»',                  'صفحة ٤٠٤'],
+    ['contact',       'أزرار التواصل العام',                      'نموذج التواصل وغيره'],
+    ['article',       '«اسأليني عن المقال»',                    '{article} بيتبدّل بعنوان المقال تلقائياً'],
+    ['notify',        '«نبهيني عند الجاهزية»',                   'الزرار بتاع لوحات «قريباً»']
+  ];
+
+  function buildWaMessages(host) {
+    var M = C.settings.waMessages || (C.settings.waMessages = {});
+
+    var note = document.createElement('div');
+    note.className = 'adm-note';
+    note.innerHTML = 'النص اللي بتكتبه هنا <strong>بيتبعت بعد التحية تلقائياً</strong> — ' +
+      'يعني مش هتكتبی «السلام عليكم» في كل رسالة. لو حذفتِ الزرار اللي ' +
+      'بيستخدم رسالة، هيستخدم <strong>الرسالة العامة</strong>.';
+    host.appendChild(note);
+
+    /* a live preview, so there is no guessing what a visitor will receive */
+    var prev = document.createElement('div');
+    prev.className = 'adm-card';
+    prev.innerHTML = '<div class="adm-card__title">معاينة الرسالة</div>' +
+      '<div class="adm-hint">بتتحدّث مع كل كتابة — النتيجة كما توصل لواتساب.</div>';
+    var box = document.createElement('div');
+    box.className = 'adm-pricereply';
+    box.style.cssText = 'white-space:pre-wrap;line-height:1.7;padding:14px 16px;' +
+      'border:1px solid var(--line);border-radius:var(--r);margin-top:10px;' +
+      'background:var(--bg-alt);font-size:.94rem';
+    prev.appendChild(box);
+
+    var live = document.createElement('label');
+    live.className = 'adm-label';
+    live.textContent = 'عايزة تشوفي رسالة:';
+    var pick = document.createElement('select');
+    pick.className = 'adm-sel';
+    WA_KEYS.forEach(function (pair) {
+      var o = document.createElement('option');
+      o.value = pair[0];
+      o.textContent = pair[1];
+      pick.appendChild(o);
+    });
+    var row = document.createElement('div');
+    row.className = 'adm-field';
+    row.appendChild(live);
+    row.appendChild(pick);
+    prev.appendChild(row);
+    host.appendChild(prev);
+
+    function refresh() {
+      var body = (M[pick.value] || '').trim();
+      var sample = body.replace(/\{[a-zA-Z]+\}/g, 'قوارير للحفظ المتدرج');
+      box.textContent = (M.greeting || '').trim() + '\n' + sample;
+    }
+    pick.addEventListener('change', refresh);
+
+    WA_KEYS.forEach(function (pair) {
+      var key = pair[0];
+      var card = document.createElement('div');
+      card.className = 'adm-card';
+
+      var head = document.createElement('div');
+      head.innerHTML = '<div class="adm-card__title">' + esc(pair[1]) + '</div>' +
+        '<div class="adm-hint">' + esc(pair[2]) + '</div>';
+      card.appendChild(head);
+
+      var wrap = document.createElement('div');
+      wrap.className = 'adm-field';
+      var lab = document.createElement('label');
+      lab.className = 'adm-label';
+      lab.textContent = key === 'greeting' ? 'نص التحية' : 'نص الرسالة (بعد التحية)';
+      var ta = document.createElement('textarea');
+      ta.className = 'adm-ta';
+      ta.dir = 'rtl';
+      ta.value = M[key] || '';
+      ta.addEventListener('input', function () {
+        M[key] = ta.value;
+        refresh();
+        markDirty();
+      });
+      labelFor(lab, ta, 'wa');
+      wrap.appendChild(lab);
+      wrap.appendChild(ta);
+      card.appendChild(wrap);
+
+      var go = document.createElement('button');
+      go.type = 'button';
+      go.className = 'adm-mini';
+      go.textContent = 'عايزة أشوفها في المعاينة';
+      go.addEventListener('click', function () {
+        pick.value = key;
+        refresh();
+        prev.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      });
+      card.appendChild(go);
+
+      host.appendChild(card);
+    });
+
+    refresh();
+  }
+
   /* ---------- ANNOUNCEMENT ---------- */
   function buildAnnouncement(host) {
     var note = document.createElement('div');
@@ -2422,7 +2622,8 @@ function buildSections(host) {
     { file: 'pricing.html', regions: {
         'pricing-cards': 'priceTiers',
         'price-table':  'priceTable',
-        'price-notes':  'priceNotes'
+        'price-notes':  'priceNotes',
+      'pricing-intro': 'priceIntro'
       } },
     { file: 'testimonials.html', regions: {
         'reviews': 'reviewsAll'
@@ -2540,6 +2741,16 @@ function buildSections(host) {
   function configJsText() {
     var c = (C.settings && C.settings.contact) || {};
     var body = JSON.stringify(c, null, 2);
+
+    /* The WhatsApp messages ride along here. config.js is the only settings
+       file the public pages load, so putting them anywhere else would mean a
+       second request just to say "hello" to a visitor. */
+    var wa = (C.settings && C.settings.waMessages) || null;
+    if (wa) {
+      body = body.replace(/\}\s*$/, ',\n  "waMessages": ' +
+        JSON.stringify(wa, null, 2).replace(/\n/g, '\n  ') + '\n}');
+    }
+
     return '/* ==========================================================================\n' +
       '   أكاديمية قوارير — Qawareer Academy\n' +
       '   الإعدادات المركزية — غيّر هنا مرة واحدة فقط\n' +
