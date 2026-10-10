@@ -2665,44 +2665,52 @@ function buildSections(host) {
         'why':            'whyBlock',
         'materials-block': 'materialsTeaser',
         'reviews':        'reviewSlider',
-        'faq':            'faq'
+        'faq':            'faq',
+        'floaters':       'floaters'
       } },
     { file: 'programs.html', regions: {
         'programs-cards':  'programCardsLocal',
-        'program-details': 'programDetails'
+        'program-details': 'programDetails',
+        'floaters':        'floaters'
       } },
     { file: 'pricing.html', regions: {
         'pricing-cards': 'priceTiers',
         'price-table':  'priceTable',
         'price-notes':  'priceNotes',
-      'pricing-intro': 'priceIntro'
+        'pricing-intro': 'priceIntro',
+        'floaters':       'floaters'
       } },
     { file: 'testimonials.html', regions: {
-        'reviews': 'reviewsAll'
+        'reviews': 'reviewsAll',
+        'floaters': 'floaters'
       } },
     { file: 'materials.html', regions: {
         'topics':            'topics',
         'materials-hero':    'pageHeroText:materials',
         'materials-intro':   'materialsIntro',
-        'materials-suggest': 'materialsSuggest'
+        'materials-suggest': 'materialsSuggest',
+        'floaters':          'floaters'
       } },
     { file: 'faq.html', regions: {
-        'faq': 'faq'
+        'faq': 'faq',
+        'floaters': 'floaters'
       } },
     /* no marked regions left, but the page still needs the section / nav /
        texts / seo passes applied to it */
-    { file: 'contact.html', regions: {} },
+    { file: 'contact.html', regions: { 'floaters': 'floaters' } },
     /* the error page carries the search index and the quick links. Being in
        this list is also what makes applySettings run on it at all, so the theme
        and the WhatsApp number follow the panel instead of going stale. */
     { file: '404.html', regions: {
         'search-index': 'searchIndex',
-        'quick-links':  'quickLinks'
+        'quick-links':  'quickLinks',
+        'floaters':     'floaters'
       } },
-    { file: 'privacy.html', regions: {} },
+    { file: 'privacy.html', regions: { 'floaters': 'floaters' } },
     { file: 'about.html', regions: {
         'about-hero': 'pageHeroText:about',
-        'about':      'aboutBody'
+        'about':      'aboutBody',
+        'floaters':   'floaters'
       } },
   ];
 
