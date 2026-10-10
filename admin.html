@@ -134,6 +134,12 @@ body { background: var(--cream); }
 .adm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .adm-row--3 { grid-template-columns: repeat(3, 1fr); }
 
+/* a bundle label with its delete button underneath -- the button is a
+   separate line so it cannot squeeze the input or inherit the grid gap */
+.adm-planfield { display: flex; flex-direction: column; gap: 6px; }
+.adm-planfield .adm-mini { align-self: flex-start; }
+.adm-mini--add { margin-top: 10px; }
+
 /* image field (testimonial photo) */
 .adm-imgrow { display: flex; gap: 14px; align-items: flex-start; }
 .adm-imgprev {

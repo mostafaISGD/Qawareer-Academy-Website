@@ -831,7 +831,103 @@
   })();
 
   /* ==================================================================
-     11. CONTACT FORM → WhatsApp (no backend needed)
+     11. WHATSAPP LINKS
+
+     Every wa.me link is built here, from window.SITE.waMessages, which the
+     panel writes into config.js at publish time.
+
+     This used to be a <script> block copied verbatim into ten pages. One
+     edit meant ten files, and nothing the owner typed into the panel could
+     change a message -- the whole point of the control was missing.
+
+     A button names its message with data-wa="key", and may say what it is
+     about with data-ctx="..." which fills in {program}:
+
+         <a data-wa="program" data-ctx="قوارير للحفظ المتدرج">
+
+     The greeting is added here, on purpose, rather than being part of the
+     editable text. An owner editing a message cannot leave it off by
+     forgetting; they only ever edit what comes after it.
+     ================================================================== */
+  function waText(key, ctx) {
+    var M = (window.SITE && window.SITE.waMessages) || {};
+    var body = (M[key] || M.general || '').trim();
+    if (ctx) body = body.replace(/\{[a-zA-Z]+\}/g, ctx);
+    var greeting = (M.greeting || '').trim();
+    return greeting ? greeting + '\n' + body : body;
+  }
+
+  (function whatsapp() {
+    var number = (window.SITE && window.SITE.whatsapp) || CFG.whatsapp;
+    var links = $$('[data-wa]');
+    if (!links.length) return;
+
+    links.forEach(function (a) {
+      var key = a.getAttribute('data-wa') || '';
+      a.setAttribute('href', 'https://wa.me/' + number +
+        '?text=' + encodeURIComponent(waText(key, a.getAttribute('data-ctx'))));
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener');
+    });
+  })();
+
+  /* ==================================================================
+     11a. CONTACT LINKS + LOCAL CLICK COUNTER
+
+     Telegram, Instagram, email and the phone display all come from
+     config.js, and the WhatsApp half lives in the section above.
+
+     These two used to sit in a <script> block copied into ten pages. Anything
+     that had to change meant editing all ten, and nothing typed into the panel
+     could reach them -- which is how the WhatsApp message ended up frozen in
+     the markup while config.js carried a perfectly editable phone number
+     twenty lines above it.
+     ================================================================== */
+  (function contactLinks() {
+    var C = window.SITE || {};
+    var tg = 'https://t.me/'      + (C.telegram  || 'QawareerAcademy');
+    var ig = 'https://instagram.com/' + (C.instagram || 'Qawareer.Academy');
+    var ml = 'mailto:'            + (C.email     || 'QawarirAcademy@gmail.com');
+
+    function set(sel, attr, val, blank) {
+      $$(sel).forEach(function (a) {
+        a.setAttribute(attr, val);
+        if (blank) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); }
+      });
+    }
+
+    set('[data-tg]',   'href', tg, true);
+    set('[data-ig]',   'href', ig, true);
+    set('[data-mail]', 'href', ml, false);
+
+    $$('[data-phone]').forEach(function (el) {
+      el.textContent = C.phoneDisplay || '01130830390';
+    });
+
+    /* ---------- local click counter (works with zero setup) ----------
+       Counts outbound WhatsApp taps per page, in this browser only. Useful
+       even without Google Analytics: open the console and run qwrStats(). */
+    if (C.localStats) {
+      var KEY = 'qwr-stats';
+      var stats = {};
+      try { stats = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+      window.qwrStats = function () {
+        console.log('%c إحصائيات الضغط ', 'background:#06683f;color:#caa959;padding:3px 8px;border-radius:4px');
+        console.table(stats);
+        return stats;
+      };
+      document.addEventListener('click', function (e) {
+        var a = e.target.closest && e.target.closest('a[href*="wa.me"]');
+        if (!a) return;
+        var p = (location.pathname.split('/').pop() || 'index.html');
+        stats[p] = (stats[p] || 0) + 1;
+        try { localStorage.setItem(KEY, JSON.stringify(stats)); } catch (e) {}
+      }, true);
+    }
+  })();
+
+  /* ==================================================================
+     11b. CONTACT FORM → WhatsApp (no backend needed)
      Turns the form into a WhatsApp message so it works on any host.
      ================================================================== */
   (function waForm() {
@@ -848,8 +944,9 @@
 
       if (!name) { alert('من فضلكِ اكتبِي اسمكِ'); return; }
 
+      var M = (window.SITE && window.SITE.waMessages) || {};
       var lines = [
-        'السلام عليكم',
+        (M.greeting || 'السلام عليكم ورحمة الله وبركاته'),
         'أنا: ' + name,
         phone ? 'رقم التواصل: ' + phone : '',
         prog  ? 'البرنامج المطلوب: ' + prog : '',
