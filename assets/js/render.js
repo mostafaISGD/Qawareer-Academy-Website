@@ -555,7 +555,10 @@
     var plans = prPlans() || [];
     if (!systems.length || !plans.length) return '';
 
-    /* arabic-Indic digits read more naturally alongside the rest of the copy */
+    /* Session lengths in arabic-Indic digits, matching how the rest of the copy
+       writes them; the bundle NAMES are passed through untouched, because a
+       bundle is called whatever the owner called it ("22 حصة" stays "22 حصة",
+       not "٢٢ حصة" -- half-converted numbers look like a typo). */
     var AR = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
     function ar(n) {
       return String(n).replace(/[0-9]/g, function (d) { return AR[+d]; });
@@ -565,13 +568,37 @@
     var bundles = plans.map(function (p) { return esc(p.label); }).join(' و ');
     var tierCount = (prTiers() || []).length;
 
+    /* Counting words need the right form: two bundles take "حصتين", three take
+       "ثلاث حصص". Written as a standalone phrase, then prefixed -- "بـ" joins
+       to a following word ("بخمس") but not to "خمس", so the two are kept apart
+       and the prefix is chosen per form rather than pasted on blindly. */
+    var COUNT = {
+      1: { one: 'حصة واحدة', acc: 'بحصة واحدة' },
+      2: { one: 'حصتين',     acc: 'بحصتين' },
+      3: { one: 'ثلاث حصص',  acc: 'بثلاث حصص' },
+      4: { one: 'أربع حصص',  acc: 'بأربع حصص' },
+      5: { one: 'خمس حصص',   acc: 'بخمس حصص' },
+      6: { one: 'ست حصص',    acc: 'بست حصص' },
+      7: { one: 'سبع حصص',   acc: 'بسبع حصص' },
+      8: { one: 'ثمان حصص',  acc: 'بثمان حصص' },
+      9: { one: 'تسع حصص',   acc: 'بتسع حصص' },
+      10: { one: 'عشر حصص',  acc: 'بعشر حصص' }
+    };
+    function countAcc(n) {
+      var c = COUNT[n];
+      return c ? c.acc : 'بـ' + ar(n) + ' حصة';
+    }
+    function tiersWord(n) {
+      return ['', 'فئة واحدة', 'فئتان', 'ثلاث فئات', 'أربع فئات', 'خمس فئات'][n] ||
+             ar(n) + ' فئات';
+    }
+
     var lead = (settings().texts || {})['pricing.lead'];
     var body = lead
       ? esc(lead)
-      : esc(ar(tierCount) + ' فئات، وكل فئة فيها أنظمة الحصة الثلاث (' + mins +
-            ' دقيقة) بـ' + ar(plans.length === 3 ? 'ثلاث' : plans.length === 4 ? 'أربع' :
-                               plans.length === 5 ? 'خمس' : ar(plans.length)) +
-            ' باقات (' + bundles + ').');
+      : esc(tiersWord(tierCount) + '، وكل فئة فيها أنظمة الحصة الثلاث (' +
+            mins + ' دقيقة) ' + countAcc(plans.length) +
+            ' (' + bundles + ').');
 
     return [
       '      <div class="sec-head sec-head--center">',
