@@ -850,26 +850,67 @@
     return raw;   // some other host: use whatever was given
   }
 
+  /* The video id, for the facade's swap on click. */
+  function videoId() {
+    var m = String(videoEmbedUrl()).match(/embed\/([\w-]+)/);
+    return m ? m[1] : '';
+  }
+
+  /* Why this is a button and not an <iframe>:
+
+     A live YouTube embed pulled 1042 KB on first load -- 80% of the whole page,
+     and enough to hold the hero text back to 7.5s on a phone. loading="lazy"
+     was not enough: Chrome still fetches an iframe sitting within about a
+     screen and a half of the viewport, which this one does on a phone.
+
+     So the embed waits for a click. The poster is a first-party WebP, the
+     player is built only once somebody asks for it, and YouTube is not
+     contacted at all until then. The button carries the real title, so this
+     still reads as a video to a screen reader and to a crawler. */
   function videoBlock() {
     if (offSection('video')) return '';
     var v = (data().home && data().home.video) || {};
     var src = videoEmbedUrl();
     var out = [secHeadHtml('video')];
-    if (src) {
-      out.push([
-        '      <div class="video" data-reveal="zoom">',
-        '        <div class="video__frame">',
+    if (!src) return out.filter(Boolean).join('\n\n');
+
+    var label = homeBlock('video').title || 'فيديو تعريفي بأكاديمية قوارير';
+    var isYouTube = /youtube|youtu\.be/i.test(src);
+
+    out.push([
+      '      <div class="video" data-reveal="zoom">',
+      '        <div class="video__frame">',
+      isYouTube ? [
+        '          <button class="video__facade" type="button" data-video-id="' + esc(videoId()) + '"',
+        '                  data-video-title="' + esc(label) + '" aria-label="' + esc(label) + '">',
+        '            <picture>',
+        '              <source srcset="assets/img/video-poster.webp" type="image/webp">',
+        '              <img class="video__poster" src="assets/img/video-poster.jpg" alt=""',
+        '                   width="800" height="450" loading="lazy" decoding="async">',
+        '            </picture>',
+        '            <span class="video__play" aria-hidden="true">',
+        '              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>',
+        '            </span>',
+        '          </button>',
+        '          <noscript>',
+        '            <style>.video__facade{display:none!important}</style>',
+        '            <iframe src="' + esc(src) + '" title="' + esc(label) + '" loading="lazy"',
+        '                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"',
+        '                    allowfullscreen></iframe>',
+        '          </noscript>'
+      ].join('\n') : [
         '          <iframe',
         '            src="' + esc(src) + '"',
-        '            title="' + esc(v.title || homeBlock('video').title || 'فيديو تعريفي') + '"',
+        '            title="' + esc(label) + '"',
         '            loading="lazy"',
         '            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"',
-        '            allowfullscreen></iframe>',
-        '        </div>',
-        v.caption ? '        <p class="video__cap">' + esc(v.caption) + '</p>' : '',
-        '      </div>'
-      ].filter(Boolean).join('\n'));
-    }
+        '            allowfullscreen></iframe>'
+      ].join('\n'),
+      '        </div>',
+      v.caption ? '        <p class="video__cap">' + esc(v.caption) + '</p>' : '',
+      '      </div>'
+    ].filter(Boolean).join('\n'));
+
     return out.filter(Boolean).join('\n\n');
   }
 
@@ -1774,6 +1815,7 @@
     quickLinks: quickLinks,
     videoBlock: videoBlock,
     videoEmbedUrl: videoEmbedUrl,
+    videoId: videoId,
     secHeadHtml: secHeadHtml,
     /* section visibility */
     sectionVisible: sectionVisible,

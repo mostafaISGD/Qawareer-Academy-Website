@@ -35,7 +35,9 @@
 <!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap"></noscript>
 
 <!-- Styles -->
 <link rel="stylesheet" href="assets/css/style.css">
@@ -297,12 +299,23 @@
 
       <div class="video" data-reveal="zoom">
         <div class="video__frame">
-          <iframe
-            src="https://www.youtube-nocookie.com/embed/y1TUN9ivr-Q"
-            title="تعرّفي على أكاديمية قوارير"
-            loading="lazy"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen></iframe>
+          <button class="video__facade" type="button" data-video-id="y1TUN9ivr-Q"
+                  data-video-title="تعرّفي على أكاديمية قوارير" aria-label="تعرّفي على أكاديمية قوارير">
+            <picture>
+              <source srcset="assets/img/video-poster.webp" type="image/webp">
+              <img class="video__poster" src="assets/img/video-poster.jpg" alt=""
+                   width="800" height="450" loading="lazy" decoding="async">
+            </picture>
+            <span class="video__play" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>
+            </span>
+          </button>
+          <noscript>
+            <style>.video__facade{display:none!important}</style>
+            <iframe src="https://www.youtube-nocookie.com/embed/y1TUN9ivr-Q" title="تعرّفي على أكاديمية قوارير" loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+          </noscript>
         </div>
         <p class="video__cap">جزء عم كامل — أسلوب متّبع في تعليم وتحفيظ القرآن الكريم للأطفال</p>
       </div>

@@ -285,6 +285,43 @@
   })();
 
   /* ==================================================================
+     4c. VIDEO FACADE
+
+     The homepage shows a poster and a play button instead of a live YouTube
+     embed, and this builds the real player on the first click. A live embed
+     cost 1042 KB before the visitor had even scrolled to it.
+
+     autoplay=1 because the visitor just asked for the video; without it
+     YouTube shows its own click-to-play poster over ours, which is two clicks
+     for one intent.
+
+     The noscript case needs no help: without JS the facade is a button that
+     does nothing, so it is hidden by the .no-js rule in the stylesheet and the
+     real embed is what the visitor gets. */
+  (function videoFacade() {
+    var btns = $$('.video__facade');
+    if (!btns.length) return;
+
+    btns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-video-id');
+        if (!id) return;
+
+        var frame = document.createElement('iframe');
+        frame.src = 'https://www.youtube-nocookie.com/embed/' + id +
+                    '?autoplay=1&rel=0';
+        frame.title = btn.getAttribute('data-video-title') || 'فيديو';
+        frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        frame.allowFullscreen = true;
+        frame.className = 'video__embed';
+
+        /* swap in place, keeping the poster's box so nothing shifts */
+        btn.parentNode.replaceChild(frame, btn);
+      });
+    });
+  })();
+
+  /* ==================================================================
      5. REVEAL ON SCROLL
      ================================================================== */
   (function reveal() {
