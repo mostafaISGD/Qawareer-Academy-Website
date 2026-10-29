@@ -751,7 +751,7 @@ window.CONTENT = {
   },
   "settings": {
     "theme": {
-      "name": "green",
+      "name": "maroon",
       "mode": "auto",
       "showDarkToggle": true,
       "colors": {
@@ -765,7 +765,7 @@ window.CONTENT = {
       "name": "أكاديمية قوارير",
       "nameEn": "Qawareer Academy",
       "slogan": "رفقاً بقلوبكن.. وقرباً لكتاب الله",
-      "tagline": "برامج قرآنية وتربوية رحيمة",
+      "tagline": "برامج قرآنية وتربوية",
       "phoneDisplay": "01130830390",
       "whatsapp": "201130830390",
       "email": "QawarirAcademy@gmail.com",
@@ -1141,5 +1141,5 @@ window.CONTENT = {
       }
     }
   },
-  "updatedAt": "2026-10-29T23:33:54.180Z"
+  "updatedAt": "2026-10-29T23:34:49.223Z"
 };
