@@ -2656,6 +2656,7 @@ function buildSections(host) {
      ================================================================ */
   var PAGE_MAP = [
     { file: 'index.html', regions: {
+        'home-cta':      'homeCtaBlock',
         'about-intro':   'aboutIntroBlock',
         'video':         'videoBlock',
         'programs-head': 'programsHead',
