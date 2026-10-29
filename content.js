@@ -559,7 +559,7 @@ window.CONTENT = {
       "visible": true
     },
     "about-intro": {
-      "visible": true
+      "visible": false
     },
     "video": {
       "visible": false
@@ -1141,5 +1141,5 @@ window.CONTENT = {
       }
     }
   },
-  "updatedAt": "2026-10-29T22:53:32.920Z"
+  "updatedAt": "2026-10-29T23:00:30.833Z"
 };
