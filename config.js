@@ -7,7 +7,7 @@ window.SITE = {
   "name": "أكاديمية قوارير",
   "nameEn": "Qawareer Academy",
   "slogan": "رفقاً بقلوبكن.. وقرباً لكتاب الله",
-  "tagline": "برامج قرآنية وتربوية رحيمة",
+  "tagline": "برامج قرآنية وتربوية",
   "phoneDisplay": "01130830390",
   "whatsapp": "201130830390",
   "email": "QawarirAcademy@gmail.com",
