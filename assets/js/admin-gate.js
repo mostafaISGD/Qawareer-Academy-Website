@@ -26,8 +26,7 @@
    ========================================================================== */
 (function () {
   'use strict';
-
-  /* sha256('[REDACTED]') — change both this and the note above together */
+  /* Passphrase verification hash. Keep the passphrase out of source comments. */
   var GATE_HASH = '4a563069a35619c5990cfd1aed07eb16daefe3352b974236422aaac19855e91b';
 
   var SESSION_KEY = 'qwr-gate-ok';     // this browser tab only
