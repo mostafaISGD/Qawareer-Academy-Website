@@ -1545,6 +1545,17 @@
     return html;
   }
 
+  /* Keep footer program links aligned with the published program list. */
+  function applyFooterPrograms(html) {
+    var links = visible(data().programs).map(function (p) {
+      return '          <a href="programs.html#' + esc(p.id) + '">' + esc(p.title) + '</a>';
+    }).join('\n');
+    return html.replace(
+      /(<nav\b[^>]*\bdata-footer-programs(?:="[^"]*")?[^>]*>)[\s\S]*?<\/nav>/g,
+      function (_, open) { return open + '\n' + links + '\n        </nav>'; }
+    );
+  }
+
   /* ---- navigation: rebuild header/footer/social from settings ---- */
   function applyNavigation(html) {
     var nav = (settings().navigation || {});
@@ -1589,6 +1600,8 @@
       );
     }
     
+    html = applyFooterPrograms(html);
+
     // Social links (footer)
     if (nav.social) {
       var whatsapp = nav.social.whatsapp || '201130830390';
@@ -1957,6 +1970,7 @@
     applySections: applySections,
     applySettings: applySettings,
     applySectionOrder: applySectionOrder,
+    applyFooterPrograms: applyFooterPrograms,
     applyNavigation: applyNavigation,
     applyTexts: applyTexts,
     applySeo: applySeo,
