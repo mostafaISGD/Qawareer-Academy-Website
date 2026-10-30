@@ -871,7 +871,7 @@ window.CONTENT = {
         {
           "label": "آراء الطلاب",
           "href": "testimonials.html",
-          "visible": true,
+          "visible": false,
           "target": ""
         },
         {
@@ -1141,5 +1141,5 @@ window.CONTENT = {
       }
     }
   },
-  "updatedAt": "2026-10-29T23:39:41.848Z"
+  "updatedAt": "2026-10-30T00:12:41.197Z"
 };
