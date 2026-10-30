@@ -2255,8 +2255,9 @@
     ].join('\n');
   }
 
-  /* Homepage signup copy, shared by publish and file export. */
-  function homeCtaBlock() {
+  /* One signup block shared by every page. The values live under home.cta for
+     compatibility with existing saved drafts, but they are site-wide. */
+  function globalCtaBlock() {
     var c = (data().home || {}).cta || {};
     return [
       '      <span class="offer">' + esc(c.offer) + '</span>',
@@ -2269,6 +2270,13 @@
       '        </a>',
       '      </div>'
     ].join('\n');
+  }
+
+  function applyGlobalCta(html) {
+    var pattern = /(<section\b[^>]*class="[^"]*\bcta-band\b[^"]*"[^>]*>\s*<div class="container">)[\s\S]*?(?=\s*<p class="cta-band__note">)/g;
+    return html.replace(pattern, function (_, opening) {
+      return opening + '\n' + globalCtaBlock() + '\n';
+    });
   }
 
   /* ==================================================================
@@ -2299,7 +2307,9 @@
     stats: stats,
     topics: topics,
     /* home blocks */
-    homeCtaBlock: homeCtaBlock,
+    globalCtaBlock: globalCtaBlock,
+    homeCtaBlock: globalCtaBlock,
+    applyGlobalCta: applyGlobalCta,
     aboutIntroBlock: aboutIntroBlock,
     whyBlock: whyBlock,
     programsHead: programsHead,

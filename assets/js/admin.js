@@ -1676,7 +1676,9 @@ function buildSections(host) {
         card.appendChild(field('الفلسفة', 'يظهر داخل مربع مميز', pg.philosophy, function (v) { pg.philosophy = v; }, true));
         if (!pg.blocks) pg.blocks = {};
         var aboutGroup = '';
-        window.RENDER.ABOUT_FIELDS.forEach(function (f) {
+        window.RENDER.ABOUT_FIELDS.filter(function (f) {
+          return f.group !== 'شريط الحجز';
+        }).forEach(function (f) {
           if (f.group !== aboutGroup) {
             aboutGroup = f.group;
             var heading = document.createElement('h3');
@@ -1754,15 +1756,21 @@ function buildSections(host) {
     });
     host.appendChild(sc);
 
-    // cta
+    // One CTA source for every page. The renderer applies these four fields to
+    // each .cta-band during publish, so page copies cannot drift apart.
     var cc = document.createElement('div');
     cc.className = 'adm-card';
     cc.innerHTML = '<div class="adm-card__head"><div class="adm-card__num">C</div>' +
-      '<div class="adm-card__title">شريط الدعوة للتسجيل</div></div>';
+      '<div class="adm-card__title">شريط الدعوة العام — كل الصفحات</div></div>' +
+      '<p class="adm-hint mb-2">أي تعديل هنا بيتطبّق على بلوك الحجز في كل صفحات الموقع عند النشر.</p>';
     cc.appendChild(field('الشارة', '', h.cta.offer, function (v) { h.cta.offer = v; }));
     cc.appendChild(field('العنوان', '', h.cta.title, function (v) { h.cta.title = v; }));
     cc.appendChild(field('النص', '', h.cta.text, function (v) { h.cta.text = v; }, true));
     cc.appendChild(field('نص الزرار', '', h.cta.button, function (v) { h.cta.button = v; }));
+    var trialMessages = C.settings.waMessages || (C.settings.waMessages = {});
+    cc.appendChild(field('رسالة واتساب', 'الرسالة التي يفتحها زر البلوك', trialMessages.trial, function (v) {
+      trialMessages.trial = v;
+    }, true));
     host.appendChild(cc);
 
     /* من نحن · لماذا قوارير · الفيديو · عنوان البرامج */
@@ -1948,7 +1956,6 @@ function buildSections(host) {
   var WA_KEYS = [
     ['greeting',      'التحية (بتبدأ بيها كل رسالة)',            'بتتضاف تلقائياً لكل رسالة، مش بتكتبيها مع كل زرار'],
     ['general',       'الرسالة العامة (الزرار الافتراضي)',       'أي زرار مش محدد ليه رسالة خاصة'],
-    ['trial',         'زر «احجزي الحصة التجريبية الآن»',          'الشريط في أسفل الصفحة الرئيسية وكل الصفحات'],
     ['program',       'زرار «احجزي في هذا البرنامج»',             '{program} بيتبدّل باسم البرنامج تلقائياً'],
     ['pricing',       '«عرض تفاصيل الباقات»',                    'من الصفحة الرئيسية'],
     ['tierClassic',   '«اختاري باقتكِ» — التقليدية',              'صفحة الأسعار'],
@@ -2671,7 +2678,6 @@ function buildSections(host) {
      ================================================================ */
   var PAGE_MAP = [
     { file: 'index.html', regions: {
-        'home-cta':      'homeCtaBlock',
         'about-intro':   'aboutIntroBlock',
         'video':         'videoBlock',
         'programs-head': 'programsHead',
@@ -2785,6 +2791,7 @@ function buildSections(host) {
         /* inject navigation (header/footer/social) from settings */
         html = window.RENDER.applyNavigation(html);
         html = window.RENDER.applyAboutCopy(html);
+        html = window.RENDER.applyGlobalCta(html);
         /* inject static texts from settings.texts */
         html = window.RENDER.applyTexts(html);
         /* inject SEO meta tags from settings.seo */
