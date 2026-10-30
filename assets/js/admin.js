@@ -1674,6 +1674,21 @@ function buildSections(host) {
         card.appendChild(field('النص الأساسي', '', pg.lead, function (v) { pg.lead = v; }, true, true));
         card.appendChild(field('النص الثانوي', '', pg.lead2, function (v) { pg.lead2 = v; }, true, true));
         card.appendChild(field('الفلسفة', 'يظهر داخل مربع مميز', pg.philosophy, function (v) { pg.philosophy = v; }, true));
+        if (!pg.blocks) pg.blocks = {};
+        var aboutGroup = '';
+        window.RENDER.ABOUT_FIELDS.forEach(function (f) {
+          if (f.group !== aboutGroup) {
+            aboutGroup = f.group;
+            var heading = document.createElement('h3');
+            heading.textContent = aboutGroup;
+            heading.className = 'mt-3 mb-2';
+            card.appendChild(heading);
+          }
+          var value = pg.blocks[f.key] == null ? f.value : pg.blocks[f.key];
+          card.appendChild(field(f.label, '', value, function (v) {
+            pg.blocks[f.key] = v;
+          }, f.multiline));
+        });
       } else {
         card.appendChild(field('المقدمة', '', pg.intro, function (v) { pg.intro = v; }, true));
         card.appendChild(field('عنوان الاقتراح', '', pg.suggestionTitle, function (v) { pg.suggestionTitle = v; }));
@@ -2769,6 +2784,7 @@ function buildSections(host) {
         html = window.RENDER.applySectionOrder(html);
         /* inject navigation (header/footer/social) from settings */
         html = window.RENDER.applyNavigation(html);
+        html = window.RENDER.applyAboutCopy(html);
         /* inject static texts from settings.texts */
         html = window.RENDER.applyTexts(html);
         /* inject SEO meta tags from settings.seo */

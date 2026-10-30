@@ -1689,6 +1689,357 @@
     return (data().pages || {})[key] || {};
   }
 
+  // Defaults keep existing drafts compatible with the new page fields.
+  var ABOUT_FIELDS = [
+  {
+    "key": "block1_1",
+    "group": "رسالتنا والفئات المستهدفة",
+    "label": "الشارة — رسالتنا",
+    "value": "رسالتنا",
+    "multiline": false
+  },
+  {
+    "key": "block1_2",
+    "group": "رسالتنا والفئات المستهدفة",
+    "label": "العنوان — أن نكون الوجهة الأولى في تعليم القرآن للنساء ",
+    "value": "أن نكون الوجهة الأولى في تعليم القرآن للنساء والأطفال",
+    "multiline": false
+  },
+  {
+    "key": "block1_3",
+    "group": "رسالتنا والفئات المستهدفة",
+    "label": "الأيقونة — 👩",
+    "value": "👩",
+    "multiline": false
+  },
+  {
+    "key": "block1_4",
+    "group": "رسالتنا والفئات المستهدفة",
+    "label": "العنوان — للنساء",
+    "value": "للنساء",
+    "multiline": false
+  },
+  {
+    "key": "block1_5",
+    "group": "رسالتنا والفئات المستهدفة",
+    "label": "النص — برامج مصممة خصيصًا للنساء، مراعية لظروفهن ومس",
+    "value": "برامج مصممة خصيصًا للنساء، مراعية لظروفهن ومسؤولياتهن — سواء كانت مبتدئة، أو حافظة، أو ترغب في تحسين تلاوتها، أو تحتاج وردًا ثابتًا يناسب عملها وبيتها وأمومتها.",
+    "multiline": true
+  },
+  {
+    "key": "block1_6",
+    "group": "رسالتنا والفئات المستهدفة",
+    "label": "الأيقونة — 👧",
+    "value": "👧",
+    "multiline": false
+  },
+  {
+    "key": "block1_7",
+    "group": "رسالتنا والفئات المستهدفة",
+    "label": "العنوان — للأطفال",
+    "value": "للأطفال",
+    "multiline": false
+  },
+  {
+    "key": "block1_8",
+    "group": "رسالتنا والفئات المستهدفة",
+    "label": "النص — نؤسس الأطفال علاقة حبّ مع القرآن منذ الصغر، ب",
+    "value": "نؤسس الأطفال علاقة حبّ مع القرآن منذ الصغر، بأسلوب تفاعلي وممتع يناسب عمرهم، قبل الدخول في أي حفظ مكثف.",
+    "multiline": true
+  },
+  {
+    "key": "block2_1",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "الشارة — أدواتنا",
+    "value": "أدواتنا",
+    "multiline": false
+  },
+  {
+    "key": "block2_2",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "العنوان — نظام العمل الموحّد",
+    "value": "نظام العمل الموحّد",
+    "multiline": false
+  },
+  {
+    "key": "block2_3",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "النص — أربع أدوات نستخدمها في أغلب البرامج لأنها هي ",
+    "value": "أربع أدوات نستخدمها في أغلب البرامج لأنها هي ما يصنع الفرق فعلًا.",
+    "multiline": true
+  },
+  {
+    "key": "block2_4",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "الأيقونة — 🗺️",
+    "value": "🗺️",
+    "multiline": false
+  },
+  {
+    "key": "block2_5",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "العنوان — خريطة القرآن",
+    "value": "خريطة القرآن",
+    "multiline": false
+  },
+  {
+    "key": "block2_6",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "النص — جدول يوضّح حالة كل مقطع: قيد الحفظ، يحتاج تثب",
+    "value": "جدول يوضّح حالة كل مقطع: قيد الحفظ، يحتاج تثبيت، ثابت، أو يحتاج استعادة.",
+    "multiline": true
+  },
+  {
+    "key": "block2_7",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "الأيقونة — 📌",
+    "value": "📌",
+    "multiline": false
+  },
+  {
+    "key": "block2_8",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "العنوان — المتابعة الأسبوعية",
+    "value": "المتابعة الأسبوعية",
+    "multiline": false
+  },
+  {
+    "key": "block2_9",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "النص — هدف صغير وخطوة قادمة — واضحتان ومحددتان، بلا ",
+    "value": "هدف صغير وخطوة قادمة — واضحتان ومحددتان، بلا تردد.",
+    "multiline": true
+  },
+  {
+    "key": "block2_10",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "الأيقونة — 🤲",
+    "value": "🤲",
+    "multiline": false
+  },
+  {
+    "key": "block2_11",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "العنوان — رفقة القرآن",
+    "value": "رفقة القرآن",
+    "multiline": false
+  },
+  {
+    "key": "block2_12",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "النص — تشجيع ومتابعة إنسانية لا تقتصر على الحصة، بل ",
+    "value": "تشجيع ومتابعة إنسانية لا تقتصر على الحصة، بل تمتد بين الحصص.",
+    "multiline": true
+  },
+  {
+    "key": "block2_13",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "الأيقونة — 📊",
+    "value": "📊",
+    "multiline": false
+  },
+  {
+    "key": "block2_14",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "العنوان — التقرير الختامي",
+    "value": "التقرير الختامي",
+    "multiline": false
+  },
+  {
+    "key": "block2_15",
+    "group": "أدواتنا — نظام العمل الموحّد",
+    "label": "النص — يوضّح ما أُنجز وما يحتاج إلى متابعة، كما تكون",
+    "value": "يوضّح ما أُنجز وما يحتاج إلى متابعة، كما تكون الصورة واضحة أمامكِ.",
+    "multiline": true
+  },
+  {
+    "key": "block3_1",
+    "group": "معايير النجاح",
+    "label": "الشارة — معايير النجاح",
+    "value": "معايير النجاح",
+    "multiline": false
+  },
+  {
+    "key": "block3_2",
+    "group": "معايير النجاح",
+    "label": "العنوان — كيف نعرف أن البرنامج نجح؟",
+    "value": "كيف نعرف أن البرنامج نجح؟",
+    "multiline": false
+  },
+  {
+    "key": "block3_3",
+    "group": "معايير النجاح",
+    "label": "النص — لا نقيس النجاح بعدد الحصص الحاضرة. نقيسه بهذه",
+    "value": "لا نقيس النجاح بعدد الحصص الحاضرة. نقيسه بهذه المؤشرات البسيطة.",
+    "multiline": true
+  },
+  {
+    "key": "block3_4",
+    "group": "معايير النجاح",
+    "label": "الأيقونة — ✅",
+    "value": "✅",
+    "multiline": false
+  },
+  {
+    "key": "block3_5",
+    "group": "معايير النجاح",
+    "label": "العنوان — استمرارية الطالبة",
+    "value": "استمرارية الطالبة",
+    "multiline": false
+  },
+  {
+    "key": "block3_6",
+    "group": "معايير النجاح",
+    "label": "النص — وصولها حتى نهاية البرنامج، وحرصها على عدم الا",
+    "value": "وصولها حتى نهاية البرنامج، وحرصها على عدم الانقطاع.",
+    "multiline": true
+  },
+  {
+    "key": "block3_7",
+    "group": "معايير النجاح",
+    "label": "الأيقونة — 🎯",
+    "value": "🎯",
+    "multiline": false
+  },
+  {
+    "key": "block3_8",
+    "group": "معايير النجاح",
+    "label": "العنوان — تحقيق الهدف",
+    "value": "تحقيق الهدف",
+    "multiline": false
+  },
+  {
+    "key": "block3_9",
+    "group": "معايير النجاح",
+    "label": "النص — الوصول إلى الهدف المتفق عليه مسبقًا، لا أكثر ",
+    "value": "الوصول إلى الهدف المتفق عليه مسبقًا، لا أكثر ولا أقل.",
+    "multiline": true
+  },
+  {
+    "key": "block3_10",
+    "group": "معايير النجاح",
+    "label": "الأيقونة — 📈",
+    "value": "📈",
+    "multiline": false
+  },
+  {
+    "key": "block3_11",
+    "group": "معايير النجاح",
+    "label": "العنوان — تحسّن الخريطة",
+    "value": "تحسّن الخريطة",
+    "multiline": false
+  },
+  {
+    "key": "block3_12",
+    "group": "معايير النجاح",
+    "label": "النص — انتقال المقاطع من \"مهتز\" و\"منسي\" إلى \"ثابت\" ف",
+    "value": "انتقال المقاطع من \"مهتز\" و\"منسي\" إلى \"ثابت\" في خريطة القرآن.",
+    "multiline": true
+  },
+  {
+    "key": "block3_13",
+    "group": "معايير النجاح",
+    "label": "الأيقونة — 💡",
+    "value": "💡",
+    "multiline": false
+  },
+  {
+    "key": "block3_14",
+    "group": "معايير النجاح",
+    "label": "العنوان — قدرة التطبيق",
+    "value": "قدرة التطبيق",
+    "multiline": false
+  },
+  {
+    "key": "block3_15",
+    "group": "معايير النجاح",
+    "label": "النص — أن تطبّق الطالبة ما تعلّمه عمليًا، لا أن تحفظ",
+    "value": "أن تطبّق الطالبة ما تعلّمه عمليًا، لا أن تحفظه فقط.",
+    "multiline": true
+  },
+  {
+    "key": "block3_16",
+    "group": "معايير النجاح",
+    "label": "الأيقونة — 💚",
+    "value": "💚",
+    "multiline": false
+  },
+  {
+    "key": "block3_17",
+    "group": "معايير النجاح",
+    "label": "العنوان — رضا الطالبة ووليّ الأمر",
+    "value": "رضا الطالبة ووليّ الأمر",
+    "multiline": false
+  },
+  {
+    "key": "block3_18",
+    "group": "معايير النجاح",
+    "label": "النص — شعور طرف ثالث بأن الرحلة كانت ذات قيمة.",
+    "value": "شعور طرف ثالث بأن الرحلة كانت ذات قيمة.",
+    "multiline": true
+  },
+  {
+    "key": "block3_19",
+    "group": "معايير النجاح",
+    "label": "الأيقونة — 🔁",
+    "value": "🔁",
+    "multiline": false
+  },
+  {
+    "key": "block3_20",
+    "group": "معايير النجاح",
+    "label": "العنوان — العودة لبرنامج لاحق",
+    "value": "العودة لبرنامج لاحق",
+    "multiline": false
+  },
+  {
+    "key": "block3_21",
+    "group": "معايير النجاح",
+    "label": "النص — أن تطلب الطالبة أن تستمر معنا في المرحلة التا",
+    "value": "أن تطلب الطالبة أن تستمر معنا في المرحلة التالية.",
+    "multiline": true
+  },
+  {
+    "key": "block4_1",
+    "group": "شريط الحجز",
+    "label": "الشارة — 🎁 حصة تجريبية مجانية",
+    "value": "🎁 حصة تجريبية مجانية",
+    "multiline": false
+  },
+  {
+    "key": "block4_2",
+    "group": "شريط الحجز",
+    "label": "العنوان — اقرئي عنّا أكثر من خلال التجربة",
+    "value": "اقرئي عنّا أكثر من خلال التجربة",
+    "multiline": false
+  },
+  {
+    "key": "block4_3",
+    "group": "شريط الحجز",
+    "label": "النص — أفضل طريقة تعرفين فيها أكاديمية قوارير هي أن ",
+    "value": "أفضل طريقة تعرفين فيها أكاديمية قوارير هي أن تبدئي. تواصلي معنا واحجزي حصة تجريبية مجانية.",
+    "multiline": true
+  },
+  {
+    "key": "ctaButton",
+    "group": "شريط الحجز",
+    "label": "نص زر الحجز",
+    "value": "احجزي الحصة التجريبية الآن",
+    "multiline": false
+  }
+];
+  function applyAboutCopy(html) {
+    var blocks = pageOf('about').blocks || {};
+    ABOUT_FIELDS.forEach(function (f) {
+      var value = blocks[f.key] == null ? f.value : blocks[f.key];
+      var pattern = new RegExp('<!--about-copy:' + f.key + ':start-->[\\s\\S]*?<!--about-copy:' + f.key + ':end-->', 'g');
+      html = html.replace(pattern, function () {
+        return '<!--about-copy:' + f.key + ':start-->' + esc(value) + '<!--about-copy:' + f.key + ':end-->';
+      });
+    });
+    return html;
+  }
+
   /* the <h1> + subtitle pair inside .page-hero */
   function pageHeroText(key) {
     var pg = pageOf(key);
@@ -1971,6 +2322,8 @@
     applySettings: applySettings,
     applySectionOrder: applySectionOrder,
     applyFooterPrograms: applyFooterPrograms,
+    ABOUT_FIELDS: ABOUT_FIELDS,
+    applyAboutCopy: applyAboutCopy,
     applyNavigation: applyNavigation,
     applyTexts: applyTexts,
     applySeo: applySeo,
