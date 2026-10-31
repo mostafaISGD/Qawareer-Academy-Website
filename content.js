@@ -785,6 +785,25 @@ window.CONTENT = {
       "bg": "#06683f",
       "color": "#ffffff"
     },
+    "footer": {
+      "about": "برامج قرآنية وتربوية رحيمة للنساء والأطفال، تجمع بين القرب من كتاب الله والتطبيق العملي والمتابعة المستمرة.",
+      "columns": [
+        {
+          "title": "روابط سريعة",
+          "links": [
+            { "label": "الرئيسية", "href": "index.html" },
+            { "label": "عن الأكاديمية", "href": "about.html" },
+            { "label": "البرامج", "href": "programs.html" },
+            { "label": "الأسعار", "href": "pricing.html" },
+            { "label": "آراء الطلاب", "href": "testimonials.html" }
+          ]
+        }
+      ],
+      "programsTitle": "البرامج",
+      "contactTitle": "تواصلي معنا",
+      "copyright": "أكاديمية قوارير — كل الحقوق محفوظة",
+      "motto": "رفقاً بقلوبكن.. وقرباً لكتاب الله"
+    },
     "waMessages": {
       "greeting": "السلام عليكم ورحمة الله وبركاته",
       "general": "حابّة أعرف تفاصيل أكثر عن برامج أكاديمية قوارير.",

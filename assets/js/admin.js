@@ -26,6 +26,20 @@
     if (!S.theme) S.theme = { name: 'green', mode: 'auto', showDarkToggle: true, colors: { brand: '', accent: '', bg: '', text: '' } };
     if (!S.theme.colors) S.theme.colors = { brand: '', accent: '', bg: '', text: '' };
     if (!S.contact) S.contact = { name: 'أكاديمية قوارير', nameEn: 'Qawareer Academy', slogan: 'رفقاً بقلوبكن.. وقرباً لكتاب الله', tagline: 'برامج قرآنية وتربوية رحيمة', phoneDisplay: '01130830390', whatsapp: '201130830390', email: 'QawarirAcademy@gmail.com', telegram: 'QawareerAcademy', instagram: 'Qawareer.Academy', audience: 'النساء والأطفال', location: 'أونلاين بالكامل', siteUrl: '', gaId: '', localStats: true };
+    if (!S.footer) S.footer = {
+      about: 'برامج قرآنية وتربوية رحيمة للنساء والأطفال، تجمع بين القرب من كتاب الله والتطبيق العملي والمتابعة المستمرة.',
+      columns: [{ title: 'روابط سريعة', links: [
+        { label: 'الرئيسية', href: 'index.html' },
+        { label: 'عن الأكاديمية', href: 'about.html' },
+        { label: 'البرامج', href: 'programs.html' },
+        { label: 'الأسعار', href: 'pricing.html' },
+        { label: 'آراء الطلاب', href: 'testimonials.html' }
+      ]}],
+      programsTitle: 'البرامج',
+      contactTitle: 'تواصلي معنا',
+      copyright: 'أكاديمية قوارير — كل الحقوق محفوظة',
+      motto: 'رفقاً بقلوبكن.. وقرباً لكتاب الله'
+    };
     if (!S.announcement) S.announcement = { visible: false, text: '', link: '', linkText: '', bg: '#06683f', color: '#ffffff' };
     if (!S.home) S.home = { reviews: { random: true, count: 3 } };
     if (!S.home.reviews) S.home.reviews = { random: true, count: 3 };
@@ -712,6 +726,7 @@
     { id: 'waMessages', label: 'رسائل الواتساب', icon: '💬', build: buildWaMessages },
     { id: 'sectionOrder', label: 'ترتيب الأقسام', icon: '↕️', build: buildSectionOrder },
     { id: 'navigation', label: 'القائمة', icon: '🧭', build: buildNavigation },
+    { id: 'footer', label: 'الفوتر', icon: '🧱', build: buildFooter },
     { id: 'texts', label: 'النصوص', icon: '📝', build: buildTexts },
     { id: 'seo', label: 'SEO', icon: '🔎', build: buildSeo },
     { id: 'programs', label: 'البرامج', icon: '📚', build: buildPrograms,
@@ -2182,10 +2197,84 @@ function buildSections(host) {
   }
 
   /* ---------- NAVIGATION (Header/Footer/Social) ---------- */
+  function buildFooter(host) {
+    var F = C.settings.footer;
+    var note = document.createElement('div');
+    note.className = 'adm-note';
+    note.innerHTML = 'تحكّم سهل في الفوتر من مكان واحد. <strong>البرامج</strong> تتحدّث تلقائياً من البرامج المفعّلة، و<strong>التواصل</strong> يسحب بياناته من تبويب الإعدادات.';
+    host.appendChild(note);
+
+    var general = document.createElement('div');
+    general.className = 'adm-card';
+    general.innerHTML = '<div class="adm-card__head"><div class="adm-card__num">✦</div><div class="adm-card__title">النصوص العامة</div></div>';
+    general.appendChild(field('وصف الأكاديمية', 'يظهر بجانب الشعار', F.about, function (v) { F.about = v; }, true));
+    var titles = document.createElement('div');
+    titles.className = 'adm-row';
+    titles.appendChild(field('عنوان عمود البرامج', 'محتواه تلقائي', F.programsTitle, function (v) { F.programsTitle = v; }));
+    titles.appendChild(field('عنوان عمود التواصل', 'بياناته من الإعدادات', F.contactTitle, function (v) { F.contactTitle = v; }));
+    general.appendChild(titles);
+    general.appendChild(field('حقوق النشر', 'السنة بتتضاف تلقائياً', F.copyright, function (v) { F.copyright = v; }));
+    general.appendChild(field('النص الختامي', '', F.motto, function (v) { F.motto = v; }));
+    host.appendChild(general);
+
+    var columnsHead = document.createElement('div');
+    columnsHead.className = 'adm-card';
+    columnsHead.innerHTML = '<div class="adm-card__head"><div class="adm-card__num">↗</div><div class="adm-card__title">أعمدة الروابط</div></div><p class="adm-hint mb-2">أضيفي أعمدة وروابط أو رتّبيها. عمودا البرامج والتواصل بيضافوا تلقائياً بعدهم.</p>';
+    host.appendChild(columnsHead);
+
+    (F.columns || []).forEach(function (col, cIdx) {
+      var colCard = document.createElement('div');
+      colCard.className = 'adm-card';
+      colCard.style.padding = '14px';
+
+      var head = document.createElement('div');
+      head.className = 'adm-row';
+      head.appendChild(field('عنوان العمود', '', col.title, function (v) { col.title = v; }));
+      var tools = document.createElement('div');
+      tools.className = 'adm-card__tools';
+      [['↑', -1], ['↓', 1]].forEach(function (move) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'adm-mini'; b.textContent = move[0];
+        b.disabled = cIdx + move[1] < 0 || cIdx + move[1] >= F.columns.length;
+        b.addEventListener('click', function () {
+          var target = cIdx + move[1];
+          var item = F.columns.splice(cIdx, 1)[0];
+          F.columns.splice(target, 0, item); markDirty(); renderTab();
+        });
+        tools.appendChild(b);
+      });
+      var delCol = document.createElement('button');
+      delCol.type = 'button'; delCol.className = 'adm-mini is-del'; delCol.textContent = '🗑';
+      delCol.addEventListener('click', function () { F.columns.splice(cIdx, 1); markDirty(); renderTab(); });
+      tools.appendChild(delCol); head.appendChild(tools); colCard.appendChild(head);
+
+      (col.links || []).forEach(function (link, lIdx) {
+        var row = document.createElement('div');
+        row.className = 'adm-row';
+        row.appendChild(field('اسم الرابط', '', link.label, function (v) { link.label = v; }));
+        row.appendChild(field('الرابط', 'مثال: about.html', link.href, function (v) { link.href = v; }));
+        var del = document.createElement('button');
+        del.type = 'button'; del.className = 'adm-mini is-del'; del.textContent = '🗑 حذف الرابط';
+        del.addEventListener('click', function () { col.links.splice(lIdx, 1); markDirty(); renderTab(); });
+        row.appendChild(del); colCard.appendChild(row);
+      });
+
+      var addLink = document.createElement('button');
+      addLink.type = 'button'; addLink.className = 'btn btn--outline btn--sm'; addLink.textContent = '+ إضافة رابط';
+      addLink.addEventListener('click', function () { col.links.push({ label: 'رابط جديد', href: '#' }); markDirty(); renderTab(); });
+      colCard.appendChild(addLink); columnsHead.appendChild(colCard);
+    });
+
+    var addColumn = document.createElement('button');
+    addColumn.type = 'button'; addColumn.className = 'btn btn--green btn--sm'; addColumn.textContent = '+ إضافة عمود روابط';
+    addColumn.addEventListener('click', function () { F.columns.push({ title: 'عمود جديد', links: [] }); markDirty(); renderTab(); });
+    columnsHead.appendChild(addColumn);
+  }
+
   function buildNavigation(host) {
     var note = document.createElement('div');
     note.className = 'adm-note';
-    note.innerHTML = 'إدارة القائمة العلوية (الهيدر)، أعمدة الفوتر، وروابط السوشيال. '
+    note.innerHTML = 'إدارة القائمة العلوية (الهيدر) وروابط السوشيال. الفوتر له تبويب مستقل لتسهيل تعديله. '
       'التعديلات بتحفظ في <code>settings.navigation</code> وبتظهر في كل الموقع بعد النشر.';
     host.appendChild(note);
 
@@ -2303,6 +2392,7 @@ function buildSections(host) {
     // Footer columns
     var footerCard = document.createElement('div');
     footerCard.className = 'adm-card';
+    footerCard.hidden = true;
     footerCard.style.marginBottom = '16px';
     footerCard.innerHTML = '<div class="adm-card__title">أعمدة الفوتر</div>';
     host.appendChild(footerCard);
@@ -2613,6 +2703,7 @@ function buildSections(host) {
       case 'announcement': return (C.settings && C.settings.announcement && C.settings.announcement.visible) ? 1 : 0;
       case 'sectionOrder': return Object.keys(C.settings.sectionOrder || {}).length;
       case 'navigation': return 1;
+      case 'footer': return 1;
       case 'texts': return Object.keys(C.settings.texts || {}).length;
       case 'seo': return Object.keys(C.settings.seo || {}).length;
       default: return 0;

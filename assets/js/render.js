@@ -1546,6 +1546,52 @@
   }
 
   /* Keep footer program links aligned with the published program list. */
+  function footerColumns() {
+    var footer = settings().footer || {};
+    return (footer.columns || []).map(function (col) {
+      var links = (col.links || []).map(function (link) {
+        return '          <a href="' + esc(link.href) + '">' + esc(link.label) + '</a>';
+      }).join('\n');
+      return [
+        '      <div>',
+        '        <h3 class="footer__title">' + esc(col.title) + '</h3>',
+        '        <nav class="footer__links">',
+        links,
+        '        </nav>',
+        '      </div>'
+      ].join('\n');
+    }).join('\n\n');
+  }
+
+  function applyFooterSettings(html) {
+    var footer = settings().footer || {};
+    var columnsStart = '<!--qwr:footer-columns:start-->';
+    var columnsEnd = '<!--qwr:footer-columns:end-->';
+    var si = html.indexOf(columnsStart);
+    var ei = html.indexOf(columnsEnd);
+    if (si !== -1 && ei > si) {
+      html = html.slice(0, si + columnsStart.length) + '\n' + footerColumns() + '\n' + html.slice(ei);
+    }
+    if (footer.about != null) {
+      html = html.replace(/(<p class="footer__about" data-footer-about>)[\s\S]*?(<\/p>)/g,
+        '$1\n          ' + esc(footer.about) + '\n        $2');
+    }
+    if (footer.programsTitle != null) {
+      html = html.replace(/(<h3 class="footer__title" data-footer-programs-title>)[\s\S]*?(<\/h3>)/g,
+        '$1' + esc(footer.programsTitle) + '$2');
+    }
+    if (footer.contactTitle != null) {
+      html = html.replace(/(<h3 class="footer__title" data-footer-contact-title>)[\s\S]*?(<\/h3>)/g,
+        '$1' + esc(footer.contactTitle) + '$2');
+    }
+    html = html.replace(/<div class="footer__bottom">[\s\S]*?<\/div>/g,
+      '<div class="footer__bottom">\n' +
+      '      <span>© <span data-year>' + new Date().getFullYear() + '</span> ' + esc(footer.copyright || '') + '</span>\n' +
+      '      <span>' + esc(footer.motto || '') + '</span>\n' +
+      '    </div>');
+    return html;
+  }
+
   function applyFooterPrograms(html) {
     var links = visible(data().programs).map(function (p) {
       return '          <a href="programs.html#' + esc(p.id) + '">' + esc(p.title) + '</a>';
@@ -1600,6 +1646,7 @@
       );
     }
     
+    html = applyFooterSettings(html);
     html = applyFooterPrograms(html);
 
     // Social links (footer)
@@ -2332,6 +2379,7 @@
     applySettings: applySettings,
     applySectionOrder: applySectionOrder,
     applyFooterPrograms: applyFooterPrograms,
+    applyFooterSettings: applyFooterSettings,
     ABOUT_FIELDS: ABOUT_FIELDS,
     applyAboutCopy: applyAboutCopy,
     applyNavigation: applyNavigation,
