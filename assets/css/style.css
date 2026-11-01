@@ -2733,6 +2733,7 @@ a.contact-card__val:hover { color: var(--gold-d); }
 
 @media (max-width: 900px) {
   .nav { display: none; }
+  .header__actions { margin-inline-start: auto; }
   .burger { display: grid; }
   .header__actions .btn { display: none; }
   .g-3 { grid-template-columns: repeat(2, 1fr); }
