@@ -165,7 +165,7 @@
      ================================================================== */
   function programDetails() {
     if (offSection('programs')) return '';
-    return visible(data().programs).map(function (p) {
+    var cards = visible(data().programs).map(function (p) {
       return [
         '      <article class="prog-detail mb-4" id="' + esc(p.id) + '" data-reveal>',
         '        <div class="prog-detail__head">',
@@ -222,6 +222,7 @@
         '      </article>'
       ].join('\n');
     }).join('\n');
+    return '      <div class="program-details-grid">\n' + cards + '\n      </div>';
   }
 
   /* ==================================================================
@@ -247,7 +248,7 @@
       var enabled = status === 'open' ? ' class="btn btn--green"' : disabled;
       var button = course.cta || (status === 'open' ? 'احجزي في الدورة' : statusLabels[status]);
       return [
-        '      <article class="course-card' + (course.isFree ? ' course-card--free' : '') + '" id="' + esc(course.id) + '" data-reveal' + delay(i) + '>',
+        '      <article class="course-card ' + (course.isFree ? 'course-card--free' : 'course-card--paid') + '" id="' + esc(course.id) + '" data-reveal' + delay(i) + '>',
         related ? '        <span class="season-related-badge">' + esc(related.relatedBadge || related.badge || 'عرض موسمي') + '</span>' : '',
         course.isFree ? '        <div class="free-decor" aria-hidden="true"><span>🎁</span><span>✦</span><span>◆</span><span>✦</span><span>🎀</span></div>' : '',
         '        <div class="course-card__top">',
@@ -277,7 +278,7 @@
       '        <p>دورات محددة المدة والموعد، ويمكن متابعة حالة التسجيل وتفاصيل كل دورة.</p>',
       '        <div class="rule"></div>',
       '      </div>',
-      '      <div class="grid g-auto-lg">', cards,
+      '      <div class="grid g-courses">', cards,
       '      </div>',
       '    </div>',
       '  </section>'
@@ -295,7 +296,7 @@
     var cards = courses.map(function (course, i) {
       var status = course.status || 'soon';
       return [
-        '      <article class="course-teaser' + (course.isFree ? ' course-teaser--free' : '') + '" data-reveal' + delay(i) + '>',
+        '      <article class="course-teaser ' + (course.isFree ? 'course-teaser--free' : 'course-teaser--paid') + '" data-reveal' + delay(i) + '>',
         course.isFree ? '        <div class="free-decor" aria-hidden="true"><span>🎁</span><span>✦</span><span>◆</span><span>✦</span><span>🎀</span></div>' : '',
         '        <div class="course-teaser__badges">',
         course.isFree ? '          <span class="course-free">مجانية</span>' : '',
@@ -321,7 +322,7 @@
       '        <p>تعرفي على المدة والموعد وحالة التسجيل، ثم انتقلي للتفاصيل الكاملة.</p>',
       '        <div class="rule"></div>',
       '      </div>',
-      '      <div class="grid g-auto-lg">', cards,
+      '      <div class="grid g-home-courses">', cards,
       '      </div>',
       '      <div class="center mt-4"><a class="btn btn--outline" href="programs.html#courses">كل الدورات</a></div>',
       '    </div>',
@@ -1820,9 +1821,10 @@
     html = html.replace(/<!--qwr:site-background:start-->[\s\S]*?<!--qwr:site-background:end-->\s*/g, '');
     html = html.replace(/<body([^>]*)>/, function (m, attrs) {
       attrs = attrs.replace(/\sclass="([^"]*)"/, function (_, names) {
-        var clean = names.replace(/\bhas-site-background\b/g, '').replace(/\s+/g, ' ').trim();
+        var clean = names.replace(/\bhas-site-background\b/g, '').replace(/\bhas-cursor-effect\b/g, '').replace(/\s+/g, ' ').trim();
         return clean ? ' class="' + clean + '"' : '';
       });
+      attrs = attrs.replace(/\sdata-cursor-style="[^"]*"/g, '').replace(/\sdata-cursor-intensity="[^"]*"/g, '');
       return '<body' + attrs + '>';
     });
 
@@ -1856,18 +1858,15 @@
       html = html.replace(/<button[^>]*data-theme-toggle[^>]*>[\s\S]*?<\/button>/, '');
     }
 
-    /* Optional moving site background. The image URL lives in a data attribute
-       and main.js applies it, so uploaded data URLs and ordinary paths are both safe. */
-    var bg = ((settings().theme || {}).background || {});
-    if (bg.enabled === true && bg.image) {
+    /* Desktop-only cursor decoration. Native cursor and click behaviour stay intact. */
+    var cursor = ((settings().theme || {}).cursorEffect || {});
+    if (cursor.enabled === true) {
       html = html.replace(/<body([^>]*)>/, function (m, attrs) {
-        if (/\sclass="/.test(attrs)) attrs = attrs.replace(/\sclass="([^"]*)"/, ' class="$1 has-site-background"');
-        else attrs += ' class="has-site-background"';
+        if (/\sclass="/.test(attrs)) attrs = attrs.replace(/\sclass="([^"]*)"/, ' class="$1 has-cursor-effect"');
+        else attrs += ' class="has-cursor-effect"';
+        attrs += ' data-cursor-style="' + esc(cursor.style || 'sparkle') + '" data-cursor-intensity="' + esc(cursor.intensity || 'balanced') + '"';
         return '<body' + attrs + '>';
       });
-      var opacity = Math.min(.98, Math.max(.55, parseFloat(bg.overlayOpacity) || .9));
-      var background = '<div class="site-parallax-bg" data-site-parallax data-bg-src="' + esc(bg.image) + '" data-parallax="' + (bg.parallax !== false) + '" data-motion="' + esc(bg.motion || 'soft') + '" style="--site-bg-overlay:' + esc(bg.overlay || '#f5faf7') + ';--site-bg-opacity:' + opacity + '" aria-hidden="true"></div>';
-      html = html.replace(/(<body[^>]*>)\s*/, '$1\n<!--qwr:site-background:start-->\n' + background + '\n<!--qwr:site-background:end-->\n');
     }
 
     /* announcement bar. The `\s*` after <body> is swallowed and replaced with one

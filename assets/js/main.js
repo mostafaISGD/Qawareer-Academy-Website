@@ -977,25 +977,55 @@
   /* ==================================================================
      CAMPAIGN SLIDER
      ================================================================== */
-  (function siteParallaxBackground() {
-    var layer = $('[data-site-parallax]');
-    if (!layer) return;
-    var src = layer.getAttribute('data-bg-src');
-    if (src) layer.style.backgroundImage = 'url("' + src.replace(/"/g, '\\"') + '")';
-    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced || layer.getAttribute('data-parallax') !== 'true') return;
-    var speeds = { soft: .055, medium: .095, strong: .14 };
-    var speed = speeds[layer.getAttribute('data-motion')] || speeds.soft;
-    var queued = false;
-    function paint() {
-      var shift = Math.max(-110, Math.min(110, window.scrollY * speed));
-      layer.style.setProperty('--site-bg-shift', shift.toFixed(1) + 'px');
-      queued = false;
+  (function cursorMotionEffect() {
+    var body = document.body;
+    if (!body.classList.contains('has-cursor-effect') || reduceMotion) return;
+    if (!window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+
+    var style = body.getAttribute('data-cursor-style') || 'sparkle';
+    var intensity = body.getAttribute('data-cursor-intensity') || 'balanced';
+    var aura = document.createElement('span');
+    aura.className = 'cursor-aura cursor-aura--' + style + ' cursor-aura--' + intensity;
+    aura.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(aura);
+
+    var targetX = -100, targetY = -100, x = -100, y = -100, visible = false;
+    var lastParticle = 0, lastX = -100, lastY = -100;
+    var interval = intensity === 'vivid' ? 26 : (intensity === 'soft' ? 68 : 44);
+    var distance = intensity === 'vivid' ? 9 : (intensity === 'soft' ? 24 : 15);
+    var particleIndex = 0;
+
+    function particle(px, py) {
+      if (style === 'glow') return;
+      var dot = document.createElement('span');
+      dot.className = 'cursor-particle cursor-particle--' + style + ' cursor-particle--' + intensity;
+      dot.style.left = px + 'px';
+      dot.style.top = py + 'px';
+      dot.style.setProperty('--cursor-color', particleIndex++ % 2 ? '#d6ad43' : '#08734f');
+      dot.style.setProperty('--cursor-drift-x', ((particleIndex % 3) - 1) * 14 + 'px');
+      document.body.appendChild(dot);
+      dot.addEventListener('animationend', function () { dot.remove(); }, { once: true });
     }
-    window.addEventListener('scroll', function () {
-      if (!queued) { queued = true; window.requestAnimationFrame(paint); }
+
+    document.addEventListener('pointermove', function (event) {
+      targetX = event.clientX; targetY = event.clientY;
+      if (!visible) { x = targetX; y = targetY; visible = true; aura.classList.add('is-visible'); }
+      var now = performance.now();
+      var moved = Math.hypot(targetX - lastX, targetY - lastY);
+      if (now - lastParticle >= interval && moved >= distance) {
+        particle(targetX, targetY); lastParticle = now; lastX = targetX; lastY = targetY;
+      }
     }, { passive: true });
-    paint();
+    document.addEventListener('pointerleave', function () { visible = false; aura.classList.remove('is-visible'); });
+    document.addEventListener('pointerdown', function () { aura.classList.add('is-pressed'); });
+    document.addEventListener('pointerup', function () { aura.classList.remove('is-pressed'); });
+
+    function paintCursor() {
+      x += (targetX - x) * .22; y += (targetY - y) * .22;
+      aura.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0) translate(-50%,-50%)';
+      requestAnimationFrame(paintCursor);
+    }
+    paintCursor();
   })();
 
   (function campaignSliders() {

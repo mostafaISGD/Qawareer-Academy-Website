@@ -25,7 +25,7 @@
     var S = C.settings;
     if (!S.theme) S.theme = { name: 'green', mode: 'auto', showDarkToggle: true, colors: { brand: '', accent: '', bg: '', text: '' } };
     if (!S.theme.colors) S.theme.colors = { brand: '', accent: '', bg: '', text: '' };
-    if (!S.theme.background) S.theme.background = { enabled: false, image: '', parallax: true, motion: 'soft', overlay: '#f5faf7', overlayOpacity: 0.9 };
+    if (!S.theme.cursorEffect) S.theme.cursorEffect = { enabled: false, style: 'sparkle', intensity: 'balanced' };
     if (!S.contact) S.contact = { name: 'أكاديمية قوارير', nameEn: 'Qawareer Academy', slogan: 'رفقاً بقلوبكن.. وقرباً لكتاب الله', tagline: 'برامج قرآنية وتربوية رحيمة', phoneDisplay: '01130830390', whatsapp: '201130830390', email: 'QawarirAcademy@gmail.com', telegram: 'QawareerAcademy', instagram: 'Qawareer.Academy', audience: 'النساء والأطفال', location: 'أونلاين بالكامل', siteUrl: '', gaId: '', localStats: true };
     if (!S.footer) S.footer = {
       about: 'برامج قرآنية وتربوية رحيمة للنساء والأطفال، تجمع بين القرب من كتاب الله والتطبيق العملي والمتابعة المستمرة.',
@@ -299,7 +299,7 @@
           motto: 'رفقاً بقلوبكن.. وقرباً لكتاب الله'
         };
         setStatus('عندك مسودة محفوظة من قبل', 'dirty');
-        $('#btnPublish').disabled = true;
+        $('#btnPublish').disabled = false;
         $('#admSaveTxt').textContent =
           'عندك مسودة محفوظة — اضغطي «حفظ ونشر» لتثبيتها أو امسحيها من المتصفح.';
       }
@@ -314,7 +314,7 @@
     C.updatedAt = new Date().toISOString();
     try { localStorage.setItem(LS_DRAFT, JSON.stringify(C)); } catch (e) {}
     setStatus('فيه تغييرات مش محفوظة', 'dirty');
-    $('#btnPublish').disabled = true;
+    $('#btnPublish').disabled = false;
     $('#admSaveTxt').textContent = 'فيه تغييرات — اضغطي «حفظ ونشر» لتثبيتها على الموقع';
   }
 
@@ -792,7 +792,6 @@
     { id: 'sections', label: 'الأقسام', icon: '👁', build: buildSections },
     { id: 'theme', label: 'المظهر', icon: '🎨', build: buildTheme },
     { id: 'contact', label: 'الإعدادات', icon: '⚙️', build: buildContact },
-    { id: 'announcement', label: 'إعلان', icon: '📢', build: buildAnnouncement },
     { id: 'waMessages', label: 'رسائل الواتساب', icon: '💬', build: buildWaMessages },
     { id: 'sectionOrder', label: 'ترتيب الأقسام', icon: '↕️', build: buildSectionOrder },
     { id: 'navigation', label: 'القائمة', icon: '🧭', build: buildNavigation },
@@ -803,7 +802,7 @@
       addLabel: '+ أضيفي برنامجاً', add: addProgram },
     { id: 'courses', label: 'الدورات', icon: '🗓️', build: buildCourses,
       addLabel: '+ أضيفي دورة', add: addCourse },
-    { id: 'campaigns', label: 'الحملات', icon: '📣', build: buildCampaigns,
+    { id: 'campaigns', label: 'الإعلانات والحملات', icon: '📣', build: buildCampaigns,
       addLabel: '+ أضيفي إعلاناً', add: addCampaign },
     { id: 'packages', label: 'الفئات', icon: '💳', build: buildPackages,
       addLabel: '+ أضيفي فئة أسعار', add: addPackage },
@@ -1203,6 +1202,7 @@ function buildSections(host) {
   }
 
   function buildCampaigns(host) {
+    buildAnnouncement(host, true);
     var slider = C.settings.campaignSlider;
     var settingsCard = document.createElement('div'); settingsCard.className = 'adm-card';
     settingsCard.innerHTML = '<div class="adm-card__title">إعدادات سلايدر الإعلانات</div>';
@@ -2179,20 +2179,17 @@ function buildSections(host) {
 
     host.appendChild(colorsCard);
 
-    var bg = T.background || (T.background = { enabled: false, image: '', parallax: true, motion: 'soft', overlay: '#f5faf7', overlayOpacity: 0.9 });
-    var bgCard = document.createElement('div');
-    bgCard.className = 'adm-card';
-    bgCard.innerHTML = '<div class="adm-card__title">خلفية الموقع المتحركة</div>' +
-      '<div class="adm-hint">اختاري صورة هادئة، وسنضع فوقها طبقة تحافظ على وضوح النصوص.</div>';
-    bgCard.appendChild(toggle('إظهار صورة كخلفية للموقع', bg.enabled === true, function (v) { bg.enabled = v; }));
-    bgCard.appendChild(imgField('صورة الخلفية', 'اختاري صورة من الجهاز أو اكتبي رابطها.', bg.image || '', function (v) { bg.image = v; }, { maxEdge: 2200, crop: false, wide: true }));
-    bgCard.appendChild(toggle('تحريك الخلفية مع السكرول', bg.parallax !== false, function (v) { bg.parallax = v; }));
-    bgCard.appendChild(select('قوة الحركة', { soft: 'هادئة', medium: 'متوسطة', strong: 'واضحة' }, bg.motion || 'soft', function (v) { bg.motion = v; }));
-    var bgRow = document.createElement('div'); bgRow.className = 'adm-row';
-    bgRow.appendChild(field('لون طبقة التغطية', 'مثال: #f5faf7', bg.overlay || '#f5faf7', function (v) { bg.overlay = v; }));
-    bgRow.appendChild(select('وضوح صورة الخلفية', { '0.94': 'هادئة جدًا', '0.90': 'هادئة ومقروءة', '0.82': 'متوسطة', '0.72': 'واضحة' }, String(bg.overlayOpacity == null ? 0.9 : bg.overlayOpacity), function (v) { bg.overlayOpacity = parseFloat(v); }));
-    bgCard.appendChild(bgRow);
-    host.appendChild(bgCard);
+    var cursor = T.cursorEffect || (T.cursorEffect = { enabled: false, style: 'sparkle', intensity: 'balanced' });
+    var cursorCard = document.createElement('div');
+    cursorCard.className = 'adm-card';
+    cursorCard.innerHTML = '<div class="adm-card__title">مؤثر حركة مؤشر الماوس</div>' +
+      '<div class="adm-hint">يظهر على الكمبيوتر فقط، ولا يغيّر شكل المؤشر الأساسي أو يعطّل الضغط.</div>';
+    cursorCard.appendChild(toggle('تشغيل مؤثر المؤشر', cursor.enabled === true, function (v) { cursor.enabled = v; }));
+    var cursorRow = document.createElement('div'); cursorRow.className = 'adm-row';
+    cursorRow.appendChild(select('شكل المؤثر', { sparkle: 'هالة ولمعات ذهبية وخضراء', glow: 'هالة ناعمة فقط', trail: 'أثر ضوئي متدرّج' }, cursor.style || 'sparkle', function (v) { cursor.style = v; }));
+    cursorRow.appendChild(select('قوة المؤثر', { soft: 'هادئ', balanced: 'متوازن', vivid: 'واضح' }, cursor.intensity || 'balanced', function (v) { cursor.intensity = v; }));
+    cursorCard.appendChild(cursorRow);
+    host.appendChild(cursorCard);
   }
 
   /* ---------- CONTACT ---------- */
@@ -2346,15 +2343,18 @@ function buildSections(host) {
   }
 
   /* ---------- ANNOUNCEMENT ---------- */
-  function buildAnnouncement(host) {
+  function buildAnnouncement(host, embedded) {
     var note = document.createElement('div');
     note.className = 'adm-note';
-    note.innerHTML = 'شريط إعلان أعلى الموقع. فعّليه واكتبي الرسالة، وهيظهر لكل الزوار بعد النشر.';
+    note.innerHTML = embedded
+      ? '<b>كل الإعلانات من مكان واحد:</b> الشريط العام للإعلانات السريعة، وتحته الحملات الموسمية والسلايدر والعروض المرتبطة بالأسعار.'
+      : 'شريط إعلان أعلى الموقع. فعّليه واكتبي الرسالة، وهيظهر لكل الزوار بعد النشر.';
     host.appendChild(note);
 
     var A = C.settings.announcement;
     var card = document.createElement('div');
     card.className = 'adm-card';
+    card.innerHTML = '<div class="adm-card__title">شريط الإعلان العام</div><div class="adm-hint">لرسالة قصيرة ثابتة أعلى الموقع. أما العروض الموسمية والصور والخصومات فتُدار من الحملات بالأسفل.</div>';
 
     card.appendChild(toggle('إظهار الشريط', A.visible === true, function (v) { A.visible = v; }));
     card.appendChild(field('النص', '', A.text, function (v) { A.text = v; }));
@@ -3011,7 +3011,7 @@ function buildSections(host) {
       }).length;
       case 'programs': return C.programs.length;
       case 'courses':  return (C.courses || []).length;
-      case 'campaigns': return (C.campaigns || []).length;
+      case 'campaigns': return (C.campaigns || []).length + ((C.settings && C.settings.announcement && C.settings.announcement.visible) ? 1 : 0);
       case 'packages': return (C.pricing && C.pricing.tiers || []).length;
       case 'reviews':  return C.testimonials.length;
       case 'articles': return (C.articles || []).length;
@@ -3020,7 +3020,6 @@ function buildSections(host) {
       case 'home':     return 1;
       case 'theme':    return 1;
       case 'contact':  return 1;
-      case 'announcement': return (C.settings && C.settings.announcement && C.settings.announcement.visible) ? 1 : 0;
       case 'sectionOrder': return Object.keys(C.settings.sectionOrder || {}).length;
       case 'navigation': return 1;
       case 'footer': return 1;
@@ -3338,7 +3337,7 @@ function buildSections(host) {
       .then(function () {
         localStorage.setItem(LS_GH, JSON.stringify({ owner: owner, repo: repo, branch: branch, token: token }));
         $('#ghSetup').open = false;
-        $('#btnPublish').disabled = true;
+        $('#btnPublish').disabled = false;
         setStatus('متصل بـ GitHub', 'saved');
         toast('تم الاتصال بـ ' + owner + '/' + repo, 'ok');
       })
@@ -3402,7 +3401,7 @@ function buildSections(host) {
         $('#admSaveTxt').textContent = 'تم النشر على GitHub — الموقع بيتحدّث الآن';
       })
       .catch(function (e) {
-        btn.disabled = true;
+        btn.disabled = false;
         setStatus('فشل النشر', 'error');
         toast(e.message, 'err');
         if (window.console) console.error(e);
@@ -3449,7 +3448,7 @@ function buildSections(host) {
       $('#ghRepo').value = g.repo;
       $('#ghBranch').value = g.branch;
       $('#ghToken').value = g.token;
-      $('#btnPublish').disabled = true;
+      $('#btnPublish').disabled = false;
       setStatus('متصل بـ GitHub', 'saved');
     }
 

@@ -803,13 +803,10 @@ window.CONTENT = {
         "bg": "",
         "text": ""
       },
-      "background": {
+      "cursorEffect": {
         "enabled": true,
-        "image": "assets/img/seasonal-gifts-bg.svg",
-        "parallax": true,
-        "motion": "soft",
-        "overlay": "#f5faf7",
-        "overlayOpacity": 0.9
+        "style": "sparkle",
+        "intensity": "balanced"
       }
     },
     "contact": {

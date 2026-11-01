@@ -13,7 +13,7 @@
   var GROUPS = [
     { label: 'المحتوى', ids: ['home', 'pages', 'campaigns', 'programs', 'courses', 'packages', 'reviews', 'faq'] },
     { label: 'تجربة الموقع', ids: ['sections', 'sectionOrder', 'navigation', 'footer'] },
-    { label: 'التواصل', ids: ['announcement', 'waMessages', 'contact'] },
+    { label: 'التواصل', ids: ['waMessages', 'contact'] },
     { label: 'الهوية والظهور', ids: ['theme', 'seo'] }
   ];
 
@@ -53,7 +53,7 @@
         '<div class="adm-v2-box"><h3>اختصارات سريعة</h3><p>أكثر المهام استخداماً بدون البحث بين التبويبات.</p>' +
           '<div class="adm-v2-quick">' +
             quick('home', 'تعديل الرئيسية') + quick('programs', 'إدارة البرامج') +
-            quick('announcement', 'إضافة إعلان') + quick('footer', 'تعديل الفوتر') +
+            quick('campaigns', 'الإعلانات والحملات') + quick('footer', 'تعديل الفوتر') +
           '</div></div>' +
         '<div class="adm-v2-box"><h3>جاهزية المحتوى</h3><p>ملخص سريع قبل أي عملية نشر.</p>' +
           '<div class="adm-v2-checks">' +
@@ -83,9 +83,9 @@
   function tabId(button) {
     var text = button.textContent || '';
     var map = {
-      'الأقسام': 'sections', 'المظهر': 'theme', 'الإعدادات': 'contact', 'إعلان': 'announcement',
+      'الأقسام': 'sections', 'المظهر': 'theme', 'الإعدادات': 'contact',
       'رسائل الواتساب': 'waMessages', 'ترتيب الأقسام': 'sectionOrder', 'القائمة': 'navigation',
-      'الفوتر': 'footer', 'النصوص': 'texts', 'SEO': 'seo', 'البرامج': 'programs', 'الدورات': 'courses', 'الحملات': 'campaigns',
+      'الفوتر': 'footer', 'النصوص': 'texts', 'SEO': 'seo', 'البرامج': 'programs', 'الدورات': 'courses', 'الإعلانات والحملات': 'campaigns', 'الحملات': 'campaigns',
       'الفئات': 'packages', 'الآراء': 'reviews', 'الأسئلة': 'faq', 'الصفحات': 'pages', 'الرئيسية': 'home'
     };
     var found = Object.keys(map).sort(function (a, b) { return b.length - a.length; })
@@ -253,25 +253,6 @@
     new MutationObserver(function () {
       if (!grouping) window.requestAnimationFrame(decorateTabs);
     }).observe(nav, { childList: true });
-  }
-
-  function disablePreviewPublishing() {
-    var publish = document.getElementById('btnPublish');
-    if (!publish) return;
-    if (!publish.disabled) publish.disabled = true;
-    publish.textContent = 'المراجعة والنشر — بعد الاعتماد';
-    publish.title = 'النشر معطّل في النسخة التجريبية';
-  }
-
-  disablePreviewPublishing();
-  document.addEventListener('DOMContentLoaded', disablePreviewPublishing);
-  var previewPublishButton = document.getElementById('btnPublish');
-  if (previewPublishButton) {
-    previewPublishButton.addEventListener('click', function (event) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      disablePreviewPublishing();
-    }, true);
   }
 
   var contentPreviewOpen = document.getElementById('contentPreviewOpen');
