@@ -25,6 +25,7 @@
     var S = C.settings;
     if (!S.theme) S.theme = { name: 'green', mode: 'auto', showDarkToggle: true, colors: { brand: '', accent: '', bg: '', text: '' } };
     if (!S.theme.colors) S.theme.colors = { brand: '', accent: '', bg: '', text: '' };
+    if (!S.theme.background) S.theme.background = { enabled: false, image: '', parallax: true, motion: 'soft', overlay: '#f5faf7', overlayOpacity: 0.9 };
     if (!S.contact) S.contact = { name: 'أكاديمية قوارير', nameEn: 'Qawareer Academy', slogan: 'رفقاً بقلوبكن.. وقرباً لكتاب الله', tagline: 'برامج قرآنية وتربوية رحيمة', phoneDisplay: '01130830390', whatsapp: '201130830390', email: 'QawarirAcademy@gmail.com', telegram: 'QawareerAcademy', instagram: 'Qawareer.Academy', audience: 'النساء والأطفال', location: 'أونلاين بالكامل', siteUrl: '', gaId: '', localStats: true };
     if (!S.footer) S.footer = {
       about: 'برامج قرآنية وتربوية رحيمة للنساء والأطفال، تجمع بين القرب من كتاب الله والتطبيق العملي والمتابعة المستمرة.',
@@ -43,6 +44,26 @@
     if (!S.announcement) S.announcement = { visible: false, text: '', link: '', linkText: '', bg: '#06683f', color: '#ffffff' };
     if (!S.campaignSlider) S.campaignSlider = { visible: true, auto: true, speed: 6000, navigation: true };
     if (!C.campaigns) C.campaigns = [];
+    if (S.campaignSlider.height == null) S.campaignSlider.height = 150;
+    C.campaigns.forEach(function (item) {
+      if (item.showInSlider == null) item.showInSlider = true;
+      if (item.showBar == null) item.showBar = false;
+      if (item.showCard == null) item.showCard = false;
+      if (item.applyPricing == null) item.applyPricing = false;
+      if (!item.discountType) item.discountType = 'none';
+      if (!item.discountTier) item.discountTier = 'all';
+      if (!item.discountSystem) item.discountSystem = 'all';
+      if (!item.discountPlan) item.discountPlan = 'all';
+      if (item.showCountdown == null) item.showCountdown = false;
+      if (!item.targetPage) item.targetPage = 'all';
+      if (!item.relatedType) item.relatedType = '';
+      if (!item.relatedId) item.relatedId = '';
+      if (!item.relatedBadge) item.relatedBadge = 'عرض موسمي';
+      if (!item.originalPrice) item.originalPrice = '';
+      if (!item.offerPrice) item.offerPrice = '';
+      if (!item.priceLabel) item.priceLabel = '';
+      if (!item.theme) item.theme = 'giftPink';
+    });
     if (!S.home) S.home = { reviews: { random: true, count: 3 } };
     if (!S.home.reviews) S.home.reviews = { random: true, count: 3 };
     if (S.home.reviews.random == null) S.home.reviews.random = true;
@@ -844,7 +865,11 @@
       id: 'ad' + Date.now().toString(36).slice(-5), order: nextOrder(C.campaigns), visible: true,
       badge: 'إعلان جديد', title: 'عنوان الإعلان', text: 'اكتبي وصفًا مختصرًا وواضحًا.',
       button: 'اعرفي التفاصيل', link: '', image: '', mobileImage: '',
-      bg: '#074e38', color: '#ffffff', startAt: '', endAt: ''
+      bg: '#074e38', color: '#ffffff', startAt: '', endAt: '',
+      originalPrice: '', offerPrice: '', priceLabel: '', showInSlider: true,
+      showBar: false, showCard: false, showCountdown: false,
+      targetPage: 'all',
+      relatedType: '', relatedId: '', relatedBadge: 'عرض موسمي', theme: 'giftPink'
     });
     markDirty(); renderTab(); focusCard(C.campaigns.length);
   }
@@ -1164,6 +1189,19 @@ function buildSections(host) {
   }
 
   /* ---------- CAMPAIGNS / AD SLIDER ---------- */
+  function campaignRelatedOptions() {
+    var options = { '': 'بدون شارة مرتبطة' };
+    (C.programs || []).forEach(function (item) { options['program:' + item.id] = 'برنامج — ' + item.title; });
+    (C.courses || []).forEach(function (item) { options['course:' + item.id] = 'دورة — ' + item.title; });
+    return options;
+  }
+
+  function campaignPricingOptions(items, label) {
+    var options = { all: label };
+    (items || []).forEach(function (item) { options[item.id] = item.name || item.label || item.id; });
+    return options;
+  }
+
   function buildCampaigns(host) {
     var slider = C.settings.campaignSlider;
     var settingsCard = document.createElement('div'); settingsCard.className = 'adm-card';
@@ -1172,6 +1210,7 @@ function buildSections(host) {
     settingsCard.appendChild(toggle('تشغيل تلقائي', slider.auto !== false, function (v) { slider.auto = v; }));
     settingsCard.appendChild(toggle('إظهار الأسهم والنقاط', slider.navigation !== false, function (v) { slider.navigation = v; }));
     settingsCard.appendChild(field('مدة ظهور الإعلان بالمللي ثانية', 'مثال: 6000 = 6 ثوانٍ', slider.speed, function (v) { slider.speed = Math.max(2000, parseInt(v, 10) || 6000); }));
+    settingsCard.appendChild(field('ارتفاع السلايدر الرفيع', 'من 100 إلى 220 بكسل — المقترح 150', slider.height, function (v) { slider.height = Math.min(220, Math.max(100, parseInt(v, 10) || 150)); }));
     host.appendChild(settingsCard);
     C.campaigns.forEach(function (item) {
       var card = cardShell(item, item.title, item.order, { list: 'campaigns' });
@@ -1179,9 +1218,40 @@ function buildSections(host) {
       row.appendChild(field('الشارة', 'مثال: التسجيل مفتوح', item.badge, function (v) { item.badge = v; }));
       row.appendChild(field('العنوان', '', item.title, function (v) { item.title = v; })); card.appendChild(row);
       card.appendChild(field('الوصف', '', item.text, function (v) { item.text = v; }, true));
+      card.appendChild(select('ستايل الموسم', { giftPink: 'هدايا وردي وأحمر', gift: 'هدايا وذهبي', ramadan: 'رمضان وليالي', eid: 'عيد وبهجة', school: 'عودة للدراسة', elegant: 'هادئ وأنيق' }, item.theme || 'giftPink', function (v) { item.theme = v; }));
+      var places = document.createElement('div'); places.className = 'adm-card';
+      places.innerHTML = '<div class="adm-card__title">أماكن ظهور العرض</div>';
+      places.appendChild(toggle('سلايدر مضغوط في الرئيسية', item.showInSlider !== false, function (v) { item.showInSlider = v; }));
+      places.appendChild(toggle('شريط تنبيه أعلى الصفحات', item.showBar === true, function (v) { item.showBar = v; }));
+      places.appendChild(toggle('كارت عرض داخل البرامج والأسعار', item.showCard === true, function (v) { item.showCard = v; }));
+      places.appendChild(toggle('عداد تنازلي عند وجود تاريخ نهاية', item.showCountdown === true, function (v) { item.showCountdown = v; }));
+      places.appendChild(select('الصفحات المستهدفة', { all: 'كل صفحات الموقع', home: 'الرئيسية فقط', programs: 'البرامج فقط', pricing: 'الأسعار فقط' }, item.targetPage || 'all', function (v) { item.targetPage = v; }));
+      card.appendChild(places);
       row = document.createElement('div'); row.className = 'adm-row';
       row.appendChild(field('نص الزر', '', item.button, function (v) { item.button = v; }));
       row.appendChild(field('رابط الزر', 'صفحة داخلية أو رابط كامل', item.link, function (v) { item.link = v; })); card.appendChild(row);
+      row = document.createElement('div'); row.className = 'adm-row';
+      row.appendChild(field('السعر قبل العرض', 'اختياري', item.originalPrice, function (v) { item.originalPrice = v; }));
+      row.appendChild(field('سعر العرض', 'اختياري', item.offerPrice, function (v) { item.offerPrice = v; }));
+      row.appendChild(field('عبارة التوفير', 'مثال: وفّري 20%', item.priceLabel, function (v) { item.priceLabel = v; })); card.appendChild(row);
+      var pricingOffer = document.createElement('div'); pricingOffer.className = 'adm-card';
+      pricingOffer.innerHTML = '<div class="adm-card__title">تطبيق العرض على أسعار الباقات</div>' +
+        '<div class="adm-hint">السعر الأساسي يظل محفوظًا، ويظهر السعر المخفّض فقط خلال مدة العرض.</div>';
+      pricingOffer.appendChild(toggle('تطبيق خصم فعلي على الأسعار', item.applyPricing === true, function (v) { item.applyPricing = v; }));
+      row = document.createElement('div'); row.className = 'adm-row adm-row--3';
+      row.appendChild(select('نوع الخصم', { none: 'إعلان فقط — بدون تغيير السعر', percent: 'نسبة مئوية', fixed: 'مبلغ ثابت' }, item.discountType || 'none', function (v) { item.discountType = v; }));
+      row.appendChild(field('قيمة الخصم', 'مثال: 20 أو 100', item.discountValue, function (v) { item.discountValue = v; }));
+      row.appendChild(select('فئة الباقات', campaignPricingOptions((C.pricing && C.pricing.tiers) || [], 'كل فئات الباقات'), item.discountTier || 'all', function (v) { item.discountTier = v; }));
+      pricingOffer.appendChild(row);
+      row = document.createElement('div'); row.className = 'adm-row';
+      row.appendChild(select('مدة الحصة', campaignPricingOptions((C.pricing && C.pricing.systems) || [], 'كل مدد الحصص'), item.discountSystem || 'all', function (v) { item.discountSystem = v; }));
+      row.appendChild(select('الباقة', campaignPricingOptions((C.pricing && C.pricing.plans) || [], 'كل الباقات'), item.discountPlan || 'all', function (v) { item.discountPlan = v; }));
+      pricingOffer.appendChild(row);
+      card.appendChild(pricingOffer);
+      var related = (item.relatedType && item.relatedId) ? item.relatedType + ':' + item.relatedId : '';
+      row = document.createElement('div'); row.className = 'adm-row';
+      row.appendChild(select('ضع شارة العرض على', campaignRelatedOptions(), related, function (v) { var bits = v.split(':'); item.relatedType = bits[0] || ''; item.relatedId = bits[1] || ''; }));
+      row.appendChild(field('نص الشارة المرتبطة', 'مثال: عرض رمضان', item.relatedBadge, function (v) { item.relatedBadge = v; })); card.appendChild(row);
       row = document.createElement('div'); row.className = 'adm-row';
       row.appendChild(imgField('صورة الكمبيوتر', 'يمكن اختيار صورة من الجهاز أو كتابة رابط.', item.image, function (v) { item.image = v; }, { maxEdge: 1600, crop: false, wide: true }));
       row.appendChild(imgField('صورة الموبايل', 'اختيارية؛ عند تركها فارغة تُستخدم صورة الكمبيوتر.', item.mobileImage, function (v) { item.mobileImage = v; }, { maxEdge: 900, crop: false, wide: true })); card.appendChild(row);
@@ -2108,6 +2178,21 @@ function buildSections(host) {
     });
 
     host.appendChild(colorsCard);
+
+    var bg = T.background || (T.background = { enabled: false, image: '', parallax: true, motion: 'soft', overlay: '#f5faf7', overlayOpacity: 0.9 });
+    var bgCard = document.createElement('div');
+    bgCard.className = 'adm-card';
+    bgCard.innerHTML = '<div class="adm-card__title">خلفية الموقع المتحركة</div>' +
+      '<div class="adm-hint">اختاري صورة هادئة، وسنضع فوقها طبقة تحافظ على وضوح النصوص.</div>';
+    bgCard.appendChild(toggle('إظهار صورة كخلفية للموقع', bg.enabled === true, function (v) { bg.enabled = v; }));
+    bgCard.appendChild(imgField('صورة الخلفية', 'اختاري صورة من الجهاز أو اكتبي رابطها.', bg.image || '', function (v) { bg.image = v; }, { maxEdge: 2200, crop: false, wide: true }));
+    bgCard.appendChild(toggle('تحريك الخلفية مع السكرول', bg.parallax !== false, function (v) { bg.parallax = v; }));
+    bgCard.appendChild(select('قوة الحركة', { soft: 'هادئة', medium: 'متوسطة', strong: 'واضحة' }, bg.motion || 'soft', function (v) { bg.motion = v; }));
+    var bgRow = document.createElement('div'); bgRow.className = 'adm-row';
+    bgRow.appendChild(field('لون طبقة التغطية', 'مثال: #f5faf7', bg.overlay || '#f5faf7', function (v) { bg.overlay = v; }));
+    bgRow.appendChild(select('وضوح صورة الخلفية', { '0.94': 'هادئة جدًا', '0.90': 'هادئة ومقروءة', '0.82': 'متوسطة', '0.72': 'واضحة' }, String(bg.overlayOpacity == null ? 0.9 : bg.overlayOpacity), function (v) { bg.overlayOpacity = parseFloat(v); }));
+    bgCard.appendChild(bgRow);
+    host.appendChild(bgCard);
   }
 
   /* ---------- CONTACT ---------- */
@@ -3117,6 +3202,7 @@ function buildSections(host) {
         html = window.RENDER.applySections(html);
         /* reorder sections per page settings */
         html = window.RENDER.applySectionOrder(html, p.file);
+        html = window.RENDER.applyCampaignPlacements(html, p.file);
         /* inject navigation (header/footer/social) from settings */
         html = window.RENDER.applyNavigation(html);
         html = window.RENDER.applyAboutCopy(html);

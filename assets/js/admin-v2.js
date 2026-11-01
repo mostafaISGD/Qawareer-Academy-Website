@@ -200,6 +200,9 @@
       if (!String(item.title || '').trim()) add('campaigns', 'يوجد إعلان مفعّل بدون عنوان.');
       if (item.startAt && item.endAt && new Date(item.startAt) > new Date(item.endAt)) add('campaigns', 'تاريخ نهاية «' + name + '» أقدم من تاريخ البداية.');
       if (item.link && !/^(https?:\/\/|mailto:|tel:|#|[\w-]+\.html)/i.test(item.link)) add('campaigns', 'رابط «' + name + '» غير مكتمل.');
+      if (item.applyPricing === true && (!item.discountType || item.discountType === 'none')) add('campaigns', 'حددي نوع الخصم في «' + name + '» أو أوقفي تطبيقه على الأسعار.');
+      if (item.applyPricing === true && !(parseFloat(String(item.discountValue || '').replace(',', '.')) > 0)) add('campaigns', 'قيمة الخصم في «' + name + '» غير صحيحة.');
+      if (item.applyPricing === true && item.discountType === 'percent' && parseFloat(item.discountValue) >= 100) add('campaigns', 'نسبة الخصم في «' + name + '» يجب أن تكون أقل من 100%.');
     });
     (content.courses || []).forEach(function (item, index) {
       if (item.visible === false) return;

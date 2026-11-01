@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200">
+  <defs>
+    <radialGradient id="g1" cx="20%" cy="10%" r="70%"><stop stop-color="#d9b85f" stop-opacity=".34"/><stop offset="1" stop-color="#d9b85f" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g2" cx="90%" cy="80%" r="70%"><stop stop-color="#0d7a54" stop-opacity=".32"/><stop offset="1" stop-color="#0d7a54" stop-opacity="0"/></radialGradient>
+    <pattern id="p" width="240" height="240" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#b78c2d" stroke-width="3" opacity=".28">
+        <rect x="42" y="76" width="54" height="46" rx="8"/><path d="M69 76v46M42 91h54M69 76c-21-3-27-18-17-24 9-6 17 7 17 24Zm0 0c21-3 27-18 17-24-9-6-17 7-17 24Z"/>
+        <path d="m177 46 5 12 13 1-10 8 3 13-11-7-11 7 3-13-10-8 13-1Z"/>
+        <path d="M168 165a31 31 0 1 0 22 54 35 35 0 1 1-22-54Z"/>
+      </g>
+      <g fill="#0c6b49" opacity=".2"><circle cx="128" cy="126" r="5"/><circle cx="24" cy="198" r="4"/><circle cx="218" cy="112" r="3"/></g>
+    </pattern>
+  </defs>
+  <rect width="1600" height="1200" fill="#f2f8f4"/>
+  <rect width="1600" height="1200" fill="url(#g1)"/>
+  <rect width="1600" height="1200" fill="url(#g2)"/>
+  <rect width="1600" height="1200" fill="url(#p)"/>
+</svg>

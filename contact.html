@@ -85,11 +85,24 @@
 <script src="config.js"></script>
 </head>
 
-<body>
+<body class="has-site-background has-season-bar">
+<!--qwr:site-background:start-->
+<div class="site-parallax-bg" data-site-parallax data-bg-src="assets/img/seasonal-gifts-bg.svg" data-parallax="true" data-motion="soft" style="--site-bg-overlay:#f5faf7;--site-bg-opacity:0.9" aria-hidden="true"></div>
+<!--qwr:site-background:end-->
 <a class="skip-link" href="#main">تخطّي إلى المحتوى الرئيسي</a>
 
 <div class="progress" aria-hidden="true"><div class="progress__bar"></div></div>
-
+<!--qwr:campaign-bar:start-->
+<aside class="season-bar season-theme--giftPink" data-season-bar style="--campaign-bg:#a32659;--campaign-color:#ffffff">
+  <div class="container season-bar__in">
+    <span class="season-bar__badge">عرض موسمي تجريبي</span>
+    <strong>ابدئي رحلتكِ القرآنية بخصم عشرين بالمئة</strong>
+    <span>وفّري 20%</span>
+    <a href="pricing.html">شاهدي تفاصيل العرض</a>
+    <button type="button" data-season-bar-close aria-label="إغلاق التنبيه">×</button>
+  </div>
+</aside>
+<!--qwr:campaign-bar:end-->
 <header class="header">
   <div class="container header__bar">
     <a class="brand" href="index.html">
@@ -308,6 +321,16 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
       <p class="cta-band__note">
         أو تواصلي معنا على تيليجرام
         <a href="https://t.me/QawreerAcademy" data-tg><bdi>@QawareerAcademy</bdi></a>
@@ -457,6 +480,5 @@
   window.gtag = gtag;
 })();
 </script>
-
 </body>
 </html>

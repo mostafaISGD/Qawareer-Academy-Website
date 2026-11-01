@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="300" viewBox="0 0 800 300">
+  <defs><linearGradient id="bg" x1="0" x2="1"><stop stop-color="#7d1a43"/><stop offset=".5" stop-color="#d63779"/><stop offset="1" stop-color="#7d1a43"/></linearGradient><pattern id="p" width="42" height="42" patternUnits="userSpaceOnUse"><circle cx="7" cy="7" r="2.5" fill="#fff" opacity=".13"/></pattern></defs>
+  <rect width="800" height="300" fill="url(#bg)"/><rect width="800" height="300" fill="url(#p)"/>
+  <g opacity=".82" transform="translate(42 86)"><rect y="36" width="98" height="76" rx="10" fill="#ff91bb"/><path d="M49 36v76M0 58h98" stroke="#ffd56a" stroke-width="12"/><path d="M49 36C12 31 9 7 27 4c16-3 22 17 22 32Zm0 0c37-5 40-29 22-32-16-3-22 17-22 32Z" fill="none" stroke="#ffd56a" stroke-width="10"/></g>
+  <text x="470" y="76" text-anchor="middle" direction="rtl" font-family="Tahoma,Arial,sans-serif" font-size="23" font-weight="700" fill="#ffd66d">هدية موسمية</text>
+  <text x="470" y="136" text-anchor="middle" direction="rtl" font-family="Tahoma,Arial,sans-serif" font-size="34" font-weight="800" fill="#fff">خصم عشرين بالمئة</text>
+  <text x="470" y="180" text-anchor="middle" direction="rtl" font-family="Tahoma,Arial,sans-serif" font-size="25" font-weight="700" fill="#fff">على أول باقة</text>
+  <rect x="350" y="211" width="240" height="48" rx="24" fill="#ffd66d"/><text x="470" y="242" text-anchor="middle" direction="rtl" font-family="Tahoma,Arial,sans-serif" font-size="19" font-weight="800" fill="#5d1534">شاهدي العرض</text>
+</svg>

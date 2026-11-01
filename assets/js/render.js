@@ -40,6 +40,89 @@
     return i % 3 === 0 ? '' : ' data-delay="' + (i % 3) + '"';
   }
 
+  function campaignDate(value, endOfDay) {
+    if (!value) return 0;
+    var text = String(value);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(text)) text += endOfDay ? 'T23:59:59' : 'T00:00:00';
+    var time = new Date(text).getTime();
+    return isNaN(time) ? 0 : time;
+  }
+  function activeCampaigns() {
+    var now = Date.now();
+    return visible(data().campaigns || []).filter(function (item) {
+      var start = campaignDate(item.startAt, false);
+      var end = campaignDate(item.endAt, true);
+      return (!start || start <= now) && (!end || end >= now);
+    });
+  }
+  function campaignMatchesPage(item, file) {
+    var target = item.targetPage || 'all';
+    var key = pageKey(file);
+    if (target === 'all') return true;
+    if (target === 'home') return key === 'index';
+    return target === key;
+  }
+  function relatedCampaign(type, id) {
+    return activeCampaigns().filter(function (item) {
+      return item.relatedType === type && item.relatedId === id;
+    })[0] || null;
+  }
+  function campaignPriceHtml(item, cls) {
+    if (!item.originalPrice && !item.offerPrice && !item.priceLabel) return '';
+    return '<div class="' + cls + '">' +
+      (item.priceLabel ? '<span class="season-save">' + esc(item.priceLabel) + '</span>' : '') +
+      (item.originalPrice ? '<del>' + esc(item.originalPrice) + '</del>' : '') +
+      (item.offerPrice ? '<strong>' + esc(item.offerPrice) + '</strong>' : '') +
+      '</div>';
+  }
+  function campaignCountdownHtml(item) {
+    var end = campaignDate(item.endAt, true);
+    return item.showCountdown && end ? '<div class="season-countdown" data-season-countdown="' + end + '" aria-label="الوقت المتبقي للعرض"></div>' : '';
+  }
+
+  function pricingCampaigns() {
+    return visible(data().campaigns || []).filter(function (item) {
+      return item.applyPricing === true && item.discountType && item.discountType !== 'none' &&
+        parseFloat(String(item.discountValue || '').replace(',', '.')) > 0;
+    });
+  }
+  function pricingCampaignFor(tierId, systemId, planId) {
+    return pricingCampaigns().filter(function (item) {
+      return (!item.discountTier || item.discountTier === 'all' || item.discountTier === tierId) &&
+        (!item.discountSystem || item.discountSystem === 'all' || item.discountSystem === systemId) &&
+        (!item.discountPlan || item.discountPlan === 'all' || item.discountPlan === planId);
+    })[0] || null;
+  }
+  function numericPrice(value) {
+    var clean = String(value == null ? '' : value).replace(/,/g, '').replace(/[^\d.]/g, '');
+    var number = parseFloat(clean);
+    return isNaN(number) ? null : number;
+  }
+  function formatPrice(value) {
+    var rounded = Math.round(value * 100) / 100;
+    return String(rounded).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1')
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+  function offerForPrice(price, campaign) {
+    var original = numericPrice(price);
+    if (original == null || !campaign) return null;
+    var value = parseFloat(String(campaign.discountValue || '').replace(',', '.'));
+    if (!value || value < 0) return null;
+    var discounted = campaign.discountType === 'fixed' ? original - value : original * (1 - value / 100);
+    discounted = Math.max(0, discounted);
+    return { original: formatPrice(original), offer: formatPrice(discounted) };
+  }
+  function offerDateAttrs(campaign) {
+    return ' data-pricing-offer data-offer-start="' + esc(campaign.startAt || '') +
+      '" data-offer-end="' + esc(campaign.endAt || '') + '"';
+  }
+  function offerLabel(campaign) {
+    if (campaign.priceLabel) return campaign.priceLabel;
+    return campaign.discountType === 'fixed'
+      ? 'خصم ' + campaign.discountValue + ' ' + (pr().currency || 'جنيه')
+      : 'خصم ' + campaign.discountValue + '%';
+  }
+
   var NL = '\n';
 
   var ARROW = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4-4.6-4.6z"/></svg>';
@@ -52,8 +135,10 @@
     if (offSection('programs')) return '';
     var prefix = (linkPrefix === undefined) ? 'programs.html' : linkPrefix;
     return visible(data().programs).map(function (p, i) {
+      var related = relatedCampaign('program', p.id);
       return [
         '      <article class="prog" data-reveal' + delay(i) + '>',
+        related ? '        <span class="season-related-badge">' + esc(related.relatedBadge || related.badge || 'عرض موسمي') + '</span>' : '',
         '        <div class="prog__head">',
         '          <div class="prog__num">' + esc(p.order) + '</div>',
         '          <h3>' + esc(p.title) + '</h3>',
@@ -149,6 +234,7 @@
     };
     var cards = courses.map(function (course, i) {
       var status = course.status || 'soon';
+      var related = relatedCampaign('course', course.id);
       var facts = [
         course.duration ? '<span><b>المدة:</b> ' + esc(course.duration) + '</span>' : '',
         course.schedule ? '<span><b>الموعد:</b> ' + esc(course.schedule) + '</span>' : '',
@@ -162,6 +248,7 @@
       var button = course.cta || (status === 'open' ? 'احجزي في الدورة' : statusLabels[status]);
       return [
         '      <article class="course-card' + (course.isFree ? ' course-card--free' : '') + '" id="' + esc(course.id) + '" data-reveal' + delay(i) + '>',
+        related ? '        <span class="season-related-badge">' + esc(related.relatedBadge || related.badge || 'عرض موسمي') + '</span>' : '',
         course.isFree ? '        <div class="free-decor" aria-hidden="true"><span>🎁</span><span>✦</span><span>◆</span><span>✦</span><span>🎀</span></div>' : '',
         '        <div class="course-card__top">',
         '          <span class="course-status course-status--' + esc(status) + '">' + esc(statusLabels[status] || status) + '</span>',
@@ -245,12 +332,7 @@
   function campaignSliderSection() {
     var slider = settings().campaignSlider || {};
     if (slider.visible === false || offSection('campaigns')) return '';
-    var now = Date.now();
-    var campaigns = visible(data().campaigns || []).filter(function (item) {
-      var start = item.startAt ? new Date(item.startAt).getTime() : 0;
-      var end = item.endAt ? new Date(item.endAt).getTime() : 0;
-      return (!start || start <= now) && (!end || end >= now);
-    });
+    var campaigns = activeCampaigns().filter(function (item) { return item.showInSlider !== false; });
     if (!campaigns.length) return '';
     var slides = campaigns.map(function (item, i) {
       var picture = item.image ? [
@@ -260,13 +342,25 @@
         '          </picture>'
       ].filter(Boolean).join('\n') : '';
       var link = item.link ? '<a class="btn btn--gold" href="' + esc(item.link) + '">' + esc(item.button || 'اعرفي التفاصيل') + '</a>' : '';
+      if (item.image) {
+        return [
+          '      <article class="campaign campaign--image season-theme--' + esc(item.theme || 'gift') + (i === 0 ? ' is-active' : '') + '" data-campaign-slide aria-hidden="' + (i === 0 ? 'false' : 'true') + '">',
+          item.link ? '        <a class="campaign__image-link" href="' + esc(item.link) + '" aria-label="' + esc(item.title || item.badge || 'تفاصيل العرض') + '">' : '        <div class="campaign__image-link">',
+          picture,
+          item.link ? '        </a>' : '        </div>',
+          '      </article>'
+        ].join('\n');
+      }
       return [
-        '      <article class="campaign' + (i === 0 ? ' is-active' : '') + '" data-campaign-slide aria-hidden="' + (i === 0 ? 'false' : 'true') + '" style="--campaign-bg:' + esc(item.bg || '#074e38') + ';--campaign-color:' + esc(item.color || '#ffffff') + '">',
+        '      <article class="campaign season-theme--' + esc(item.theme || 'gift') + (i === 0 ? ' is-active' : '') + '" data-campaign-slide aria-hidden="' + (i === 0 ? 'false' : 'true') + '" style="--campaign-bg:' + esc(item.bg || '#074e38') + ';--campaign-color:' + esc(item.color || '#ffffff') + '">',
         picture,
+        seasonDecor(),
         '        <div class="container campaign__content">',
         item.badge ? '          <span class="campaign__badge">' + esc(item.badge) + '</span>' : '',
         '          <h2>' + esc(item.title) + '</h2>',
         item.text ? '          <p>' + esc(item.text) + '</p>' : '',
+        campaignPriceHtml(item, 'campaign__price'),
+        campaignCountdownHtml(item),
         link,
         '        </div>',
         '      </article>'
@@ -276,7 +370,7 @@
       return '        <button type="button" data-campaign-dot="' + i + '" class="' + (i === 0 ? 'is-active' : '') + '" aria-label="الإعلان ' + (i + 1) + '"></button>';
     }).join('\n');
     return [
-      '  <section class="campaign-slider" data-campaign-slider data-sec="campaigns" data-auto="' + (slider.auto !== false) + '" data-speed="' + esc(slider.speed || 6000) + '">',
+      '  <section class="campaign-slider" data-campaign-slider data-sec="campaigns" data-auto="' + (slider.auto !== false) + '" data-speed="' + esc(slider.speed || 6000) + '" style="--campaign-height:' + esc(Math.min(220, Math.max(100, parseInt(slider.height, 10) || 150))) + 'px">',
       '    <div class="campaign-slider__track">', slides, '    </div>',
       slider.navigation !== false && campaigns.length > 1 ? '    <button class="campaign-slider__arrow campaign-slider__arrow--prev" type="button" data-campaign-prev aria-label="الإعلان السابق">‹</button>' : '',
       slider.navigation !== false && campaigns.length > 1 ? '    <button class="campaign-slider__arrow campaign-slider__arrow--next" type="button" data-campaign-next aria-label="الإعلان التالي">›</button>' : '',
@@ -285,13 +379,81 @@
     ].filter(Boolean).join('\n');
   }
 
+  function seasonDecor() {
+    return '        <div class="season-decor" aria-hidden="true"><span>🎁</span><span>✦</span><span>🎀</span><span>◆</span><span>✦</span></div>';
+  }
+
+  function campaignBar(item) {
+    return [
+      '<aside class="season-bar season-theme--' + esc(item.theme || 'gift') + '" data-season-bar style="--campaign-bg:' + esc(item.bg || '#075b3b') + ';--campaign-color:' + esc(item.color || '#fff') + '">',
+      '  <div class="container season-bar__in">',
+      item.badge ? '    <span class="season-bar__badge">' + esc(item.badge) + '</span>' : '',
+      '    <strong>' + esc(item.title) + '</strong>',
+      item.priceLabel ? '    <span>' + esc(item.priceLabel) + '</span>' : '',
+      item.link ? '    <a href="' + esc(item.link) + '">' + esc(item.button || 'التفاصيل') + '</a>' : '',
+      '    <button type="button" data-season-bar-close aria-label="إغلاق التنبيه">×</button>',
+      '  </div>',
+      '</aside>'
+    ].filter(Boolean).join('\n');
+  }
+
+  function campaignInlineCard(item) {
+    return [
+      '<section class="section season-inline" data-season-inline>',
+      '  <div class="container">',
+      '    <article class="season-inline__card season-theme--' + esc(item.theme || 'gift') + '" style="--campaign-bg:' + esc(item.bg || '#075b3b') + ';--campaign-color:' + esc(item.color || '#fff') + '">',
+      seasonDecor(),
+      '      <div>',
+      item.badge ? '        <span class="campaign__badge">' + esc(item.badge) + '</span>' : '',
+      '        <h2>' + esc(item.title) + '</h2>',
+      item.text ? '        <p>' + esc(item.text) + '</p>' : '',
+      '      </div>',
+      '      <div class="season-inline__action">',
+      campaignPriceHtml(item, 'season-inline__price'),
+      campaignCountdownHtml(item),
+      item.link ? '        <a class="btn btn--gold" href="' + esc(item.link) + '">' + esc(item.button || 'شاهدي التفاصيل') + '</a>' : '',
+      '      </div>',
+      '    </article>',
+      '  </div>',
+      '</section>'
+    ].filter(Boolean).join('\n');
+  }
+
+  function applyCampaignPlacements(html, file) {
+    html = html.replace(/\s*<!--qwr:campaign-bar:start-->[\s\S]*?<!--qwr:campaign-bar:end-->/g, '');
+    html = html.replace(/\s*<!--qwr:campaign-popup:start-->[\s\S]*?<!--qwr:campaign-popup:end-->/g, '');
+    html = html.replace(/\s*<!--qwr:campaign-inline:start-->[\s\S]*?<!--qwr:campaign-inline:end-->/g, '');
+    var campaigns = activeCampaigns().filter(function (item) { return campaignMatchesPage(item, file); });
+    var bar = campaigns.filter(function (item) { return item.showBar === true; })[0];
+    var inline = campaigns.filter(function (item) { return item.showCard === true; })[0];
+    html = html.replace(/<body([^>]*)>/, function (m, attrs) {
+      attrs = attrs.replace(/\sclass="([^"]*)"/, function (_, names) {
+        var clean = names.replace(/\bhas-season-bar\b/g, '').replace(/\s+/g, ' ').trim();
+        return clean ? ' class="' + clean + '"' : '';
+      });
+      if (bar) {
+        if (/\sclass="/.test(attrs)) attrs = attrs.replace(/\sclass="([^"]*)"/, ' class="$1 has-season-bar"');
+        else attrs += ' class="has-season-bar"';
+      }
+      return '<body' + attrs + '>';
+    });
+    if (bar) html = html.replace(/(<header\b[^>]*class="[^"]*(?:site-head|header)[^"]*"[^>]*>)/, '<!--qwr:campaign-bar:start-->\n' + campaignBar(bar) + '\n<!--qwr:campaign-bar:end-->\n$1');
+    if (inline && (pageKey(file) === 'programs' || pageKey(file) === 'pricing')) {
+      html = html.replace(/(<section\b[^>]*class="[^"]*cta-band[^"]*"[^>]*>)/, '<!--qwr:campaign-inline:start-->\n' + campaignInlineCard(inline) + '\n<!--qwr:campaign-inline:end-->\n$1');
+    }
+    return html;
+  }
+
   function applyPageCleanup(html) {
     if (html.indexOf('<!--qwr:program-details:start-->') !== -1) {
       html = html.replace('خمسة برامج تحل مشكلات حقيقية، لا أسماء فقط.', 'خمسة برامج تحل مشكلات حقيقية');
       html = html.replace(/\s*<section class="section">[\s\S]*?<!--qwr:programs-cards:start-->[\s\S]*?<!--qwr:programs-cards:end-->[\s\S]*?<\/section>/, '');
       html = html.replace('الفكرة، الفئة المستهدفة، طريقة التنفيذ، المدة، والمخرج النهائي.', 'الفئة المستهدفة، وطريقة التنفيذ، والمدة، والنتائج المتوقعة.');
       html = html.replace(/\s*<section class="section on-dark"[\s\S]*?<span class="kicker">أدوات مشتركة<\/span>[\s\S]*?<\/section>/, '');
-      html = html.replace(/\s*<section class="section" id="courses">[\s\S]*?<\/section>(?=\s*<section class="cta-band")/, '');
+      /* Remove every previously generated copy before inserting the one current
+         section. Older rebuilds only removed the final copy before the CTA,
+         so each publish could leave another courses section behind. */
+      html = html.replace(/\s*<section class="section" id="courses">[\s\S]*?<\/section>/g, '');
       html = html.replace(/(\s*<section class="cta-band")/, '\n\n' + coursesSection() + '\n\n$1');
     }
     if (html.indexOf('data-sec="programs"') !== -1) {
@@ -433,12 +595,19 @@
   }
 
   /* one plan row: "8 حصص   350 جنيه" */
-  function planRow(price, label) {
+  function planRow(price, label, tierId, systemId, planId) {
+    var campaign = pricingCampaignFor(tierId, systemId, planId);
+    var offer = offerForPrice(price, campaign);
+    var priceHtml = offer
+      ? '<span class="plan__price plan__price--offer"' + offerDateAttrs(campaign) + '>' +
+          '<span class="plan__price-original">' + esc(offer.original) + ' <small>' + esc(pr().currency || 'جنيه') + '</small></span>' +
+          '<span class="plan__price-new">' + esc(offer.offer) + ' <small>' + esc(pr().currency || 'جنيه') + '</small></span>' +
+        '</span>'
+      : '<span class="plan__price">' + esc(price) + ' <small>' + esc(pr().currency || 'جنيه') + '</small></span>';
     return [
       '            <div class="plan">',
       '              <span class="plan__label">' + esc(label) + '</span>',
-      '              <span class="plan__price">' + esc(price) +
-        ' <small>' + esc(pr().currency || 'جنيه') + '</small></span>',
+      '              ' + priceHtml,
       '            </div>'
     ].join('\n');
   }
@@ -452,7 +621,7 @@
     var rows = '';
     for (var i = 0; i < plans.length; i++) {
       if (!prices[i]) continue;
-      rows += (rows ? '\n' : '') + planRow(prices[i], plans[i].label);
+      rows += (rows ? '\n' : '') + planRow(prices[i], plans[i].label, tier.id, row.system, plans[i].id);
     }
 
     return [
@@ -492,6 +661,9 @@
          to the general message rather than to nothing. */
       var TIER_WA = { classic: 'tierClassic', golden: 'tierGolden', groups: 'tierGroups' };
       var waKey = TIER_WA[tier.id] || 'general';
+      var tierOffer = pricingCampaigns().filter(function (item) {
+        return !item.discountTier || item.discountTier === 'all' || item.discountTier === tier.id;
+      })[0] || null;
 
       var features = (tier.features || []).map(function (f) {
         return [
@@ -513,6 +685,9 @@
         tier.badge
           ? '            <span class="tier__badge">' + esc(tier.badge) + '</span>'
           : '',
+        tierOffer
+          ? '            <span class="tier__offer-badge"' + offerDateAttrs(tierOffer) + '>🎁 ' + esc(offerLabel(tierOffer)) + '</span>'
+          : '',
         '            <h3 class="tier__name">' + esc(tier.name) + '</h3>',
         '            <p class="tier__tagline">' + esc(tier.tagline || '') + '</p>',
         '            <p class="tier__desc">' + esc(tier.description || '') + '</p>',
@@ -526,7 +701,7 @@
         '          </div>',
         '          <div class="tier__cta" data-reveal' + delay(i) + '>',
         '            <a class="btn btn--block tier__btn" href="pricing.html"',
-        '               data-wa="' + esc(waKey) + '">' +
+        '               data-wa="' + esc(waKey) + '"' + (tierOffer ? ' data-wa-extra="العرض: ' + esc(tierOffer.title || offerLabel(tierOffer)) + '"' : '') + '>' +
           esc(tier.cta || 'اختاري باقتكِ') + '</a>',
         '          </div>',
         '        </section>'
@@ -547,11 +722,14 @@
      from the same pricing data as the full pricing page, so names,
      features and price ranges can never drift apart.
      ================================================================== */
-  function priceRange(tier) {
+  function priceRange(tier, withOffers) {
     var nums = [];
+    var plans = prPlans();
     (tier.rows || []).forEach(function (r) {
-      (r.prices || []).forEach(function (p) {
-        var n = parseInt(String(p).replace(/[^\d]/g, ''), 10);
+      (r.prices || []).forEach(function (p, i) {
+        var campaign = withOffers && plans[i] ? pricingCampaignFor(tier.id, r.system, plans[i].id) : null;
+        var offer = offerForPrice(p, campaign);
+        var n = numericPrice(offer ? offer.offer : p);
         if (!isNaN(n)) nums.push(n);
       });
     });
@@ -582,7 +760,11 @@
         ].join('\n');
       }).join('\n');
 
-      var range = priceRange(tier);
+      var range = priceRange(tier, false);
+      var offerRange = priceRange(tier, true);
+      var tierOffer = pricingCampaigns().filter(function (item) {
+        return !item.discountTier || item.discountTier === 'all' || item.discountTier === tier.id;
+      })[0] || null;
 
       return [
         '        <section class="tier tier--' + esc(theme) + ' tier--teaser"' +
@@ -591,6 +773,9 @@
         tier.badge
           ? '            <span class="tier__badge">' + esc(tier.badge) + '</span>'
           : '',
+        tierOffer
+          ? '            <span class="tier__offer-badge"' + offerDateAttrs(tierOffer) + '>🎁 ' + esc(offerLabel(tierOffer)) + '</span>'
+          : '',
         '            <h3 class="tier__name">' + esc(tier.name) + '</h3>',
         '            <p class="tier__tagline">' + esc(tier.tagline || '') + '</p>',
         '            <p class="tier__desc">' + esc(tier.description || '') + '</p>',
@@ -598,9 +783,9 @@
           ? '            <ul class="tier__feats">\n' + features + '\n            </ul>'
           : '',
         '          </div>',
-        range
-          ? '          <p class="tier__price-range">' + esc(range) + '</p>'
-          : '',
+        range && tierOffer
+          ? '          <p class="tier__price-range tier__price-range--offer"' + offerDateAttrs(tierOffer) + '><span class="tier__range-original">' + esc(range) + '</span><span class="tier__range-new">مع العرض: ' + esc(offerRange) + '</span></p>'
+          : (range ? '          <p class="tier__price-range">' + esc(range) + '</p>' : ''),
         '        </section>'
       ].filter(Boolean).join('\n');
     }).join('\n');
@@ -631,6 +816,15 @@
     var plans = prPlans();
     if (!plans.length) return '';
 
+    function tablePrice(tier, row, plan, value) {
+      var campaign = pricingCampaignFor(tier.id, row.system, plan.id);
+      var offer = offerForPrice(value, campaign);
+      if (!offer) return esc(value);
+      return '<span class="table-price-offer"' + offerDateAttrs(campaign) + '>' +
+        '<span class="table-price-original">' + esc(offer.original) + '</span>' +
+        '<strong class="table-price-new">' + esc(offer.offer) + '</strong></span>';
+    }
+
     var multi = prTiers().filter(function (t) { return (t.rows || []).length > 1; });
     if (!multi.length) return '';
 
@@ -658,7 +852,7 @@
         t.rows.forEach(function (r) {
           var v = (r.prices || [])[pi];
           cells += v
-            ? '<td class="num">' + esc(v) + '</td>'
+            ? '<td class="num">' + tablePrice(t, r, pl, v) + '</td>'
             : '<td>—</td>';
         });
       });
@@ -674,7 +868,7 @@
       var lines = single.map(function (t) {
         var r = t.rows[0];
         var cells = (r.prices || []).map(function (v, i) {
-          return plans[i] ? esc(plans[i].label) + ' <b>' + esc(v) + '</b>' : '';
+          return plans[i] ? esc(plans[i].label) + ' <b>' + tablePrice(t, r, plans[i], v) + '</b>' : '';
         }).filter(Boolean).join(' · ');
         return '          <p class="tier-one"><strong>' + esc(t.name) + '</strong> (' +
           esc(prSystem(r.system).name) + '): ' + cells + '</p>';
@@ -1623,6 +1817,14 @@
        the page drifts a few bytes on every single publish. */
     html = html.replace(/<style id="qwr-theme">[\s\S]*?<\/style>\s*/g, '');
     html = html.replace(/<!--qwr:announcement:start-->[\s\S]*?<!--qwr:announcement:end-->\s*/g, '');
+    html = html.replace(/<!--qwr:site-background:start-->[\s\S]*?<!--qwr:site-background:end-->\s*/g, '');
+    html = html.replace(/<body([^>]*)>/, function (m, attrs) {
+      attrs = attrs.replace(/\sclass="([^"]*)"/, function (_, names) {
+        var clean = names.replace(/\bhas-site-background\b/g, '').replace(/\s+/g, ' ').trim();
+        return clean ? ' class="' + clean + '"' : '';
+      });
+      return '<body' + attrs + '>';
+    });
 
     /* theme name */
     var name = themeName();
@@ -1652,6 +1854,20 @@
     var showToggle = (settings().theme || {}).showDarkToggle !== false && mode === 'auto';
     if (!showToggle) {
       html = html.replace(/<button[^>]*data-theme-toggle[^>]*>[\s\S]*?<\/button>/, '');
+    }
+
+    /* Optional moving site background. The image URL lives in a data attribute
+       and main.js applies it, so uploaded data URLs and ordinary paths are both safe. */
+    var bg = ((settings().theme || {}).background || {});
+    if (bg.enabled === true && bg.image) {
+      html = html.replace(/<body([^>]*)>/, function (m, attrs) {
+        if (/\sclass="/.test(attrs)) attrs = attrs.replace(/\sclass="([^"]*)"/, ' class="$1 has-site-background"');
+        else attrs += ' class="has-site-background"';
+        return '<body' + attrs + '>';
+      });
+      var opacity = Math.min(.98, Math.max(.55, parseFloat(bg.overlayOpacity) || .9));
+      var background = '<div class="site-parallax-bg" data-site-parallax data-bg-src="' + esc(bg.image) + '" data-parallax="' + (bg.parallax !== false) + '" data-motion="' + esc(bg.motion || 'soft') + '" style="--site-bg-overlay:' + esc(bg.overlay || '#f5faf7') + ';--site-bg-opacity:' + opacity + '" aria-hidden="true"></div>';
+      html = html.replace(/(<body[^>]*>)\s*/, '$1\n<!--qwr:site-background:start-->\n' + background + '\n<!--qwr:site-background:end-->\n');
     }
 
     /* announcement bar. The `\s*` after <body> is swallowed and replaced with one
@@ -2550,6 +2766,7 @@
     coursesSection: coursesSection,
     homeCoursesSection: homeCoursesSection,
     campaignSliderSection: campaignSliderSection,
+    applyCampaignPlacements: applyCampaignPlacements,
     applyPageCleanup: applyPageCleanup,
     applyHomeHero: applyHomeHero,
     applyPageMeta: applyPageMeta,

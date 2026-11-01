@@ -147,7 +147,43 @@ window.CONTENT = {
       "cta": "قريبًا"
     }
   ],
-  "campaigns": [],
+  "campaigns": [
+    {
+      "id": "season-demo",
+      "order": 1,
+      "visible": true,
+      "isDemo": true,
+      "badge": "عرض موسمي تجريبي",
+      "title": "ابدئي رحلتكِ القرآنية بخصم عشرين بالمئة",
+      "text": "عرض توضيحي لفترة محدودة على أول باقة، ويمكن تغيير كل تفاصيله أو إيقافه من لوحة التحكم.",
+      "button": "شاهدي تفاصيل العرض",
+      "link": "pricing.html",
+      "image": "assets/img/seasonal-banner-desktop.svg",
+      "mobileImage": "assets/img/seasonal-banner-mobile.svg",
+      "bg": "#a32659",
+      "color": "#ffffff",
+      "startAt": "",
+      "endAt": "",
+      "originalPrice": "500 ج.م",
+      "offerPrice": "400 ج.م",
+      "priceLabel": "وفّري 20%",
+      "applyPricing": true,
+      "discountType": "percent",
+      "discountValue": "20",
+      "discountTier": "all",
+      "discountSystem": "all",
+      "discountPlan": "p4",
+      "showInSlider": true,
+      "showBar": true,
+      "showCard": false,
+      "showCountdown": false,
+      "targetPage": "all",
+      "relatedType": "program",
+      "relatedId": "p1",
+      "relatedBadge": "عرض موسمي",
+      "theme": "giftPink"
+    }
+  ],
   "pricing": {
     "order": 1,
     "visible": true,
@@ -766,6 +802,14 @@ window.CONTENT = {
         "accent": "",
         "bg": "",
         "text": ""
+      },
+      "background": {
+        "enabled": true,
+        "image": "assets/img/seasonal-gifts-bg.svg",
+        "parallax": true,
+        "motion": "soft",
+        "overlay": "#f5faf7",
+        "overlayOpacity": 0.9
       }
     },
     "contact": {
@@ -796,7 +840,8 @@ window.CONTENT = {
       "visible": true,
       "auto": true,
       "speed": 6000,
-      "navigation": true
+      "navigation": true,
+      "height": 150
     },
     "pageMeta": {
       "about": { "title": "عن الأكاديمية", "subtitle": "مسارات قرآنية متكاملة، تجمع بين الحفظ والمراجعة والتثبيت والإتقان.", "showHero": true, "showBreadcrumbs": true, "showCta": true },

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="180" viewBox="0 0 1600 180">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1"><stop stop-color="#791b42"/><stop offset=".48" stop-color="#ca316f"/><stop offset="1" stop-color="#7e1740"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#ffd7e6" stop-opacity=".55"/><stop offset="1" stop-color="#ffd7e6" stop-opacity="0"/></radialGradient>
+    <pattern id="dots" width="34" height="34" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="2" fill="#fff" opacity=".12"/></pattern>
+  </defs>
+  <rect width="1600" height="180" fill="url(#bg)"/><rect width="1600" height="180" fill="url(#dots)"/>
+  <ellipse cx="800" cy="90" rx="610" ry="170" fill="url(#glow)"/>
+  <g transform="translate(112 28)"><rect y="40" width="116" height="82" rx="12" fill="#ff8fba"/><path d="M58 40v82M0 65h116" stroke="#ffd56a" stroke-width="13"/><path d="M58 40C15 34 11 5 32 2c18-3 26 20 26 38Zm0 0c43-6 47-35 26-38-18-3-26 20-26 38Z" fill="none" stroke="#ffd56a" stroke-width="11"/></g>
+  <g transform="translate(1375 40) scale(.78)"><rect y="40" width="116" height="82" rx="12" fill="#ffd56a"/><path d="M58 40v82M0 65h116" stroke="#ef3f72" stroke-width="13"/><path d="M58 40C15 34 11 5 32 2c18-3 26 20 26 38Zm0 0c43-6 47-35 26-38-18-3-26 20-26 38Z" fill="none" stroke="#ef3f72" stroke-width="11"/></g>
+  <g fill="#ffd66d"><text x="800" y="59" text-anchor="middle" font-family="Tahoma,Arial,sans-serif" font-size="24" font-weight="700">هدية موسمية لفترة محدودة</text></g>
+  <text x="800" y="113" text-anchor="middle" direction="rtl" font-family="Tahoma,Arial,sans-serif" font-size="39" font-weight="800" fill="#fff">ابدئي رحلتكِ القرآنية بخصم عشرين بالمئة</text>
+  <rect x="690" y="133" width="220" height="34" rx="17" fill="#ffd66d"/><text x="800" y="157" text-anchor="middle" direction="rtl" font-family="Tahoma,Arial,sans-serif" font-size="17" font-weight="800" fill="#5d1534">شاهدي تفاصيل العرض</text>
+</svg>

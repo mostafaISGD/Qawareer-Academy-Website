@@ -59,11 +59,24 @@
 <script src="config.js"></script>
 </head>
 
-<body>
+<body class="has-site-background has-season-bar">
+<!--qwr:site-background:start-->
+<div class="site-parallax-bg" data-site-parallax data-bg-src="assets/img/seasonal-gifts-bg.svg" data-parallax="true" data-motion="soft" style="--site-bg-overlay:#f5faf7;--site-bg-opacity:0.9" aria-hidden="true"></div>
+<!--qwr:site-background:end-->
 <a class="skip-link" href="#main">تخطّي إلى المحتوى الرئيسي</a>
 
 <div class="progress" aria-hidden="true"><div class="progress__bar"></div></div>
-
+<!--qwr:campaign-bar:start-->
+<aside class="season-bar season-theme--giftPink" data-season-bar style="--campaign-bg:#a32659;--campaign-color:#ffffff">
+  <div class="container season-bar__in">
+    <span class="season-bar__badge">عرض موسمي تجريبي</span>
+    <strong>ابدئي رحلتكِ القرآنية بخصم عشرين بالمئة</strong>
+    <span>وفّري 20%</span>
+    <a href="pricing.html">شاهدي تفاصيل العرض</a>
+    <button type="button" data-season-bar-close aria-label="إغلاق التنبيه">×</button>
+  </div>
+</aside>
+<!--qwr:campaign-bar:end-->
 <header class="header">
   <div class="container header__bar">
     <a class="brand" href="index.html">
@@ -144,6 +157,7 @@
 <!--qwr:pricing-cards:start-->
         <section class="tier tier--classic" data-tier="classic">
           <div class="tier__banner" data-reveal>
+            <span class="tier__offer-badge" data-pricing-offer data-offer-start="" data-offer-end="">🎁 وفّري 20%</span>
             <h3 class="tier__name">الباقات التقليدية</h3>
             <p class="tier__tagline">خطة واضحة ومتابعة منتظمة</p>
             <p class="tier__desc">تشمل الحفظ والمراجعة وتصحيح التلاوة، مع متابعة أسبوعية عبر واتساب.</p>
@@ -192,7 +206,7 @@
             <div class="tier__plans">
             <div class="plan">
               <span class="plan__label">4 حصص</span>
-              <span class="plan__price">200 <small>جنيه</small></span>
+              <span class="plan__price plan__price--offer" data-pricing-offer data-offer-start="" data-offer-end=""><span class="plan__price-original">200 <small>جنيه</small></span><span class="plan__price-new">160 <small>جنيه</small></span></span>
             </div>
             <div class="plan">
               <span class="plan__label">8 حصص</span>
@@ -221,7 +235,7 @@
             <div class="tier__plans">
             <div class="plan">
               <span class="plan__label">4 حصص</span>
-              <span class="plan__price">280 <small>جنيه</small></span>
+              <span class="plan__price plan__price--offer" data-pricing-offer data-offer-start="" data-offer-end=""><span class="plan__price-original">280 <small>جنيه</small></span><span class="plan__price-new">224 <small>جنيه</small></span></span>
             </div>
             <div class="plan">
               <span class="plan__label">8 حصص</span>
@@ -250,7 +264,7 @@
             <div class="tier__plans">
             <div class="plan">
               <span class="plan__label">4 حصص</span>
-              <span class="plan__price">350 <small>جنيه</small></span>
+              <span class="plan__price plan__price--offer" data-pricing-offer data-offer-start="" data-offer-end=""><span class="plan__price-original">350 <small>جنيه</small></span><span class="plan__price-new">280 <small>جنيه</small></span></span>
             </div>
             <div class="plan">
               <span class="plan__label">8 حصص</span>
@@ -273,12 +287,13 @@
           </div>
           <div class="tier__cta" data-reveal>
             <a class="btn btn--block tier__btn" href="pricing.html"
-               data-wa="tierClassic">اختاري باقتكِ</a>
+               data-wa="tierClassic" data-wa-extra="العرض: ابدئي رحلتكِ القرآنية بخصم عشرين بالمئة">اختاري باقتكِ</a>
           </div>
         </section>
         <section class="tier tier--golden is-featured" data-tier="golden">
           <div class="tier__banner" data-reveal data-delay="1">
             <span class="tier__badge">الأكثر طلباً</span>
+            <span class="tier__offer-badge" data-pricing-offer data-offer-start="" data-offer-end="">🎁 وفّري 20%</span>
             <h3 class="tier__name">الباقات الذهبية</h3>
             <p class="tier__tagline">متابعة إضافية وتقرير دوري</p>
             <p class="tier__desc">تشمل تقرير تقدّم مكتوبًا كل أسبوعين، ومراجعة الخطة، وأولوية في اختيار المواعيد المتاحة.</p>
@@ -327,7 +342,7 @@
             <div class="tier__plans">
             <div class="plan">
               <span class="plan__label">4 حصص</span>
-              <span class="plan__price">300 <small>جنيه</small></span>
+              <span class="plan__price plan__price--offer" data-pricing-offer data-offer-start="" data-offer-end=""><span class="plan__price-original">300 <small>جنيه</small></span><span class="plan__price-new">240 <small>جنيه</small></span></span>
             </div>
             <div class="plan">
               <span class="plan__label">8 حصص</span>
@@ -356,7 +371,7 @@
             <div class="tier__plans">
             <div class="plan">
               <span class="plan__label">4 حصص</span>
-              <span class="plan__price">450 <small>جنيه</small></span>
+              <span class="plan__price plan__price--offer" data-pricing-offer data-offer-start="" data-offer-end=""><span class="plan__price-original">450 <small>جنيه</small></span><span class="plan__price-new">360 <small>جنيه</small></span></span>
             </div>
             <div class="plan">
               <span class="plan__label">8 حصص</span>
@@ -385,7 +400,7 @@
             <div class="tier__plans">
             <div class="plan">
               <span class="plan__label">4 حصص</span>
-              <span class="plan__price">550 <small>جنيه</small></span>
+              <span class="plan__price plan__price--offer" data-pricing-offer data-offer-start="" data-offer-end=""><span class="plan__price-original">550 <small>جنيه</small></span><span class="plan__price-new">440 <small>جنيه</small></span></span>
             </div>
             <div class="plan">
               <span class="plan__label">8 حصص</span>
@@ -408,12 +423,13 @@
           </div>
           <div class="tier__cta" data-reveal data-delay="1">
             <a class="btn btn--block tier__btn" href="pricing.html"
-               data-wa="tierGolden">احجزي الباقة الذهبية</a>
+               data-wa="tierGolden" data-wa-extra="العرض: ابدئي رحلتكِ القرآنية بخصم عشرين بالمئة">احجزي الباقة الذهبية</a>
           </div>
         </section>
         <section class="tier tier--groups" data-tier="groups">
           <div class="tier__banner" data-reveal data-delay="2">
             <span class="tier__badge">أقل تكلفة للحصة</span>
+            <span class="tier__offer-badge" data-pricing-offer data-offer-start="" data-offer-end="">🎁 وفّري 20%</span>
             <h3 class="tier__name">باقات المجموعات</h3>
             <p class="tier__tagline">للأسرة أو الأخوات</p>
             <p class="tier__desc">حصة جماعية مدتها 60 دقيقة للأم وأبنائها أو للأخوات، مع وقت مخصص لكل مشتركة.</p>
@@ -462,7 +478,7 @@
             <div class="tier__plans">
             <div class="plan">
               <span class="plan__label">4 حصص</span>
-              <span class="plan__price">150 <small>جنيه</small></span>
+              <span class="plan__price plan__price--offer" data-pricing-offer data-offer-start="" data-offer-end=""><span class="plan__price-original">150 <small>جنيه</small></span><span class="plan__price-new">120 <small>جنيه</small></span></span>
             </div>
             <div class="plan">
               <span class="plan__label">8 حصص</span>
@@ -485,7 +501,7 @@
           </div>
           <div class="tier__cta" data-reveal data-delay="2">
             <a class="btn btn--block tier__btn" href="pricing.html"
-               data-wa="tierGroups">اسألي عن المجموعة</a>
+               data-wa="tierGroups" data-wa-extra="العرض: ابدئي رحلتكِ القرآنية بخصم عشرين بالمئة">اسألي عن المجموعة</a>
           </div>
         </section>
 <!--qwr:pricing-cards:end-->
@@ -521,8 +537,7 @@
 <!--qwr:price-notes:end-->
     </div>
   </section>
-
-  <section class="cta-band" id="contact-cta">
+<section class="cta-band" id="contact-cta">
     <div class="container">
       <span class="offer">تقييم مستوى مجاني</span>
       <h2>ابدئي من مستواكِ الحالي</h2>
@@ -533,6 +548,16 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12c0 1.77.46 3.45 1.27 4.9L2 22l5.25-1.27A9.96 9.96 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18.2a8.2 8.2 0 0 1-4.18-1.14l-.3-.18-3.11.82.83-3.1-.2-.31a8.18 8.18 0 0 1-1.26-4.39c0-4.54 3.7-8.23 8.22-8.23 2.2 0 4.26.86 5.82 2.42a8.17 8.17 0 0 1 2.41 5.82c0 4.54-3.7 8.19-8.23 8.19z"/><path d="M17.47 14.38c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.75-1.64-2.05-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.53.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.08-.15-.67-1.6-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.08c.15.2 2.1 3.2 5.07 4.49.71.3 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.28.17-1.41-.07-.13-.27-.2-.57-.35z"/></svg>
         </a>
       </div>
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -685,6 +710,5 @@
   window.gtag = gtag;
 })();
 </script>
-
 </body>
 </html>

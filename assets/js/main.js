@@ -25,6 +25,16 @@
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  function timedOfferActive(offer) {
+    if (!offer) return false;
+    var startText = offer.getAttribute('data-offer-start');
+    var endText = offer.getAttribute('data-offer-end');
+    var start = startText ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(startText) ? startText + 'T00:00:00' : startText).getTime() : 0;
+    var end = endText ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(endText) ? endText + 'T23:59:59' : endText).getTime() : 0;
+    var now = Date.now();
+    return (!start || start <= now) && (!end || end >= now);
+  }
+
   /* ==================================================================
      1. THEME (dark mode) — persisted in localStorage
      ================================================================== */
@@ -849,12 +859,13 @@
      editable text. An owner editing a message cannot leave it off by
      forgetting; they only ever edit what comes after it.
      ================================================================== */
-  function waText(key, ctx) {
+  function waText(key, ctx, extra) {
     var M = (window.SITE && window.SITE.waMessages) || {};
     var body = (M[key] || M.general || '').trim();
     if (ctx) body = body.replace(/\{[a-zA-Z]+\}/g, ctx);
     var greeting = (M.greeting || '').trim();
-    return greeting ? greeting + '\n' + body : body;
+    var text = greeting ? greeting + '\n' + body : body;
+    return extra ? text + '\n' + extra : text;
   }
 
   (function whatsapp() {
@@ -864,8 +875,11 @@
 
     links.forEach(function (a) {
       var key = a.getAttribute('data-wa') || '';
+      var extra = a.getAttribute('data-wa-extra');
+      var timedOffer = a.closest('.tier') && a.closest('.tier').querySelector('[data-pricing-offer]');
+      if (timedOffer && !timedOfferActive(timedOffer)) extra = '';
       a.setAttribute('href', 'https://wa.me/' + number +
-        '?text=' + encodeURIComponent(waText(key, a.getAttribute('data-ctx'))));
+        '?text=' + encodeURIComponent(waText(key, a.getAttribute('data-ctx'), extra)));
       a.setAttribute('target', '_blank');
       a.setAttribute('rel', 'noopener');
     });
@@ -963,6 +977,27 @@
   /* ==================================================================
      CAMPAIGN SLIDER
      ================================================================== */
+  (function siteParallaxBackground() {
+    var layer = $('[data-site-parallax]');
+    if (!layer) return;
+    var src = layer.getAttribute('data-bg-src');
+    if (src) layer.style.backgroundImage = 'url("' + src.replace(/"/g, '\\"') + '")';
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || layer.getAttribute('data-parallax') !== 'true') return;
+    var speeds = { soft: .055, medium: .095, strong: .14 };
+    var speed = speeds[layer.getAttribute('data-motion')] || speeds.soft;
+    var queued = false;
+    function paint() {
+      var shift = Math.max(-110, Math.min(110, window.scrollY * speed));
+      layer.style.setProperty('--site-bg-shift', shift.toFixed(1) + 'px');
+      queued = false;
+    }
+    window.addEventListener('scroll', function () {
+      if (!queued) { queued = true; window.requestAnimationFrame(paint); }
+    }, { passive: true });
+    paint();
+  })();
+
   (function campaignSliders() {
     $$('[data-campaign-slider]').forEach(function (slider) {
       var slides = $$('[data-campaign-slide]', slider);
@@ -998,6 +1033,54 @@
       document.addEventListener('visibilitychange', function () { document.hidden ? stop() : start(); });
       show(0); start();
     });
+  })();
+
+  /* ==================================================================
+     SEASONAL CAMPAIGNS — bar and countdown
+     ================================================================== */
+  (function seasonalCampaigns() {
+    $$('[data-pricing-offer]').forEach(function (offer) {
+      var active = timedOfferActive(offer);
+      offer.classList.toggle('is-active', active);
+      if (offer.classList.contains('tier__offer-badge')) offer.setAttribute('aria-hidden', active ? 'false' : 'true');
+      else offer.removeAttribute('aria-hidden');
+    });
+    var seasonBar = $('[data-season-bar]');
+    function syncSeasonBar() {
+      if (!seasonBar || seasonBar.hidden) {
+        document.body.style.setProperty('--season-bar-h', '0px');
+        return;
+      }
+      document.body.style.setProperty('--season-bar-h', Math.ceil(seasonBar.getBoundingClientRect().height) + 'px');
+    }
+    syncSeasonBar();
+    window.addEventListener('resize', syncSeasonBar, { passive: true });
+    $$('[data-season-bar-close]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var bar = button.closest('[data-season-bar]');
+        if (bar) { bar.hidden = true; syncSeasonBar(); }
+      });
+    });
+
+    var countdowns = $$('[data-season-countdown]');
+    function paintCountdown() {
+      var now = Date.now();
+      countdowns.forEach(function (box) {
+        var left = Math.max(0, parseInt(box.getAttribute('data-season-countdown'), 10) - now);
+        var days = Math.floor(left / 86400000);
+        var hours = Math.floor(left / 3600000) % 24;
+        var mins = Math.floor(left / 60000) % 60;
+        var secs = Math.floor(left / 1000) % 60;
+        box.innerHTML = [
+          [days, 'يوم'], [hours, 'ساعة'], [mins, 'دقيقة'], [secs, 'ثانية']
+        ].map(function (part) { return '<span><b>' + String(part[0]).padStart(2, '0') + '</b>' + part[1] + '</span>'; }).join('');
+      });
+    }
+    if (countdowns.length) {
+      paintCountdown();
+      window.setInterval(paintCountdown, 1000);
+    }
+
   })();
 
   /* ==================================================================
