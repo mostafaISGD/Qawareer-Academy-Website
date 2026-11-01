@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>لوحة التحكم | أكاديمية قوارير</title>
-<meta name="description" content="لوحة تحكم موقع أكاديمية قوارير — لتعديل المحتوى فقط.">
+<title>لوحة تحكم أكاديمية قوارير</title>
+<meta name="description" content="لوحة إدارة محتوى موقع أكاديمية قوارير.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -436,24 +436,27 @@ body.is-locked { overflow: hidden; }
   .gate__card { padding: 28px 20px 22px; }
 }
 </style>
+<link rel="stylesheet" href="assets/css/admin-v2.css">
 </head>
 
-<body>
+<body class="admin-v2">
 <a class="skip-link" href="#adm-main">تخطّي إلى المحتوى</a>
 
 <!-- ================= TOP BAR ================= -->
 <header class="adm-bar">
   <div class="container adm-bar__in">
     <div class="adm-bar__title">
-      <span>⚙️</span> لوحة تحكم أكاديمية قوارير
+      <span class="adm-brandmark">ق</span>
+      <span>لوحة قوارير</span>
     </div>
     <div class="adm-bar__sp"></div>
     <div class="adm-bar__status">
       <span class="adm-dot" id="admDot"></span>
       <span id="admStatus">جاهز</span>
     </div>
+    <button class="btn btn--ghost-light btn--sm" id="contentPreviewOpen" type="button">معاينة المحتوى</button>
     <a class="btn btn--ghost-light btn--sm" href="index.html" target="_blank" rel="noopener">
-      عرض الموقع ↗
+      معاينة الموقع ↗
     </a>
   </div>
 </header>
@@ -461,16 +464,8 @@ body.is-locked { overflow: hidden; }
 <main class="adm-wrap" id="adm-main">
   <div class="container">
 
-    <!-- ===== intro / setup ===== -->
-    <div class="adm-note">
-      <strong>إزاي بتشتغل اللوحة:</strong>
-      عدّلي المحتوى في أي تبويب ← اضغطي «حفظ التغييرات» ← هيتحفظ عندك في المتصفح.
-      بعدين اختاري طريقة النشر: <strong>نشر على GitHub</strong> (الموقع يتحدّث لوحده)
-      أو <strong>تحميل ملف</strong> (ترفعيه بنفسك).
-    </div>
-
     <!-- GitHub setup (collapsible) -->
-    <details class="adm-setup" id="ghSetup">
+    <details class="adm-setup" id="ghSetup" hidden>
       <summary style="cursor:pointer;font-weight:700">
         ⚙️ إعداد النشر على GitHub (مرة واحدة فقط)
       </summary>
@@ -514,11 +509,20 @@ body.is-locked { overflow: hidden; }
       </div>
     </details>
 
-    <!-- ===== tabs ===== -->
-    <nav class="adm-tabs" id="admTabs" aria-label="أقسام المحتوى"></nav>
+    <div class="adm-v2-layout">
+      <aside class="adm-v2-side" aria-label="التنقل داخل لوحة التحكم">
+        <label class="adm-v2-nav-search" for="admNavSearch">
+          <span aria-hidden="true">⌕</span>
+          <input id="admNavSearch" type="search" placeholder="ابحث عن إعداد…" autocomplete="off">
+        </label>
+        <nav class="adm-tabs" id="admTabs" aria-label="أقسام المحتوى"></nav>
+        <p class="adm-v2-nav-empty" id="admNavEmpty" hidden>لا يوجد إعداد بهذا الاسم</p>
+      </aside>
 
-    <!-- ===== panels ===== -->
-    <div id="admPanels"></div>
+      <section class="adm-v2-content" aria-live="polite">
+        <div id="admPanels"></div>
+      </section>
+    </div>
 
   </div>
 </main>
@@ -527,20 +531,42 @@ body.is-locked { overflow: hidden; }
 <div class="adm-save">
   <div class="container adm-save__in">
     <p class="adm-save__txt" id="admSaveTxt">مفيش تغييرات لسه</p>
-    <button class="btn btn--outline btn--sm" id="btnExport">⬇️ تحميل ملف</button>
+    <button class="btn btn--outline btn--sm adm-check-btn" id="btnCheck" type="button">
+      فحص التعديلات <span id="admCheckCount" hidden></span>
+    </button>
+    <button class="btn btn--outline btn--sm" id="btnExport">تنزيل نسخة احتياطية</button>
     <button class="btn btn--green btn--sm" id="btnPublish" disabled>
-      ⬆️ حفظ ونشر على GitHub
+      مراجعة ونشر التغييرات
     </button>
   </div>
 </div>
 
 <div class="adm-toast" id="admToast"></div>
 
+<div class="adm-review adm-check-modal" id="admCheckModal" hidden>
+  <div class="adm-review__bar">
+    <strong>فحص التعديلات قبل المعاينة</strong>
+    <button type="button" id="admCheckClose" aria-label="إغلاق فحص التعديلات">إغلاق ×</button>
+  </div>
+  <div class="adm-check-modal__body" id="admCheckBody"></div>
+</div>
+
+<div class="adm-review" id="contentPreviewModal" hidden>
+  <div class="adm-review__bar">
+    <strong>معاينة نسخة المحتوى الجديدة</strong>
+    <span class="adm-review__hint">يمكنكِ تصفح كل الصفحات من داخل المعاينة</span>
+    <button type="button" id="contentPreviewClose" aria-label="إغلاق معاينة المحتوى">إغلاق ×</button>
+  </div>
+  <iframe
+    id="contentPreviewFrame"
+    title="معاينة نسخة محتوى موقع أكاديمية قوارير"
+    data-src="../../outputs/content-refresh-preview-v1/index.html"
+  ></iframe>
+</div>
+
 <script src="content.js"></script>
 <script src="assets/js/render.js"></script>
-<!-- admin.js is NOT loaded here. assets/js/admin-gate.js draws the lock screen
-     and only pulls the editor in once the passphrase is accepted, so someone who
-     guesses this URL finds a password field instead of the editor. -->
+<!-- شاشة الدخول تحمّل ملفات اللوحة الجديدة بعد نجاح التحقق. -->
 <script src="assets/js/sha256.js"></script>
 <script src="assets/js/admin-gate.js" defer></script>
 </body>

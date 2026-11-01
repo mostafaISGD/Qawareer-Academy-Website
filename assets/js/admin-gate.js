@@ -48,11 +48,20 @@
     if (gate) gate.parentNode.removeChild(gate);
     document.body.classList.remove('is-locked');
 
-    // admin.js is deliberately not a <script> tag in admin.html: nothing loads
-    // the editor until this point, so a wrong guess cannot poke at it.
-    var s = document.createElement('script');
-    s.src = 'assets/js/admin.js';
-    document.body.appendChild(s);
+    // The primary admin now uses the v2 interface. Load its core first, then
+    // the interface enhancer. Keep the legacy loader for older saved copies.
+    var scripts = document.body.classList.contains('admin-v2')
+      ? ['assets/js/admin-v2-core.js', 'assets/js/admin-v2.js']
+      : ['assets/js/admin.js'];
+    function loadNext() {
+      var src = scripts.shift();
+      if (!src) return;
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = loadNext;
+      document.body.appendChild(s);
+    }
+    loadNext();
   }
 
   function fail(form, input, msg) {
