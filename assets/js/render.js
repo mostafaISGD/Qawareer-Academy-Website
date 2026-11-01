@@ -90,13 +90,9 @@
         p.duration ? '            <span class="chip chip--gold">' + esc(p.duration) + '</span>' : '',
         '          </div>',
         '          <h2>' + esc(p.title) + '</h2>',
-        '          <p>' + esc(p.idea) + '</p>',
+        '          <p>' + esc(p.short) + '</p>',
         '        </div>',
         '        <div class="prog-detail__body">',
-        '          <div class="prog-detail__row">',
-        '            <div class="prog-detail__key">الفكرة</div>',
-        '            <div class="prog-detail__val">' + esc(p.idea) + '</div>',
-        '          </div>',
         '          <div class="prog-detail__row">',
         '            <div class="prog-detail__key">لماذا مهم؟</div>',
         '            <div class="prog-detail__val">' + esc(p.why) + '</div>',
@@ -131,9 +127,6 @@
         '              </ul>',
         '            </div>',
         '          </div>',
-        '          <div class="callout mt-3">',
-        '            <strong>الميزة التنافسية:</strong> ' + esc(p.edge),
-        '          </div>',
         '          <div class="center mt-3">',
         /* data-ctx carries the program name, so the WhatsApp message asks
            about THIS program without the message being written five times. */
@@ -144,6 +137,178 @@
         '      </article>'
       ].join('\n');
     }).join('\n');
+  }
+
+  /* ==================================================================
+     COURSES — a separate, fully managed catalogue on programs.html
+     ================================================================== */
+  function coursesSection() {
+    var courses = visible(data().courses || []);
+    var statusLabels = {
+      open: 'التسجيل مفتوح', soon: 'قريبًا', closed: 'التسجيل مغلق', completed: 'انتهت'
+    };
+    var cards = courses.map(function (course, i) {
+      var status = course.status || 'soon';
+      var facts = [
+        course.duration ? '<span><b>المدة:</b> ' + esc(course.duration) + '</span>' : '',
+        course.schedule ? '<span><b>الموعد:</b> ' + esc(course.schedule) + '</span>' : '',
+        course.startDate ? '<span><b>البداية:</b> ' + esc(course.startDate) + '</span>' : '',
+        course.isFree ? '<span><b>السعر:</b> مجانية</span>' : (course.price ? '<span><b>السعر:</b> ' + esc(course.price) + '</span>' : '')
+      ].filter(Boolean).join('');
+      var topics = (course.topics || []).length ?
+        '<ul class="tick-list">' + ticks(course.topics) + '</ul>' : '';
+      var disabled = status === 'open' ? '' : ' aria-disabled="true" class="btn btn--green is-disabled"';
+      var enabled = status === 'open' ? ' class="btn btn--green"' : disabled;
+      var button = course.cta || (status === 'open' ? 'احجزي في الدورة' : statusLabels[status]);
+      return [
+        '      <article class="course-card' + (course.isFree ? ' course-card--free' : '') + '" id="' + esc(course.id) + '" data-reveal' + delay(i) + '>',
+        course.isFree ? '        <div class="free-decor" aria-hidden="true"><span>🎁</span><span>✦</span><span>◆</span><span>✦</span><span>🎀</span></div>' : '',
+        '        <div class="course-card__top">',
+        '          <span class="course-status course-status--' + esc(status) + '">' + esc(statusLabels[status] || status) + '</span>',
+        course.isFree ? '          <span class="course-free">مجانية</span>' : '',
+        course.audience ? '          <span class="chip">' + esc(course.audience) + '</span>' : '',
+        '        </div>',
+        '        <h3>' + esc(course.title) + '</h3>',
+        '        <p>' + esc(course.short || '') + '</p>',
+        facts ? '        <div class="course-facts">' + facts + '</div>' : '',
+        course.details ? '        <p class="course-card__details">' + esc(course.details) + '</p>' : '',
+        topics,
+        '        <a href="#"' + enabled + ' data-wa="program" data-ctx="دورة: ' + esc(course.title) + '">' + esc(button) + '</a>',
+        '      </article>'
+      ].filter(Boolean).join('\n');
+    }).join('\n');
+
+    if (!cards) {
+      cards = '      <div class="empty-state">لا توجد دورات معلنة حاليًا. ستظهر الدورات هنا عند إضافتها من لوحة التحكم.</div>';
+    }
+    return [
+      '  <section class="section" id="courses">',
+      '    <div class="container">',
+      '      <div class="sec-head sec-head--center">',
+      '        <span class="kicker">الدورات</span>',
+      '        <h2>الدورات المتاحة</h2>',
+      '        <p>دورات محددة المدة والموعد، ويمكن متابعة حالة التسجيل وتفاصيل كل دورة.</p>',
+      '        <div class="rule"></div>',
+      '      </div>',
+      '      <div class="grid g-auto-lg">', cards,
+      '      </div>',
+      '    </div>',
+      '  </section>'
+    ].join('\n');
+  }
+
+  function homeCoursesSection() {
+    if (offSection('courses')) return '';
+    var courses = visible(data().courses || []).filter(function (course) {
+      return course.showOnHome !== false;
+    });
+    if (!courses.length) return '';
+    var statusLabels = { open: 'التسجيل مفتوح', soon: 'قريبًا', closed: 'التسجيل مغلق', completed: 'انتهت' };
+    var anyFree = courses.some(function (course) { return course.isFree === true; });
+    var cards = courses.map(function (course, i) {
+      var status = course.status || 'soon';
+      return [
+        '      <article class="course-teaser' + (course.isFree ? ' course-teaser--free' : '') + '" data-reveal' + delay(i) + '>',
+        course.isFree ? '        <div class="free-decor" aria-hidden="true"><span>🎁</span><span>✦</span><span>◆</span><span>✦</span><span>🎀</span></div>' : '',
+        '        <div class="course-teaser__badges">',
+        course.isFree ? '          <span class="course-free">مجانية</span>' : '',
+        '          <span class="course-status course-status--' + esc(status) + '">' + esc(statusLabels[status] || status) + '</span>',
+        '        </div>',
+        '        <h3>' + esc(course.title) + '</h3>',
+        '        <p>' + esc(course.short || '') + '</p>',
+        '        <div class="course-teaser__meta">',
+        course.duration ? '          <span>⏱ ' + esc(course.duration) + '</span>' : '',
+        course.startDate ? '          <span>📅 ' + esc(course.startDate) + '</span>' : '',
+        course.isFree ? '          <span>🎁 بدون رسوم</span>' : '',
+        '        </div>',
+        '        <a class="link-arrow" href="programs.html#' + esc(course.id) + '">عرض التفاصيل ' + ARROW + '</a>',
+        '      </article>'
+      ].filter(Boolean).join('\n');
+    }).join('\n');
+    return [
+      '  <section class="section home-courses' + (anyFree ? ' home-courses--free' : '') + '" data-home-courses data-sec="courses">',
+      '    <div class="container">',
+      '      <div class="sec-head sec-head--center">',
+      '        <span class="kicker">' + (anyFree ? '🎁 فرصة مجانية 🎁' : 'الدورات') + '</span>',
+      '        <h2>' + (anyFree ? '<span class="free-title-gift" aria-hidden="true">🎁</span> دورات مجانية تستحق اهتمامكِ <span class="free-title-gift" aria-hidden="true">🎁</span>' : 'دورات مختارة') + '</h2>',
+      '        <p>تعرفي على المدة والموعد وحالة التسجيل، ثم انتقلي للتفاصيل الكاملة.</p>',
+      '        <div class="rule"></div>',
+      '      </div>',
+      '      <div class="grid g-auto-lg">', cards,
+      '      </div>',
+      '      <div class="center mt-4"><a class="btn btn--outline" href="programs.html#courses">كل الدورات</a></div>',
+      '    </div>',
+      '  </section>'
+    ].join('\n');
+  }
+
+  function campaignSliderSection() {
+    var slider = settings().campaignSlider || {};
+    if (slider.visible === false || offSection('campaigns')) return '';
+    var now = Date.now();
+    var campaigns = visible(data().campaigns || []).filter(function (item) {
+      var start = item.startAt ? new Date(item.startAt).getTime() : 0;
+      var end = item.endAt ? new Date(item.endAt).getTime() : 0;
+      return (!start || start <= now) && (!end || end >= now);
+    });
+    if (!campaigns.length) return '';
+    var slides = campaigns.map(function (item, i) {
+      var picture = item.image ? [
+        '          <picture class="campaign__picture">',
+        item.mobileImage ? '            <source media="(max-width:640px)" srcset="' + esc(item.mobileImage) + '">' : '',
+        '            <img src="' + esc(item.image) + '" alt="" loading="' + (i ? 'lazy' : 'eager') + '">',
+        '          </picture>'
+      ].filter(Boolean).join('\n') : '';
+      var link = item.link ? '<a class="btn btn--gold" href="' + esc(item.link) + '">' + esc(item.button || 'اعرفي التفاصيل') + '</a>' : '';
+      return [
+        '      <article class="campaign' + (i === 0 ? ' is-active' : '') + '" data-campaign-slide aria-hidden="' + (i === 0 ? 'false' : 'true') + '" style="--campaign-bg:' + esc(item.bg || '#074e38') + ';--campaign-color:' + esc(item.color || '#ffffff') + '">',
+        picture,
+        '        <div class="container campaign__content">',
+        item.badge ? '          <span class="campaign__badge">' + esc(item.badge) + '</span>' : '',
+        '          <h2>' + esc(item.title) + '</h2>',
+        item.text ? '          <p>' + esc(item.text) + '</p>' : '',
+        link,
+        '        </div>',
+        '      </article>'
+      ].filter(Boolean).join('\n');
+    }).join('\n');
+    var dots = campaigns.map(function (_, i) {
+      return '        <button type="button" data-campaign-dot="' + i + '" class="' + (i === 0 ? 'is-active' : '') + '" aria-label="الإعلان ' + (i + 1) + '"></button>';
+    }).join('\n');
+    return [
+      '  <section class="campaign-slider" data-campaign-slider data-sec="campaigns" data-auto="' + (slider.auto !== false) + '" data-speed="' + esc(slider.speed || 6000) + '">',
+      '    <div class="campaign-slider__track">', slides, '    </div>',
+      slider.navigation !== false && campaigns.length > 1 ? '    <button class="campaign-slider__arrow campaign-slider__arrow--prev" type="button" data-campaign-prev aria-label="الإعلان السابق">‹</button>' : '',
+      slider.navigation !== false && campaigns.length > 1 ? '    <button class="campaign-slider__arrow campaign-slider__arrow--next" type="button" data-campaign-next aria-label="الإعلان التالي">›</button>' : '',
+      campaigns.length > 1 ? '    <div class="campaign-slider__dots">\n' + dots + '\n    </div>' : '',
+      '  </section>'
+    ].filter(Boolean).join('\n');
+  }
+
+  function applyPageCleanup(html) {
+    if (html.indexOf('<!--qwr:program-details:start-->') !== -1) {
+      html = html.replace('خمسة برامج تحل مشكلات حقيقية، لا أسماء فقط.', 'خمسة برامج تحل مشكلات حقيقية');
+      html = html.replace(/\s*<section class="section">[\s\S]*?<!--qwr:programs-cards:start-->[\s\S]*?<!--qwr:programs-cards:end-->[\s\S]*?<\/section>/, '');
+      html = html.replace('الفكرة، الفئة المستهدفة، طريقة التنفيذ، المدة، والمخرج النهائي.', 'الفئة المستهدفة، وطريقة التنفيذ، والمدة، والنتائج المتوقعة.');
+      html = html.replace(/\s*<section class="section on-dark"[\s\S]*?<span class="kicker">أدوات مشتركة<\/span>[\s\S]*?<\/section>/, '');
+      html = html.replace(/\s*<section class="section" id="courses">[\s\S]*?<\/section>(?=\s*<section class="cta-band")/, '');
+      html = html.replace(/(\s*<section class="cta-band")/, '\n\n' + coursesSection() + '\n\n$1');
+    }
+    if (html.indexOf('data-sec="programs"') !== -1) {
+      html = html.replace(/\s*<section class="campaign-slider"[^>]*data-campaign-slider[\s\S]*?<\/section>/, '');
+      var campaignSlider = campaignSliderSection();
+      if (campaignSlider) {
+        html = html.replace(/(<section\b[^>]*\bdata-sec="hero"[^>]*>[\s\S]*?<\/section>)/, '$1\n\n' + campaignSlider);
+      }
+      html = html.replace(/\s*<section class="section home-courses(?: home-courses--free)?" data-home-courses[^>]*>[\s\S]*?<\/section>/, '');
+      var homeCourses = homeCoursesSection();
+      if (homeCourses) {
+        html = html.replace(/(<section class="section" data-sec="programs">[\s\S]*?<!--qwr:programs-cards:end-->[\s\S]*?<\/section>)/,
+          '$1\n\n' + homeCourses);
+      }
+    }
+    html = html.replace(/\s*<div class="callout mt-3">\s*<strong>ملاحظة:<\/strong>\s*هذه النماذج ترسل عبر واتساب ولا تحتاج سيرفر أو\s*قاعدة بيانات، ولهذا تعمل على أي استضافة مجانية بدون إعداد\.\s*<\/div>/, '');
+    return html;
   }
 
   /* ==================================================================
@@ -307,7 +472,6 @@
 
   /* the whole tier: coloured banner + feature list + system cards */
   function priceTiers() {
-    if (offSection('pricing')) return '';
     var tiers = prTiers();
     if (!tiers.length) return '';
 
@@ -549,8 +713,6 @@
      outside every region, so no rebuild could ever correct it. The numbers now
      follow pricing.systems and pricing.plans wherever they change. */
   function priceIntro() {
-    if (offSection('pricing')) return '';
-
     var systems = prSystems() || [];
     var plans = prPlans() || [];
     if (!systems.length || !plans.length) return '';
@@ -613,7 +775,6 @@
   }
 
   function priceNotes() {
-    if (offSection('pricing')) return '';
     var n = data().priceNotes;
     if (!n || n.visible === false) return '';
 
@@ -1343,7 +1504,7 @@
     }
   };
 
-  var SEC_ORDER = ['hero', 'stats', 'about-intro', 'video', 'programs', 'why', 'testimonials', 'pricing', 'articles', 'reviews', 'faq', 'cta', 'materials'];
+  var SEC_ORDER = ['hero', 'campaigns', 'stats', 'about-intro', 'video', 'programs', 'courses', 'why', 'testimonials', 'pricing', 'articles', 'reviews', 'faq', 'cta', 'materials'];
 
   /* Blocks the owner may only switch on or off. "قريباً" would read oddly on
      a section that already exists and is simply not wanted right now, so the
@@ -1504,44 +1665,94 @@
     return html;
   }
 
-  /* ---- sectionOrder: reorder marked regions in each page ---- */
-  function applySectionOrder(html) {
-    var order = (settings().sectionOrder || {});
-    var pageFile = html.indexOf('index.html') !== -1 ? 'home' : 
-                   html.indexOf('about.html') !== -1 ? 'about' :
-                   html.indexOf('programs.html') !== -1 ? 'programs' :
-                   html.indexOf('pricing.html') !== -1 ? 'pricing' :
-                   html.indexOf('testimonials.html') !== -1 ? 'testimonials' :
-                   html.indexOf('materials.html') !== -1 ? 'materials' :
-                   html.indexOf('faq.html') !== -1 ? 'faq' :
-                   html.indexOf('contact.html') !== -1 ? 'contact' : null;
-    
-    if (!pageFile || !order[pageFile]) return html;
-    
-    var pageOrder = order[pageFile];
-    var regions = {};
-    var markerRegex = /<!--qwr:([^:]+):start-->/g;
+  function pageKey(file) {
+    return String(file || '').replace(/^.*[\\/]/, '').replace(/\.html(?:[?#].*)?$/i, '') || 'index';
+  }
+
+  /* Reorder the real homepage sections, not the small regions inside them. */
+  function applySectionOrder(html, file) {
+    if (pageKey(file) !== 'index') return html;
+    var wanted = ((settings().sectionOrder || {}).home || []).slice();
+    var main = html.match(/<main id="main">([\s\S]*?)<\/main>/);
+    if (!main) return html;
+    var body = main[1];
+    var sections = {};
+    var natural = [];
+    var re = /<section\b[^>]*\bdata-sec="([^"]+)"[^>]*>[\s\S]*?<\/section>/g;
     var match;
-    
-    while ((match = markerRegex.exec(html)) !== null) {
-      regions[match[1]] = { start: match.index, marker: match[0] };
+    while ((match = re.exec(body)) !== null) {
+      sections[match[1]] = match[0];
+      natural.push(match[1]);
     }
-    
-    // Build ordered content
-    var orderedContent = '';
-    pageOrder.forEach(function(regionName) {
-      var s = '<!--qwr:' + regionName + ':start-->';
-      var e = '<!--qwr:' + regionName + ':end-->';
-      var si = html.indexOf(s);
-      var ei = html.indexOf(e);
-      if (si !== -1 && ei !== -1 && ei > si) {
-        orderedContent += html.slice(si, ei + e.length) + '\n';
-      }
-    });
-    
-    // If we have ordered content, we need to reconstruct the page
-    // For now, just return html as-is since sections are already in order in HTML
-    // The real reordering happens when the admin publishes and rebuilds
+    if (!natural.length) return html;
+    natural.forEach(function (key) { if (wanted.indexOf(key) === -1) wanted.push(key); });
+    wanted = wanted.filter(function (key, i) { return sections[key] && wanted.indexOf(key) === i; });
+    var first = body.indexOf(sections[natural[0]]);
+    var lastSection = sections[natural[natural.length - 1]];
+    var last = body.lastIndexOf(lastSection) + lastSection.length;
+    var ordered = wanted.map(function (key) { return sections[key]; }).join('\n\n');
+    var rebuilt = body.slice(0, first) + ordered + body.slice(last);
+    return html.replace(main[1], rebuilt);
+  }
+
+  function applyHomeHero(html, file) {
+    if (pageKey(file) !== 'index') return html;
+    var hero = (data().home && data().home.hero) || {};
+    var found = html.match(/<section\b[^>]*class="[^"]*\bhero\b[^"]*"[^>]*>[\s\S]*?<\/section>/);
+    if (!found) return html;
+    var block = found[0];
+    function textClass(className, value) {
+      if (value == null) return;
+      var re = new RegExp('(<[^>]+class="[^"]*\\b' + className + '\\b[^"]*"[^>]*>)[\\s\\S]*?(<\\/[^>]+>)');
+      block = block.replace(re, function (_, open, close) { return open + esc(value) + close; });
+    }
+    textClass('hero__title', hero.title);
+    textClass('hero__slogan', hero.slogan);
+    textClass('hero__desc', hero.desc);
+    if (hero.ctaPrimary != null) {
+      block = block.replace(/(<a\b[^>]*class="[^"]*btn--gold[^"]*"[^>]*data-wa="trial"[^>]*>)[\s\S]*?(<svg)/,
+        function (_, open, svg) { return open + '\n          ' + esc(hero.ctaPrimary) + '\n          ' + svg; });
+    }
+    if (hero.ctaSecondary != null) {
+      block = block.replace(/(<a\b[^>]*class="[^"]*btn--ghost[^"]*"[^>]*>)[\s\S]*?(<svg)/,
+        function (_, open, svg) { return open + '\n          ' + esc(hero.ctaSecondary) + '\n          ' + svg; });
+    }
+    if (Array.isArray(hero.tags)) {
+      block = block.replace(/(<div class="hero__tags">)[\s\S]*?(<\/div>)/, function (_, open, close) {
+        return open + '\n' + hero.tags.map(function (tag) {
+          return '        <span class="hero__tag">' + esc(tag) + '</span>';
+        }).join('\n') + '\n      ' + close;
+      });
+    }
+    return html.replace(found[0], block);
+  }
+
+  function applyPageMeta(html, file) {
+    var key = pageKey(file);
+    if (key === 'index') return html;
+    var meta = ((settings().pageMeta || {})[key]);
+    if (!meta) return html;
+    if (meta.title != null) {
+      html = html.replace(/(<section class="page-hero"[\s\S]*?<h1>)[\s\S]*?(<\/h1>)/,
+        function (_, open, close) { return open + esc(meta.title) + close; });
+    }
+    if (meta.subtitle != null) {
+      html = html.replace(/(<section class="page-hero"[\s\S]*?<h1>[\s\S]*?<\/h1>\s*<p>)[\s\S]*?(<\/p>)/,
+        function (_, open, close) { return open + esc(meta.subtitle) + close; });
+    }
+    if (meta.showHero === false) {
+      html = html.replace(/<section class="page-hero"/, '<section class="page-hero" hidden');
+    } else {
+      html = html.replace(/<section class="page-hero"\s+hidden/, '<section class="page-hero"');
+    }
+    if (meta.showBreadcrumbs === false) {
+      html = html.replace(/\s*<nav class="crumbs"[\s\S]*?<\/nav>/, '');
+    }
+    if (meta.showCta === false) {
+      html = html.replace(/<section class="cta-band"/, '<section class="cta-band" hidden');
+    } else {
+      html = html.replace(/<section class="cta-band"\s+hidden/, '<section class="cta-band"');
+    }
     return html;
   }
 
@@ -1574,15 +1785,15 @@
     }
     if (footer.about != null) {
       html = html.replace(/(<p class="footer__about" data-footer-about>)[\s\S]*?(<\/p>)/g,
-        '$1\n          ' + esc(footer.about) + '\n        $2');
+        function (_, open, close) { return open + '\n          ' + esc(footer.about) + '\n        ' + close; });
     }
     if (footer.programsTitle != null) {
       html = html.replace(/(<h3 class="footer__title" data-footer-programs-title>)[\s\S]*?(<\/h3>)/g,
-        '$1' + esc(footer.programsTitle) + '$2');
+        function (_, open, close) { return open + esc(footer.programsTitle) + close; });
     }
     if (footer.contactTitle != null) {
       html = html.replace(/(<h3 class="footer__title" data-footer-contact-title>)[\s\S]*?(<\/h3>)/g,
-        '$1' + esc(footer.contactTitle) + '$2');
+        function (_, open, close) { return open + esc(footer.contactTitle) + close; });
     }
     html = html.replace(/<div class="footer__bottom">[\s\S]*?<\/div>/g,
       '<div class="footer__bottom">\n' +
@@ -1650,16 +1861,26 @@
     html = applyFooterPrograms(html);
 
     // Social links (footer)
-    if (nav.social) {
-      var whatsapp = nav.social.whatsapp || '201130830390';
-      var telegram = nav.social.telegram || 'QawareerAcademy';
-      var instagram = nav.social.instagram || 'Qawareer.Academy';
-      var email = nav.social.email || 'QawarirAcademy@gmail.com';
+    if (nav.social || settings().contact) {
+      var contact = settings().contact || {};
+      var social = nav.social || {};
+      var whatsapp = contact.whatsapp || social.whatsapp || '201130830390';
+      var telegram = contact.telegram || social.telegram || 'QawareerAcademy';
+      var instagram = contact.instagram || social.instagram || 'Qawareer.Academy';
+      var email = contact.email || social.email || 'QawarirAcademy@gmail.com';
       
       html = html.replace(/href="https:\/\/wa\.me\/[^"]*"/g, 'href="https://wa.me/' + whatsapp + '"');
       html = html.replace(/href="https:\/\/t\.me\/[^"]*"/g, 'href="https://t.me/' + telegram + '"');
       html = html.replace(/href="https:\/\/instagram\.com\/[^"]*"/g, 'href="https://instagram.com/' + instagram + '"');
       html = html.replace(/href="mailto:[^"]*"/g, 'href="mailto:' + email + '"');
+      html = html.replace(/<a\b[^>]*\bdata-mail\b[^>]*>/g, function (tag) {
+        var href = 'href="mailto:' + esc(email) + '"';
+        return /\bhref="[^"]*"/.test(tag) ? tag.replace(/\bhref="[^"]*"/, href) : tag.replace('<a', '<a ' + href);
+      });
+      html = html.replace(/<a\b[^>]*\bdata-tg\b[^>]*>/g, function (tag) {
+        var href = 'href="https://t.me/' + esc(telegram) + '"';
+        return /\bhref="[^"]*"/.test(tag) ? tag.replace(/\bhref="[^"]*"/, href) : tag.replace('<a', '<a ' + href);
+      });
     }
     
     return html;
@@ -2231,16 +2452,9 @@
   }
 
   /* ---- SEO: inject meta tags from settings.seo ---- */
-  function applySeo(html) {
+  function applySeo(html, file) {
     var seo = (settings().seo || {});
-    var pageFile = html.indexOf('index.html') !== -1 ? 'index' : 
-                   html.indexOf('about.html') !== -1 ? 'about' :
-                   html.indexOf('programs.html') !== -1 ? 'programs' :
-                   html.indexOf('pricing.html') !== -1 ? 'pricing' :
-                   html.indexOf('testimonials.html') !== -1 ? 'testimonials' :
-                   html.indexOf('materials.html') !== -1 ? 'materials' :
-                   html.indexOf('faq.html') !== -1 ? 'faq' :
-                   html.indexOf('contact.html') !== -1 ? 'contact' : null;
+    var pageFile = pageKey(file);
     
     if (!pageFile || !seo[pageFile]) return html;
     
@@ -2275,7 +2489,7 @@
      come from config.js. The panel can edit Telegram in the settings tab,
      WhatsApp is already there. The up/down buttons are pure UI. */
   function floaters() {
-    var C = window.SITE || {};
+    var C = settings().contact || window.SITE || {};
     var wa = 'https://wa.me/' + (C.whatsapp || '201130830390');
     var tg = 'https://t.me/' + (C.telegram || 'QawareerAcademy');
 
@@ -2333,6 +2547,12 @@
     esc: esc,
     programCards: programCards,
     programDetails: programDetails,
+    coursesSection: coursesSection,
+    homeCoursesSection: homeCoursesSection,
+    campaignSliderSection: campaignSliderSection,
+    applyPageCleanup: applyPageCleanup,
+    applyHomeHero: applyHomeHero,
+    applyPageMeta: applyPageMeta,
     priceTiers: priceTiers,
     priceCards: priceCards,
     priceIntro: priceIntro,

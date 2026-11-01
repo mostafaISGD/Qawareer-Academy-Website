@@ -20,7 +20,7 @@
 
   /* Settings migration — older content.js files have no `settings` key,
      so add the defaults that match the current site exactly. */
-  (function ensureSettings() {
+  function ensureSettings() {
     if (!C.settings) C.settings = {};
     var S = C.settings;
     if (!S.theme) S.theme = { name: 'green', mode: 'auto', showDarkToggle: true, colors: { brand: '', accent: '', bg: '', text: '' } };
@@ -41,6 +41,8 @@
       motto: 'رفقاً بقلوبكن.. وقرباً لكتاب الله'
     };
     if (!S.announcement) S.announcement = { visible: false, text: '', link: '', linkText: '', bg: '#06683f', color: '#ffffff' };
+    if (!S.campaignSlider) S.campaignSlider = { visible: true, auto: true, speed: 6000, navigation: true };
+    if (!C.campaigns) C.campaigns = [];
     if (!S.home) S.home = { reviews: { random: true, count: 3 } };
     if (!S.home.reviews) S.home.reviews = { random: true, count: 3 };
     if (S.home.reviews.random == null) S.home.reviews.random = true;
@@ -135,6 +137,26 @@
         { ico: '💚', title: 'بلا لوم ولا ضغط', text: 'لو انقطعتِ، بنرجّعكِ بلطف. الخطة بتتعدّل مع ظروفكِ.' }
       ];
     }
+    if (!S.pageMeta) S.pageMeta = {};
+    var PAGE_META_DEFAULTS = {
+      about: ['عن الأكاديمية', 'تعرّفي على الأكاديمية وطريقة التعليم والمتابعة.'],
+      programs: ['البرامج والدورات', 'البرامج والدورات المتاحة بالتفصيل.'],
+      pricing: ['الأسعار والباقات', 'اختاري النظام والباقة المناسبة.'],
+      testimonials: ['آراء الطلاب وأولياء الأمور', 'تجارب وآراء الطالبات وأولياء الأمور.'],
+      materials: ['المواد المقروءة', 'مواد مساعدة للحفظ والمراجعة.'],
+      faq: ['الأسئلة الشائعة', 'إجابات عن أكثر الأسئلة تكرارًا.'],
+      contact: ['تواصلي معنا', 'تواصلي معنا للحجز أو الاستفسار.'],
+      privacy: ['سياسة الخصوصية', 'كيف نتعامل مع بيانات التواصل والحجز.'],
+      '404': ['٤٠٤ — الصفحة غير موجودة', 'الرابط غير صحيح أو أن الصفحة نُقلت.']
+    };
+    Object.keys(PAGE_META_DEFAULTS).forEach(function (key) {
+      if (!S.pageMeta[key]) S.pageMeta[key] = {
+        title: PAGE_META_DEFAULTS[key][0], subtitle: PAGE_META_DEFAULTS[key][1],
+        showHero: true, showBreadcrumbs: key !== '404', showCta: key !== 'privacy' && key !== '404'
+      };
+    });
+    if (!C.sections.courses) C.sections.courses = { visible: true };
+    if (!C.sections.campaigns) C.sections.campaigns = { visible: true };
     if (!S.sectionOrder) S.sectionOrder = {
       home: ['hero', 'stats', 'programs', 'testimonials', 'pricing', 'articles', 'faq', 'cta'],
       about: ['about-hero', 'about'],
@@ -183,7 +205,16 @@
         email: 'QawarirAcademy@gmail.com'
       }
     };
-  })();
+    var HOME_ORDER = ['hero', 'campaigns', 'stats', 'why', 'video', 'programs', 'courses', 'pricing', 'materials', 'about-intro', 'reviews', 'faq', 'cta'];
+    if (!S.sectionOrder.home) S.sectionOrder.home = [];
+    HOME_ORDER.forEach(function (key) {
+      if (S.sectionOrder.home.indexOf(key) === -1) S.sectionOrder.home.push(key);
+    });
+    S.sectionOrder.home = S.sectionOrder.home.filter(function (key, i, list) {
+      return HOME_ORDER.indexOf(key) !== -1 && list.indexOf(key) === i;
+    });
+  }
+  ensureSettings();
 
   var LS_CONTENT = 'qwr-content';
   var LS_DRAFT   = 'qwr-draft';
@@ -228,6 +259,7 @@
       if (draftAt >= liveAt) {
         C = saved;
         window.CONTENT = C;
+        ensureSettings();
         /* Drafts created by older versions may not contain newer settings.
            Migrate the restored object before any tab builder reads it. */
         if (!C.settings) C.settings = {};
@@ -246,7 +278,7 @@
           motto: 'رفقاً بقلوبكن.. وقرباً لكتاب الله'
         };
         setStatus('عندك مسودة محفوظة من قبل', 'dirty');
-        $('#btnPublish').disabled = false;
+        $('#btnPublish').disabled = true;
         $('#admSaveTxt').textContent =
           'عندك مسودة محفوظة — اضغطي «حفظ ونشر» لتثبيتها أو امسحيها من المتصفح.';
       }
@@ -261,7 +293,7 @@
     C.updatedAt = new Date().toISOString();
     try { localStorage.setItem(LS_DRAFT, JSON.stringify(C)); } catch (e) {}
     setStatus('فيه تغييرات مش محفوظة', 'dirty');
-    $('#btnPublish').disabled = false;
+    $('#btnPublish').disabled = true;
     $('#admSaveTxt').textContent = 'فيه تغييرات — اضغطي «حفظ ونشر» لتثبيتها على الموقع';
   }
 
@@ -748,6 +780,10 @@
     { id: 'seo', label: 'SEO', icon: '🔎', build: buildSeo },
     { id: 'programs', label: 'البرامج', icon: '📚', build: buildPrograms,
       addLabel: '+ أضيفي برنامجاً', add: addProgram },
+    { id: 'courses', label: 'الدورات', icon: '🗓️', build: buildCourses,
+      addLabel: '+ أضيفي دورة', add: addCourse },
+    { id: 'campaigns', label: 'الحملات', icon: '📣', build: buildCampaigns,
+      addLabel: '+ أضيفي إعلاناً', add: addCampaign },
     { id: 'packages', label: 'الفئات', icon: '💳', build: buildPackages,
       addLabel: '+ أضيفي فئة أسعار', add: addPackage },
     { id: 'reviews', label: 'الآراء', icon: '⭐', build: buildReviews,
@@ -786,6 +822,31 @@
     var at = C.programs.length - 1;   // programs render first, in order
     renderTab();
     focusCard(at);
+  }
+
+  function addCourse() {
+    if (!C.courses) C.courses = [];
+    C.courses.push({
+      id: 'c' + Date.now().toString(36).slice(-5),
+      order: nextOrder(C.courses), visible: true, showOnHome: true, isFree: false, status: 'soon',
+      title: 'دورة جديدة', short: 'وصف مختصر للدورة.', audience: 'المبتدئات',
+      duration: '', schedule: '', startDate: '', price: '',
+      details: 'اكتبي تفاصيل الدورة وشروط الالتحاق.', topics: ['محور الدورة الأول'], cta: 'احجزي في الدورة'
+    });
+    markDirty();
+    var at = C.courses.length - 1;
+    renderTab();
+    focusCard(at);
+  }
+
+  function addCampaign() {
+    C.campaigns.push({
+      id: 'ad' + Date.now().toString(36).slice(-5), order: nextOrder(C.campaigns), visible: true,
+      badge: 'إعلان جديد', title: 'عنوان الإعلان', text: 'اكتبي وصفًا مختصرًا وواضحًا.',
+      button: 'اعرفي التفاصيل', link: '', image: '', mobileImage: '',
+      bg: '#074e38', color: '#ffffff', startAt: '', endAt: ''
+    });
+    markDirty(); renderTab(); focusCard(C.campaigns.length);
   }
 
   function addPackage() {
@@ -910,12 +971,14 @@
 var SEC_META = [
   // Homepage sections. `binary: true` = ظاهر / مخفي only, no «قريباً».
   { key: 'hero',       title: 'الهيرو (الشاشة الأولى)',    where: 'الصفحة الرئيسية' },
+  { key: 'campaigns',  title: 'سلايدر الإعلانات',          where: 'الصفحة الرئيسية', binary: true },
   { key: 'stats',      title: 'شريط الأرقام',              where: 'الصفحة الرئيسية' },
   { key: 'about-intro',title: 'من نحن',                    where: 'الصفحة الرئيسية', binary: true },
   { key: 'video',      title: 'فيديو تعريفي',              where: 'الصفحة الرئيسية', binary: true },
   { key: 'programs',   title: 'قسم البرامج',               where: 'الصفحة الرئيسية + صفحة البرامج', binary: true },
+  { key: 'courses',    title: 'قسم الدورات في الرئيسية',   where: 'الصفحة الرئيسية', binary: true },
   { key: 'why',        title: 'لماذا قوارير؟',             where: 'الصفحة الرئيسية', binary: true },
-  { key: 'pricing',    title: 'معاينة الأسعار',            where: 'الصفحة الرئيسية + صفحة الأسعار' },
+  { key: 'pricing',    title: 'معاينة الأسعار',            where: 'الصفحة الرئيسية فقط' },
   { key: 'reviews',    title: 'آراء الطالبات',            where: 'الصفحة الرئيسية + صفحة آراء الطالبات' },
   { key: 'faq',        title: 'الأسئلة الشائعة',          where: 'الرئيسية + صفحة الأسئلة + تواصل معنا' },
   { key: 'cta',        title: 'شريط الدعوة للتسجيل',      where: 'الصفحة الرئيسية' },
@@ -1026,7 +1089,6 @@ function buildSections(host) {
       grid.appendChild(field('الوصف القصير', 'يظهر في كارت البرنامج', p.short, function (v) { p.short = v; }, true));
       card.appendChild(grid);
 
-      card.appendChild(field('الفكرة', 'الفقرة الأولى في التفاصيل', p.idea, function (v) { p.idea = v; }, true));
       card.appendChild(field('لماذا مهم؟', '', p.why, function (v) { p.why = v; }, true));
 
       [['who', 'الفئة المستهدفة (كل سطر بند)'],
@@ -1048,8 +1110,87 @@ function buildSections(host) {
         card.appendChild(f);
       });
 
-      card.appendChild(field('الميزة التنافسية', 'يظهر في مربع مميز', p.edge, function (v) { p.edge = v; }, true));
+      host.appendChild(card);
+    });
+  }
 
+  /* ---------- COURSES ---------- */
+  function buildCourses(host) {
+    if (!C.courses) C.courses = [];
+    var note = document.createElement('div');
+    note.className = 'adm-note';
+    note.textContent = 'الدورات منفصلة عن البرامج. يمكنكِ تحديد حالة التسجيل والموعد والمدة والسعر وإخفاء أي دورة دون حذفها.';
+    host.appendChild(note);
+    C.courses.forEach(function (course) {
+      var card = cardShell(course, course.title, course.order, { list: 'courses' });
+      var grid = document.createElement('div');
+      grid.className = 'adm-row';
+      grid.appendChild(field('اسم الدورة', '', course.title, function (v) { course.title = v; }));
+      grid.appendChild(select('حالة الدورة', {
+        open: 'التسجيل مفتوح', soon: 'قريبًا', closed: 'التسجيل مغلق', completed: 'انتهت'
+      }, course.status || 'soon', function (v) { course.status = v; }));
+      card.appendChild(grid);
+
+      var options = document.createElement('div');
+      options.className = 'adm-row';
+      options.appendChild(toggle('تظهر مختصرة في الرئيسية', course.showOnHome !== false, function (v) { course.showOnHome = v; }));
+      options.appendChild(toggle('دورة مجانية — إبراز أقوى', course.isFree === true, function (v) { course.isFree = v; }));
+      card.appendChild(options);
+
+      grid = document.createElement('div'); grid.className = 'adm-row';
+      grid.appendChild(field('الفئة المستهدفة', '', course.audience, function (v) { course.audience = v; }));
+      grid.appendChild(field('المدة', 'مثال: 4 أسابيع', course.duration, function (v) { course.duration = v; }));
+      card.appendChild(grid);
+      card.appendChild(field('الوصف المختصر', 'يظهر تحت اسم الدورة', course.short, function (v) { course.short = v; }, true));
+
+      grid = document.createElement('div'); grid.className = 'adm-row adm-row--3';
+      grid.appendChild(field('الموعد', 'مثال: كل سبت', course.schedule, function (v) { course.schedule = v; }));
+      grid.appendChild(field('تاريخ البداية', '', course.startDate, function (v) { course.startDate = v; }));
+      grid.appendChild(field('السعر', 'مع العملة', course.price, function (v) { course.price = v; }));
+      card.appendChild(grid);
+      card.appendChild(field('التفاصيل وشروط الالتحاق', '', course.details, function (v) { course.details = v; }, true));
+
+      var topics = document.createElement('div'); topics.className = 'adm-field';
+      topics.innerHTML = '<span class="adm-label">محاور الدورة (كل سطر بند)</span>';
+      var le = listEditor(course.topics || (course.topics = []), function () {}, 'اكتبي محورًا');
+      topics.appendChild(le);
+      var add = document.createElement('button'); add.className = 'adm-mini'; add.type = 'button';
+      add.textContent = '+ أضيفي محورًا'; add.style.marginTop = '8px';
+      add.addEventListener('click', function () { addRow(le, 'محور جديد'); markDirty(); });
+      topics.appendChild(add); card.appendChild(topics);
+      card.appendChild(field('نص الزر', '', course.cta, function (v) { course.cta = v; }));
+      host.appendChild(card);
+    });
+  }
+
+  /* ---------- CAMPAIGNS / AD SLIDER ---------- */
+  function buildCampaigns(host) {
+    var slider = C.settings.campaignSlider;
+    var settingsCard = document.createElement('div'); settingsCard.className = 'adm-card';
+    settingsCard.innerHTML = '<div class="adm-card__title">إعدادات سلايدر الإعلانات</div>';
+    settingsCard.appendChild(toggle('إظهار السلايدر عند وجود إعلانات فعالة', slider.visible !== false, function (v) { slider.visible = v; }));
+    settingsCard.appendChild(toggle('تشغيل تلقائي', slider.auto !== false, function (v) { slider.auto = v; }));
+    settingsCard.appendChild(toggle('إظهار الأسهم والنقاط', slider.navigation !== false, function (v) { slider.navigation = v; }));
+    settingsCard.appendChild(field('مدة ظهور الإعلان بالمللي ثانية', 'مثال: 6000 = 6 ثوانٍ', slider.speed, function (v) { slider.speed = Math.max(2000, parseInt(v, 10) || 6000); }));
+    host.appendChild(settingsCard);
+    C.campaigns.forEach(function (item) {
+      var card = cardShell(item, item.title, item.order, { list: 'campaigns' });
+      var row = document.createElement('div'); row.className = 'adm-row';
+      row.appendChild(field('الشارة', 'مثال: التسجيل مفتوح', item.badge, function (v) { item.badge = v; }));
+      row.appendChild(field('العنوان', '', item.title, function (v) { item.title = v; })); card.appendChild(row);
+      card.appendChild(field('الوصف', '', item.text, function (v) { item.text = v; }, true));
+      row = document.createElement('div'); row.className = 'adm-row';
+      row.appendChild(field('نص الزر', '', item.button, function (v) { item.button = v; }));
+      row.appendChild(field('رابط الزر', 'صفحة داخلية أو رابط كامل', item.link, function (v) { item.link = v; })); card.appendChild(row);
+      row = document.createElement('div'); row.className = 'adm-row';
+      row.appendChild(imgField('صورة الكمبيوتر', 'يمكن اختيار صورة من الجهاز أو كتابة رابط.', item.image, function (v) { item.image = v; }, { maxEdge: 1600, crop: false, wide: true }));
+      row.appendChild(imgField('صورة الموبايل', 'اختيارية؛ عند تركها فارغة تُستخدم صورة الكمبيوتر.', item.mobileImage, function (v) { item.mobileImage = v; }, { maxEdge: 900, crop: false, wide: true })); card.appendChild(row);
+      row = document.createElement('div'); row.className = 'adm-row';
+      row.appendChild(field('لون الخلفية', '#074e38', item.bg, function (v) { item.bg = v; }));
+      row.appendChild(field('لون النص', '#ffffff', item.color, function (v) { item.color = v; })); card.appendChild(row);
+      row = document.createElement('div'); row.className = 'adm-row';
+      row.appendChild(field('بداية الظهور', 'YYYY-MM-DD أو اتركيه فارغًا', item.startAt, function (v) { item.startAt = v; }));
+      row.appendChild(field('نهاية الظهور', 'YYYY-MM-DD أو اتركيه فارغًا', item.endAt, function (v) { item.endAt = v; })); card.appendChild(row);
       host.appendChild(card);
     });
   }
@@ -1689,6 +1830,33 @@ function buildSections(host) {
 
   /* ---------- PAGES ---------- */
   function buildPages(host) {
+    var PAGE_NAMES = {
+      about: 'عن الأكاديمية', programs: 'البرامج والدورات', pricing: 'الأسعار والباقات',
+      testimonials: 'الآراء', materials: 'المواد المقروءة', faq: 'الأسئلة الشائعة',
+      contact: 'تواصل معنا', privacy: 'سياسة الخصوصية', '404': 'صفحة الخطأ 404'
+    };
+    var meta = C.settings.pageMeta || (C.settings.pageMeta = {});
+    Object.keys(PAGE_NAMES).forEach(function (key) {
+      if (!meta[key]) return;
+      var mc = document.createElement('div');
+      mc.className = 'adm-card';
+      mc.innerHTML = '<div class="adm-card__head"><div class="adm-card__num">📄</div>' +
+        '<div><div class="adm-card__title">' + esc(PAGE_NAMES[key]) + '</div>' +
+        '<div class="adm-hint">' + esc(key + '.html') + '</div></div></div>';
+      mc.appendChild(field('عنوان الصفحة داخل الموقع', '', meta[key].title, function (v) { meta[key].title = v; }));
+      mc.appendChild(field('الوصف تحت العنوان', '', meta[key].subtitle, function (v) { meta[key].subtitle = v; }, true));
+      var controls = document.createElement('div'); controls.className = 'adm-row adm-page-options';
+      controls.appendChild(toggle('إظهار مقدمة الصفحة', meta[key].showHero !== false, function (v) { meta[key].showHero = v; }));
+      controls.appendChild(toggle('إظهار مسار التصفح', meta[key].showBreadcrumbs !== false, function (v) { meta[key].showBreadcrumbs = v; }));
+      controls.appendChild(toggle('إظهار شريط الحجز', meta[key].showCta !== false, function (v) { meta[key].showCta = v; }));
+      mc.appendChild(controls);
+      host.appendChild(mc);
+    });
+
+    var detailHead = document.createElement('div');
+    detailHead.className = 'adm-note';
+    detailHead.textContent = 'المحتوى التفصيلي للصفحات التي تحتوي على أجزاء إضافية:';
+    host.appendChild(detailHead);
     ['about', 'materials'].forEach(function (key) {
       var pg = C.pages[key];
       if (!pg) return;
@@ -1698,9 +1866,6 @@ function buildSections(host) {
       card.innerHTML = '<div class="adm-card__head"><div class="adm-card__num">' +
         (key === 'about' ? 'ع' : 'م') + '</div><div class="adm-card__title">' +
         esc(names[key]) + '</div></div>';
-
-      card.appendChild(field('عنوان الصفحة', '', pg.title, function (v) { pg.title = v; }));
-      card.appendChild(field('العنوان الفرعي', 'يظهر تحت العنوان', pg.subtitle, function (v) { pg.subtitle = v; }, true));
 
       if (key === 'about') {
         card.appendChild(field('النص الأساسي', '', pg.lead, function (v) { pg.lead = v; }, true, true));
@@ -2123,6 +2288,57 @@ function buildSections(host) {
     note.innerHTML = 'رتبي أقسام كل صفحة بالسحب والإفلات. الترتيب بيحفظ في <code>settings.sectionOrder</code> '
       'وبيطبق عند النشر — من غير ما تلمسي أي كود.';
     host.appendChild(note);
+
+    var labels = {
+      hero: 'الشاشة الأولى', campaigns: 'سلايدر الإعلانات', stats: 'شريط الأرقام', why: 'لماذا قوارير؟', video: 'الفيديو التعريفي',
+      programs: 'البرامج', courses: 'الدورات', pricing: 'معاينة الأسعار', materials: 'المواد',
+      'about-intro': 'من نحن', reviews: 'الآراء', faq: 'الأسئلة الشائعة', cta: 'شريط الحجز'
+    };
+    var order = C.settings.sectionOrder.home;
+    var card = document.createElement('div'); card.className = 'adm-card';
+    card.innerHTML = '<div class="adm-card__title">ترتيب الصفحة الرئيسية</div>' +
+      '<div class="adm-hint">استخدمي الأسهم أو اسحبي أي قسم. مفتاح الظهور يعمل من نفس المكان.</div>';
+    var homeList = document.createElement('div'); homeList.className = 'adm-sortable adm-order-list';
+    card.appendChild(homeList); host.appendChild(card);
+
+    function moveSection(index, delta) {
+      var next = index + delta;
+      if (next < 0 || next >= order.length) return;
+      var item = order.splice(index, 1)[0]; order.splice(next, 0, item);
+      markDirty(); drawHomeOrder();
+    }
+    function syncOrderFromDom() {
+      C.settings.sectionOrder.home = order = Array.prototype.map.call(homeList.children, function (item) { return item.dataset.id; });
+      markDirty();
+    }
+    function drawHomeOrder() {
+      homeList.innerHTML = '';
+      order.forEach(function (key, index) {
+        var item = document.createElement('div');
+        item.className = 'adm-sortable-item'; item.draggable = true; item.dataset.id = key;
+        item.innerHTML = '<span class="adm-drag-handle" aria-hidden="true">⋮⋮</span>' +
+          '<strong class="adm-order-label">' + esc(labels[key] || key) + '</strong>';
+        var controls = document.createElement('div'); controls.className = 'adm-order-actions';
+        var up = document.createElement('button'); up.type = 'button'; up.className = 'adm-mini'; up.textContent = '↑'; up.title = 'تحريك لأعلى';
+        up.disabled = index === 0; up.addEventListener('click', function () { moveSection(index, -1); });
+        var down = document.createElement('button'); down.type = 'button'; down.className = 'adm-mini'; down.textContent = '↓'; down.title = 'تحريك لأسفل';
+        down.disabled = index === order.length - 1; down.addEventListener('click', function () { moveSection(index, 1); });
+        controls.appendChild(up); controls.appendChild(down);
+        controls.appendChild(toggle('ظاهر', secState(key).visible !== false, function (v) { secState(key).visible = v; }));
+        item.appendChild(controls);
+        item.addEventListener('dragstart', function (event) { item.classList.add('dragging'); event.dataTransfer.effectAllowed = 'move'; });
+        item.addEventListener('dragend', function () { item.classList.remove('dragging'); syncOrderFromDom(); drawHomeOrder(); });
+        item.addEventListener('dragover', function (event) {
+          event.preventDefault(); var dragging = homeList.querySelector('.dragging');
+          if (!dragging || dragging === item) return;
+          var box = item.getBoundingClientRect();
+          homeList.insertBefore(dragging, event.clientY < box.top + box.height / 2 ? item : item.nextSibling);
+        });
+        homeList.appendChild(item);
+      });
+    }
+    drawHomeOrder();
+    return;
 
     var pages = Object.keys(C.settings.sectionOrder || {});
     pages.forEach(function (pageKey) {
@@ -2709,6 +2925,8 @@ function buildSections(host) {
         return secState(m.key).visible !== false;
       }).length;
       case 'programs': return C.programs.length;
+      case 'courses':  return (C.courses || []).length;
+      case 'campaigns': return (C.campaigns || []).length;
       case 'packages': return (C.pricing && C.pricing.tiers || []).length;
       case 'reviews':  return C.testimonials.length;
       case 'articles': return (C.articles || []).length;
@@ -2893,9 +3111,12 @@ function buildSections(host) {
         /* section on/off: add or remove `is-off` on every <section data-sec>.
            Same function the build tools use, so the published HTML and the
            committed HTML cannot drift apart. */
+        html = window.RENDER.applyPageCleanup(html);
+        html = window.RENDER.applyHomeHero(html, p.file);
+        html = window.RENDER.applyPageMeta(html, p.file);
         html = window.RENDER.applySections(html);
         /* reorder sections per page settings */
-        html = window.RENDER.applySectionOrder(html);
+        html = window.RENDER.applySectionOrder(html, p.file);
         /* inject navigation (header/footer/social) from settings */
         html = window.RENDER.applyNavigation(html);
         html = window.RENDER.applyAboutCopy(html);
@@ -2903,7 +3124,7 @@ function buildSections(host) {
         /* inject static texts from settings.texts */
         html = window.RENDER.applyTexts(html);
         /* inject SEO meta tags from settings.seo */
-        html = window.RENDER.applySeo(html);
+        html = window.RENDER.applySeo(html, p.file);
         return html;
       });
     });
@@ -2912,6 +3133,11 @@ function buildSections(host) {
       return out[f].then(function (html) { return { file: f, html: html }; });
     }));
   }
+
+  window.QWR_ADMIN_API = {
+    rebuildPages: rebuildPages,
+    getContent: function () { return C; }
+  };
 
   /* ================================================================
      6. OUTPUT
@@ -3026,7 +3252,7 @@ function buildSections(host) {
       .then(function () {
         localStorage.setItem(LS_GH, JSON.stringify({ owner: owner, repo: repo, branch: branch, token: token }));
         $('#ghSetup').open = false;
-        $('#btnPublish').disabled = false;
+        $('#btnPublish').disabled = true;
         setStatus('متصل بـ GitHub', 'saved');
         toast('تم الاتصال بـ ' + owner + '/' + repo, 'ok');
       })
@@ -3090,7 +3316,7 @@ function buildSections(host) {
         $('#admSaveTxt').textContent = 'تم النشر على GitHub — الموقع بيتحدّث الآن';
       })
       .catch(function (e) {
-        btn.disabled = false;
+        btn.disabled = true;
         setStatus('فشل النشر', 'error');
         toast(e.message, 'err');
         if (window.console) console.error(e);
@@ -3137,7 +3363,7 @@ function buildSections(host) {
       $('#ghRepo').value = g.repo;
       $('#ghBranch').value = g.branch;
       $('#ghToken').value = g.token;
-      $('#btnPublish').disabled = false;
+      $('#btnPublish').disabled = true;
       setStatus('متصل بـ GitHub', 'saved');
     }
 

@@ -961,6 +961,46 @@
   })();
 
   /* ==================================================================
+     CAMPAIGN SLIDER
+     ================================================================== */
+  (function campaignSliders() {
+    $$('[data-campaign-slider]').forEach(function (slider) {
+      var slides = $$('[data-campaign-slide]', slider);
+      var dots = $$('[data-campaign-dot]', slider);
+      if (slides.length < 2) return;
+      var index = 0;
+      var timer = null;
+      var speed = Math.max(2000, parseInt(slider.getAttribute('data-speed'), 10) || 6000);
+      var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      function show(next) {
+        index = (next + slides.length) % slides.length;
+        slides.forEach(function (slide, i) {
+          var active = i === index;
+          slide.classList.toggle('is-active', active);
+          slide.setAttribute('aria-hidden', active ? 'false' : 'true');
+        });
+        dots.forEach(function (dot, i) { dot.classList.toggle('is-active', i === index); });
+      }
+      function stop() { if (timer) clearInterval(timer); timer = null; }
+      function start() {
+        stop();
+        if (!reduced && slider.getAttribute('data-auto') === 'true') timer = setInterval(function () { show(index + 1); }, speed);
+      }
+      var prev = $('[data-campaign-prev]', slider);
+      var next = $('[data-campaign-next]', slider);
+      if (prev) prev.addEventListener('click', function () { show(index - 1); start(); });
+      if (next) next.addEventListener('click', function () { show(index + 1); start(); });
+      dots.forEach(function (dot) { dot.addEventListener('click', function () { show(parseInt(dot.getAttribute('data-campaign-dot'), 10)); start(); }); });
+      slider.addEventListener('mouseenter', stop);
+      slider.addEventListener('mouseleave', start);
+      slider.addEventListener('focusin', stop);
+      slider.addEventListener('focusout', start);
+      document.addEventListener('visibilitychange', function () { document.hidden ? stop() : start(); });
+      show(0); start();
+    });
+  })();
+
+  /* ==================================================================
      12. YEAR in footer
      ================================================================== */
   (function year() {

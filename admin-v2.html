@@ -447,13 +447,14 @@ body.is-locked { overflow: hidden; }
   <div class="container adm-bar__in">
     <div class="adm-bar__title">
       <span class="adm-brandmark">ق</span>
-      <span>لوحة قوارير <small>نسخة تجريبية</small></span>
+      <span>لوحة قوارير</span>
     </div>
     <div class="adm-bar__sp"></div>
     <div class="adm-bar__status">
       <span class="adm-dot" id="admDot"></span>
       <span id="admStatus">جاهز</span>
     </div>
+    <button class="btn btn--ghost-light btn--sm" id="contentPreviewOpen" type="button">معاينة المحتوى</button>
     <a class="btn btn--ghost-light btn--sm" href="index.html" target="_blank" rel="noopener">
       معاينة الموقع ↗
     </a>
@@ -462,19 +463,6 @@ body.is-locked { overflow: hidden; }
 
 <main class="adm-wrap" id="adm-main">
   <div class="container">
-
-    <!-- ===== intro / setup ===== -->
-    <div class="adm-v2-welcome">
-      <div>
-        <span class="adm-v2-eyebrow">مساحة الإدارة</span>
-        <h1>أهلاً بكِ، كل الموقع من مكان واحد</h1>
-        <p>عدّلي المحتوى، راجعي المسودة، ثم انشري التغييرات بعد التأكد منها.</p>
-      </div>
-      <label class="adm-v2-search" for="admV2Search">
-        <span aria-hidden="true">⌕</span>
-        <input id="admV2Search" type="search" placeholder="ابحثي عن قسم أو إعداد…" autocomplete="off">
-      </label>
-    </div>
 
     <!-- GitHub setup (collapsible) -->
     <details class="adm-setup" id="ghSetup" hidden>
@@ -523,15 +511,15 @@ body.is-locked { overflow: hidden; }
 
     <div class="adm-v2-layout">
       <aside class="adm-v2-side" aria-label="التنقل داخل لوحة التحكم">
+        <label class="adm-v2-nav-search" for="admNavSearch">
+          <span aria-hidden="true">⌕</span>
+          <input id="admNavSearch" type="search" placeholder="ابحث عن إعداد…" autocomplete="off">
+        </label>
         <nav class="adm-tabs" id="admTabs" aria-label="أقسام المحتوى"></nav>
-        <div class="adm-v2-help">
-          <strong>تحتاجي مساعدة؟</strong>
-          <span>كل تعديل يظل مسودة على هذا الجهاز حتى النشر.</span>
-        </div>
+        <p class="adm-v2-nav-empty" id="admNavEmpty" hidden>لا يوجد إعداد بهذا الاسم</p>
       </aside>
 
       <section class="adm-v2-content" aria-live="polite">
-        <div id="admV2Dashboard"></div>
         <div id="admPanels"></div>
       </section>
     </div>
@@ -543,6 +531,9 @@ body.is-locked { overflow: hidden; }
 <div class="adm-save">
   <div class="container adm-save__in">
     <p class="adm-save__txt" id="admSaveTxt">مفيش تغييرات لسه</p>
+    <button class="btn btn--outline btn--sm adm-check-btn" id="btnCheck" type="button">
+      فحص التعديلات <span id="admCheckCount" hidden></span>
+    </button>
     <button class="btn btn--outline btn--sm" id="btnExport">تنزيل نسخة احتياطية</button>
     <button class="btn btn--green btn--sm" id="btnPublish" disabled>
       مراجعة ونشر التغييرات
@@ -551,6 +542,27 @@ body.is-locked { overflow: hidden; }
 </div>
 
 <div class="adm-toast" id="admToast"></div>
+
+<div class="adm-review adm-check-modal" id="admCheckModal" hidden>
+  <div class="adm-review__bar">
+    <strong>فحص التعديلات قبل المعاينة</strong>
+    <button type="button" id="admCheckClose" aria-label="إغلاق فحص التعديلات">إغلاق ×</button>
+  </div>
+  <div class="adm-check-modal__body" id="admCheckBody"></div>
+</div>
+
+<div class="adm-review" id="contentPreviewModal" hidden>
+  <div class="adm-review__bar">
+    <strong>معاينة نسخة المحتوى الجديدة</strong>
+    <span class="adm-review__hint">يمكنكِ تصفح كل الصفحات من داخل المعاينة</span>
+    <button type="button" id="contentPreviewClose" aria-label="إغلاق معاينة المحتوى">إغلاق ×</button>
+  </div>
+  <iframe
+    id="contentPreviewFrame"
+    title="معاينة نسخة محتوى موقع أكاديمية قوارير"
+    data-src="../../outputs/content-refresh-preview-v1/index.html"
+  ></iframe>
+</div>
 
 <script src="content.js"></script>
 <script src="assets/js/render.js"></script>
